@@ -5,12 +5,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-
-export type GalaxyHandle = {
-  dispose: () => void
-  /** Toggle the opt-in ambient drone; returns true if sound is now audible. */
-  toggleSound: () => boolean
-}
+import type { GalaxyHandle } from './types'
 
 // Ported 1:1 from design/inspiration/21-hero-final.html (visually approved).
 // Imperative Three.js wrapped in a client-only island: the renderer mounts into

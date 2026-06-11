@@ -1,6 +1,7 @@
+import { createClientOnlyFn } from '@tanstack/react-start'
 import { useEffect, useRef, useState } from 'react'
 import { Eyebrow } from '../site/Eyebrow'
-import type { GalaxyHandle } from './galaxy.client'
+import type { GalaxyHandle } from './types'
 
 function hasWebGL(): boolean {
   try {
@@ -14,6 +15,14 @@ function hasWebGL(): boolean {
   }
 }
 
+// createClientOnlyFn keeps this body (and its dynamic import of Three.js) OUT of
+// the server bundle — it returns undefined on the server. So Three.js lands in
+// its own client chunk, fetched only here, never on /blog or /cv.
+const loadGalaxy = createClientOnlyFn(async (canvas: HTMLCanvasElement) => {
+  const { initGalaxy } = await import('./galaxy.client')
+  return initGalaxy(canvas)
+})
+
 export function GalaxyHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const handleRef = useRef<GalaxyHandle | null>(null)
@@ -24,15 +33,13 @@ export function GalaxyHero() {
   useEffect(() => {
     const ok = hasWebGL()
     setWebgl(ok)
-    if (!ok) return
+    if (!ok || !canvasRef.current) return
 
     let cancelled = false
-    // Dynamic import → Three.js + the scene land in their own chunk, fetched
-    // only here (client-only), never on /blog or /cv.
-    import('./galaxy.client')
-      .then(({ initGalaxy }) => {
-        if (cancelled || !canvasRef.current) return
-        handleRef.current = initGalaxy(canvasRef.current)
+    Promise.resolve(loadGalaxy(canvasRef.current))
+      .then((handle) => {
+        if (cancelled) handle?.dispose()
+        else if (handle) handleRef.current = handle
       })
       .catch((err) => {
         // Log the REAL error (do not hide it behind a friendly message).
