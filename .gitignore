@@ -1,0 +1,29 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+__unconfig*
+todos.json
+
+# Local dev / secrets
+.dev.vars
+local.db
+local.db-*
+
+# Test artifacts
+test-results
+playwright-report
+/playwright/.cache
+
+# Untracked design/spec/plan docs — never commit (project preference)
+docs/superpowers/
+design/
+design.html
+.playwright-mcp/
