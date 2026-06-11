@@ -55,16 +55,18 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
         {children}
 
-        <footer className="relative z-10 mx-auto max-w-5xl px-6 pb-16 pt-24">
-          <Eyebrow>Get in touch</Eyebrow>
-          <Link to="/freelance" className="block no-underline">
-            <h2 className="mt-3 font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
-              Work with me
-            </h2>
-          </Link>
-          <p className="mt-8 font-mono text-xs text-muted">
-            © {new Date().getFullYear()} Jérémie Néhlil — jeremn.dev
-          </p>
+        <footer className="relative z-10 bg-ground">
+          <div className="mx-auto max-w-5xl px-6 pb-16 pt-24">
+            <Eyebrow>Get in touch</Eyebrow>
+            <Link to="/freelance" className="block no-underline">
+              <h2 className="mt-3 font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
+                Work with me
+              </h2>
+            </Link>
+            <p className="mt-8 font-mono text-xs text-muted">
+              © {new Date().getFullYear()} Jérémie Néhlil — jeremn.dev
+            </p>
+          </div>
         </footer>
 
         <TanStackDevtools
