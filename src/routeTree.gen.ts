@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as HeroLabRouteImport } from './routes/hero-lab'
 import { Route as FreelanceRouteImport } from './routes/freelance'
 import { Route as CvRouteImport } from './routes/cv'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 
+const HeroLabRoute = HeroLabRouteImport.update({
+  id: '/hero-lab',
+  path: '/hero-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FreelanceRoute = FreelanceRouteImport.update({
   id: '/freelance',
   path: '/freelance',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cv': typeof CvRoute
   '/freelance': typeof FreelanceRoute
+  '/hero-lab': typeof HeroLabRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cv': typeof CvRoute
   '/freelance': typeof FreelanceRoute
+  '/hero-lab': typeof HeroLabRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
 }
@@ -60,27 +68,43 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cv': typeof CvRoute
   '/freelance': typeof FreelanceRoute
+  '/hero-lab': typeof HeroLabRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cv' | '/freelance' | '/blog/$slug' | '/blog/'
+  fullPaths: '/' | '/cv' | '/freelance' | '/hero-lab' | '/blog/$slug' | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cv' | '/freelance' | '/blog/$slug' | '/blog'
-  id: '__root__' | '/' | '/cv' | '/freelance' | '/blog/$slug' | '/blog/'
+  to: '/' | '/cv' | '/freelance' | '/hero-lab' | '/blog/$slug' | '/blog'
+  id:
+    | '__root__'
+    | '/'
+    | '/cv'
+    | '/freelance'
+    | '/hero-lab'
+    | '/blog/$slug'
+    | '/blog/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CvRoute: typeof CvRoute
   FreelanceRoute: typeof FreelanceRoute
+  HeroLabRoute: typeof HeroLabRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/hero-lab': {
+      id: '/hero-lab'
+      path: '/hero-lab'
+      fullPath: '/hero-lab'
+      preLoaderRoute: typeof HeroLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/freelance': {
       id: '/freelance'
       path: '/freelance'
@@ -123,6 +147,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CvRoute: CvRoute,
   FreelanceRoute: FreelanceRoute,
+  HeroLabRoute: HeroLabRoute,
   BlogSlugRoute: BlogSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
 }
