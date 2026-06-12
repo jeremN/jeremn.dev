@@ -74,9 +74,9 @@ export function initGalaxy(canvas: HTMLCanvasElement): GalaxyHandle {
   const piece = mergeGeometries([plate, stud])
   piece.scale(0.18, 0.18, 0.18)
   const pieceMat = new THREE.MeshStandardMaterial({
-    roughness: 0.36,
+    roughness: 0.5,
     metalness: 0.0,
-    envMapIntensity: 1.05,
+    envMapIntensity: 0.6,
   })
 
   const COUNT = coarse ? 4000 : 8000
@@ -295,12 +295,12 @@ export function initGalaxy(canvas: HTMLCanvasElement): GalaxyHandle {
         [1, 'rgba(120,150,255,0)'],
       ]),
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.3,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     }),
   )
-  bhGlow.scale.setScalar(2.6)
+  bhGlow.scale.setScalar(2.2)
   blackHole.add(bhGlow)
   blackHole.position.set(0, 0, 0.8)
   scene.add(blackHole)
@@ -319,12 +319,13 @@ export function initGalaxy(canvas: HTMLCanvasElement): GalaxyHandle {
 
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
-  // bloom: strength 0.22, radius 0.3, threshold 0.85 (threshold is the key knob)
+  // bloom: strength 0.1, radius 0.3, threshold 0.95 (threshold is the key knob)
+  // higher threshold = fewer pixels glow; lower strength = dimmer glow.
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(W(), H()),
-    0.22,
+    0.1,
     0.3,
-    0.85,
+    0.95,
   )
   composer.addPass(bloom)
   composer.addPass(new OutputPass())
@@ -384,11 +385,19 @@ export function initGalaxy(canvas: HTMLCanvasElement): GalaxyHandle {
     const c3 = c1 + 1
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2)
   }
-  const G = 8.0
+  const G = 4.5
   const HORIZON = 0.6
+  // Warp = the two laws chosen in /hero-lab:
+  //  · inverse-LINEAR pull `G/(d+ε)` — lensing deflection falls off as 1/d (not
+  //    1/d²), so the swirl reaches gracefully across the arm instead of a tight
+  //    local pucker.
+  //  · tidal spaghettification — within `reach` of the hole, bricks stretch
+  //    along the radial pull and thin crosswise (the tidal elongation of matter
+  //    falling in), then fade out so nothing pops through the horizon sphere.
   function simulate(rot: number, intro: number) {
     const cR = Math.cos(rot)
     const sR = Math.sin(rot)
+    const reach = HORIZON * 2.2
     for (let i = 0; i < COUNT; i++) {
       const bx = baseX[i]
       const by = baseY[i]
@@ -396,20 +405,33 @@ export function initGalaxy(canvas: HTMLCanvasElement): GalaxyHandle {
       const ry = bx * sR + by * cR
       const dx = rx - bh.x
       const dy = ry - bh.y
-      const d2 = dx * dx + dy * dy
-      const d = Math.sqrt(d2) + 1e-3
-      let pull = G / (d2 + 0.7)
-      if (pull > d) pull = d
+      const d = Math.sqrt(dx * dx + dy * dy) + 1e-3
+      let pull = G / (d + 0.6)
+      if (pull > d) pull = d // clamp: a brick lands at most ON the hole
       const nx = dx / d
       const ny = dy / d
-      const sw = pull * 0.95
+      const sw = pull * 0.6
       const fx = rx - nx * pull - ny * sw
       const fy = ry - ny * pull + nx * sw
-      let s = baseS[i] * intro
-      if (d < HORIZON) s *= Math.max(0, d / HORIZON)
+      const s = baseS[i] * intro
+      let rz = rotZ[i] + rot
+      let sx = s
+      let sy = s
+      if (d < reach) {
+        const t = 1 - d / reach // 0 → 1 toward the centre
+        const stretch = 1 + t * t * 3.2
+        rz = Math.atan2(ny, nx) // align the brick's long axis to the radial pull
+        sx = s * stretch
+        sy = s / Math.sqrt(stretch)
+        if (d < 0.3) {
+          const f = Math.max(0, d / 0.3)
+          sx *= f
+          sy *= f
+        }
+      }
       dummy.position.set(fx, fy, baseZ[i])
-      dummy.rotation.set(0, 0, rotZ[i] + rot)
-      dummy.scale.setScalar(s)
+      dummy.rotation.set(0, 0, rz)
+      dummy.scale.set(sx, sy, s)
       dummy.updateMatrix()
       galaxy.setMatrixAt(i, dummy.matrix)
     }
@@ -447,8 +469,8 @@ export function initGalaxy(canvas: HTMLCanvasElement): GalaxyHandle {
     bh.y += (bh.ty - bh.y) * 0.12
     blackHole.position.x = bh.x
     blackHole.position.y = bh.y
-    ring.rotation.z += dt * 1.4
-    ring2.rotation.z -= dt * 2.1
+    ring.rotation.z += dt * 0.8
+    ring2.rotation.z -= dt * 1.2
     spinGroup.rotation.z = rot
     simulate(rot, easeOutBack(Math.min(elapsed / 1.6, 1)))
     composer.render()
