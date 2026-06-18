@@ -2,21 +2,11 @@
   "name": "jeremn-dev",
   "private": true,
   "type": "module",
-  "imports": {
-    "#/*": "./src/*"
-  },
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "generate-routes": "tsr generate",
-    "build": "vite build && tsc --noEmit",
-    "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy",
-    "cf-typegen": "wrangler types",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx scripts/seed.ts",
-    "test": "vitest run",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -24,57 +14,18 @@
     "@fontsource-variable/hanken-grotesk": "^5.2.8",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
-    "@libsql/client": "^0.17.3",
-    "@shikijs/rehype": "^4.2.0",
-    "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-devtools": "latest",
-    "@tanstack/react-router": "latest",
-    "@tanstack/react-router-devtools": "latest",
-    "@tanstack/react-router-ssr-query": "latest",
-    "@tanstack/react-start": "latest",
-    "@tanstack/router-plugin": "^1.132.0",
-    "drizzle-orm": "^0.45.2",
-    "drizzle-zod": "^0.8.3",
-    "lucide-react": "^0.545.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "rehype-sanitize": "^6.0.0",
-    "rehype-stringify": "^10.0.1",
-    "remark-gfm": "^4.0.1",
-    "remark-parse": "^11.0.0",
-    "remark-rehype": "^11.1.2",
-    "shiki": "^4.2.0",
-    "tailwindcss": "^4.1.18",
-    "three": "^0.184.0",
-    "unified": "^11.0.5",
-    "zod": "^4.4.3"
+    "three": "^0.184.0"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.40.2",
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/mdx": "^4.0.0",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/typography": "^0.5.16",
-    "@tanstack/devtools-vite": "latest",
-    "@tanstack/router-cli": "^1.132.0",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.0",
-    "@types/node": "^22.10.2",
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
+    "@tailwindcss/vite": "^4.1.18",
     "@types/three": "^0.184.1",
-    "@vitejs/plugin-react": "^6.0.1",
-    "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10",
-    "jsdom": "^28.1.0",
-    "tsx": "^4.22.4",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.0",
-    "vitest": "^4.1.5",
-    "wrangler": "^4.100.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss"
-    ]
+    "astro": "^5.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.7.0"
   }
 }
