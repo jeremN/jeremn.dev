@@ -1,0 +1,42 @@
+# Sveltia CMS configuration — https://sveltiacms.app/en/docs
+# Self-hosted at jeremn.dev/admin. See docs/blog-authoring.md for the full setup.
+
+backend:
+  name: github
+  repo: jeremN/jeremn.dev
+  branch: main
+  # OAuth relay (sveltia-cms-auth Cloudflare Worker). Filled in at launch — Phase 2.
+  base_url: BASE_URL_PLACEHOLDER
+
+# Edit local files during `npm run dev` via the local-backend proxy (decap-server).
+local_backend: true
+
+# Uploaded images land here and are referenced as /uploads/... in markdown.
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: blog
+    label: Writing
+    label_singular: Post
+    folder: src/content/blog
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    summary: "{{title}}"
+    sortable_fields: [publishedAt, title]
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: summary, label: Summary, widget: text, required: false }
+      - {
+          name: publishedAt,
+          label: Published,
+          widget: datetime,
+          time_format: false,
+          date_format: "YYYY-MM-DD",
+          picker_utc: true,
+        }
+      - { name: tags, label: Tags, widget: list, required: false }
+      - { name: draft, label: Draft, widget: boolean, default: false }
+      - { name: body, label: Body, widget: markdown }
