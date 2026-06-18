@@ -1,12 +1,85 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Eyebrow from '../components/site/Eyebrow.astro'
+
+const lead =
+  'Senior JavaScript engineer, available for freelance work. I build and rebuild web apps — and the tooling around them.'
+
+const services = [
+  { title: 'Frontend web apps', blurb: 'SvelteKit, Next.js, React, TypeScript. Accessible, fast, maintainable UIs.' },
+  { title: 'Fullstack features', blurb: 'Node / Fastify APIs, GraphQL & REST, end-to-end delivery.' },
+  { title: 'Web-performance rebuilds', blurb: 'Refactoring high-traffic sites for speed and Core Web Vitals.' },
+  { title: 'Tooling & DX', blurb: 'CI/CD, testing, design systems, internal tools.' },
+]
+
+const howIWork = [
+  'Embed in your team — years of régie / consulting experience (most recently a 14-person team at ViaMichelin).',
+  'Senior and autonomous; agile delivery.',
+  'French & English.',
+  'On-site near Paris, or fully remote.',
+]
+
+const contacts = [
+  { label: 'Hire me on Malt', href: 'https://www.malt.fr/profile/jeremienehlil' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/j%C3%A9r%C3%A9mie-n%C3%A9hlil-36932a41/' },
+  { label: 'GitHub', href: 'https://github.com/jeremN' },
+]
 ---
-<Layout title="Freelance — jeremn.dev">
+<Layout
+  title="Freelance — jeremn.dev"
+  description="Hire Jérémie Néhlil — senior JavaScript engineer available for freelance web app work."
+>
   <main class="relative z-10 mx-auto max-w-3xl px-6 pb-24 pt-2">
     <Eyebrow class="block text-accent">Freelance</Eyebrow>
     <h1 class="mt-3 font-display text-5xl font-semibold tracking-tight text-ink sm:text-7xl">Work with me</h1>
-    <p class="mt-8 font-display text-lg text-muted">Available for freelance web app work. (Content to fill in.)</p>
-    <p class="mt-6 font-mono text-sm text-accent">jeremie.nehlil.freelance@proton.me</p>
+    <p class="mt-8 max-w-[55ch] font-display text-lg text-ink">{lead}</p>
+    <p class="mt-4 font-mono text-xs text-muted">Near Paris or remote · French &amp; English</p>
+
+    <section class="mt-16">
+      <Eyebrow class="block">What I do</Eyebrow>
+      <div class="mt-6 grid gap-6 sm:grid-cols-2">
+        {services.map((s) => (
+          <div class="rounded-lg border border-line bg-surface/40 p-6">
+            <h2 class="font-display text-xl font-semibold text-ink">{s.title}</h2>
+            <p class="mt-2 text-sm text-muted">{s.blurb}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="mt-16">
+      <Eyebrow class="block">How I work</Eyebrow>
+      <ul class="mt-6 space-y-3">
+        {howIWork.map((h) => (
+          <li class="flex gap-3 text-sm text-muted">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+            <span>{h}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="mt-16">
+      <Eyebrow class="block">Availability</Eyebrow>
+      <span class="mt-4 inline-flex items-center gap-2.5 font-mono text-sm text-[#7ee0c8]">
+        <span class="h-2 w-2 rounded-full bg-[#7ee0c8] shadow-[0_0_10px_#7ee0c8]"></span>
+        available for freelance work — ~4h average response
+      </span>
+    </section>
+
+    <section class="mt-16">
+      <Eyebrow class="block">Get in touch</Eyebrow>
+      <a
+        href="mailto:jeremie.nehlil.freelance@proton.me"
+        class="mt-4 block font-display text-2xl text-accent no-underline transition-colors hover:text-ink sm:text-3xl"
+      >
+        jeremie.nehlil.freelance@proton.me
+      </a>
+      <div class="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm">
+        {contacts.map((c) => (
+          <a href={c.href} target="_blank" rel="noopener" class="text-muted no-underline transition-colors hover:text-accent">{c.label} →</a>
+        ))}
+      </div>
+    </section>
   </main>
 </Layout>
