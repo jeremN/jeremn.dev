@@ -1,6 +1,49 @@
 ---
+import { getCollection } from 'astro:content'
 import Layout from '../layouts/Layout.astro'
+import Eyebrow from '../components/site/Eyebrow.astro'
+import PostCard from '../components/site/PostCard.astro'
+import Hero from '../components/hero/Hero.astro'
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  .slice(0, 3)
 ---
 <Layout>
-  <main class="mx-auto max-w-5xl px-6 py-24"><h1 class="font-display text-5xl text-ink">Home soon</h1></main>
+  <Hero />
+
+  <section class="relative z-10 flex min-h-[92vh] flex-col justify-center px-6">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-r from-ground/85 via-ground/35 to-transparent"></div>
+    <div class="relative mx-auto w-full max-w-5xl">
+      <Eyebrow class="mb-6 block text-accent">Freelance software engineer</Eyebrow>
+      <h1 class="font-grotesk text-6xl font-extrabold leading-[0.92] tracking-tight text-ink drop-shadow-[0_2px_40px_rgba(6,5,16,0.9)] sm:text-8xl">
+        Jérémie <span class="text-accent">Néhlil</span>
+      </h1>
+      <p class="mt-6 max-w-[24ch] font-display text-xl text-ink sm:text-2xl">
+        I build web apps — <em class="italic text-[#ff8aa6]">and the tooling around them.</em>
+      </p>
+      <span class="mt-8 inline-flex items-center gap-2.5 font-mono text-sm text-[#7ee0c8]">
+        <span class="h-2 w-2 rounded-full bg-[#7ee0c8] shadow-[0_0_10px_#7ee0c8]"></span>
+        available for freelance work
+      </span>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 bottom-8">
+      <div class="mx-auto max-w-5xl px-6"><Eyebrow>scroll ↓</Eyebrow></div>
+    </div>
+  </section>
+
+  <section class="relative z-10 bg-ground px-6 py-24">
+    <div class="mx-auto max-w-5xl">
+      <Eyebrow class="mb-8 block">Selected writing</Eyebrow>
+      {posts.length === 0 ? (
+        <p class="text-muted">Posts are coming soon.</p>
+      ) : (
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {posts.map((p) => (
+            <PostCard slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} />
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
 </Layout>

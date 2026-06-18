@@ -1,0 +1,35 @@
+---
+// Fixed WebGL galaxy behind the page. Decoration only (aria-hidden); the hero
+// TEXT is real SSG'd HTML in index.astro for SEO.
+---
+<canvas id="galaxy" aria-hidden="true" class="fixed inset-0 z-0 h-full w-full"></canvas>
+<div id="galaxy-fallback" aria-hidden="true" class="fixed inset-0 z-0 hidden bg-[radial-gradient(ellipse_at_50%_38%,#3a2a5e_0%,#160f28_46%,#0b0a12_100%)]"></div>
+
+<script>
+  import { initGalaxy } from './galaxy.client'
+
+  function hasWebGL(): boolean {
+    try {
+      const c = document.createElement('canvas')
+      return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')))
+    } catch { return false }
+  }
+
+  const canvas = document.getElementById('galaxy') as HTMLCanvasElement | null
+  const fallback = document.getElementById('galaxy-fallback')
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (canvas && hasWebGL() && !reduce) {
+    try {
+      initGalaxy(canvas)
+    } catch (err) {
+      // Log the REAL error; show the gradient fallback.
+      console.error('[Hero] galaxy init failed:', err)
+      canvas.classList.add('hidden')
+      fallback?.classList.remove('hidden')
+    }
+  } else {
+    canvas?.classList.add('hidden')
+    fallback?.classList.remove('hidden')
+  }
+</script>
