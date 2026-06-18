@@ -1,7 +1,23 @@
 import { defineConfig } from 'astro/config'
 import mdx from '@astrojs/mdx'
 import tailwindcss from '@tailwindcss/vite'
-import rehypeSanitize from 'rehype-sanitize'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+
+// Sanitize agent/author-authored markdown (defense-in-depth) WITHOUT destroying
+// Astro's Shiki highlighting. Astro runs its built-in Shiki before user rehype
+// plugins, so the default sanitize schema would strip Shiki's inline token
+// colors + `astro-code` class, flattening code blocks to plain text. Re-permit
+// exactly those presentational attributes on code elements; everything else
+// (scripts, event handlers, disallowed tags) is still stripped.
+const sanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    pre: [...(defaultSchema.attributes?.pre ?? []), 'className', 'style', 'tabIndex'],
+    code: [...(defaultSchema.attributes?.code ?? []), 'className', 'style'],
+    span: [...(defaultSchema.attributes?.span ?? []), 'className', 'style'],
+  },
+}
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,9 +28,7 @@ export default defineConfig({
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
     shikiConfig: { theme: 'github-dark' },
-    // Defense-in-depth for agent-authored markdown. Astro applies rehype
-    // plugins after parsing, before stringify — i.e. sanitize the tree.
-    rehypePlugins: [rehypeSanitize],
+    rehypePlugins: [[rehypeSanitize, sanitizeSchema]],
   },
   vite: { plugins: [tailwindcss()] },
 })
