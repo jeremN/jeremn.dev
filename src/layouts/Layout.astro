@@ -1,0 +1,47 @@
+---
+import '../styles.css'
+interface Props { title?: string }
+const { title = 'Jérémie Néhlil' } = Astro.props
+const nav = [
+  { href: '/blog', label: 'Writing' },
+  { href: '/cv', label: 'CV' },
+  { href: '/freelance', label: 'Freelance' },
+]
+const year = new Date().getFullYear()
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body class="antialiased [overflow-wrap:anywhere]">
+    <header class="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+      <a href="/" class="font-grotesk text-lg font-extrabold tracking-tight text-ink no-underline">
+        jeremn<span class="text-accent">.</span>dev
+      </a>
+      <nav class="flex gap-7">
+        {nav.map((n) => (
+          <a href={n.href} class="group no-underline">
+            <span class="eyebrow transition-colors group-hover:text-accent">{n.label}</span>
+          </a>
+        ))}
+      </nav>
+    </header>
+
+    <slot />
+
+    <footer class="relative z-10 bg-ground">
+      <div class="mx-auto max-w-5xl px-6 pb-16 pt-24">
+        <span class="eyebrow">Get in touch</span>
+        <a href="/freelance" class="block no-underline">
+          <h2 class="mt-3 font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
+            Work with me
+          </h2>
+        </a>
+        <p class="mt-8 font-mono text-xs text-muted">© {year} Jérémie Néhlil — jeremn.dev</p>
+      </div>
+    </footer>
+  </body>
+</html>
