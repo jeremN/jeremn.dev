@@ -1,61 +1,73 @@
 # jeremn.dev
 
-Jérémie Néhlil's personal website — CV, tech blog, and freelance page — plus a
-lightweight content CRM. Blog posts are stored as **markdown rows in a database**
-and are writable both by the author and by the author's LLM agents (later phases).
-The homepage opens with a signature **WebGL "Brick Milky Way" galaxy hero**.
+Jérémie Néhlil's personal website — CV, tech blog, and freelance page. Blog posts
+are **markdown files in the repo** (git is the CMS): write an `.mdx` file, commit,
+push, and a GitHub Action rebuilds and deploys the static site. The homepage opens
+with a signature **WebGL "Brick Milky Way" galaxy hero**.
 
 ## Stack
 
-TanStack Start (React, SSR) · Cloudflare Workers · Turso (libSQL) + Drizzle ORM ·
-Tailwind v4 + self-hosted fonts (`@fontsource`) · unified/remark/rehype + Shiki ·
-Three.js (hero) · Vitest + Playwright.
+Astro (`output: 'static'`) · Tailwind v4 (`@tailwindcss/vite`) + self-hosted fonts
+(`@fontsource-variable/*`) · Astro Content Layer (MDX) · Shiki (`github-dark`) +
+`rehype-sanitize` · Three.js (hero, imperative — no framework) · Playwright.
+Deployed to **GitHub Pages**.
 
 ## Local development
 
-> **Why `turso dev`?** The app's SSR runs in the Cloudflare Workers runtime
-> (workerd), which has **no filesystem** — so a `file:` SQLite DB can't be read at
-> runtime. Serve the local DB over HTTP instead with `turso dev`. (Node tooling —
-> `drizzle-kit`, the seed script — and the tests can use `file:`/`:memory:`.)
-
 ```bash
 npm install
-cp .env.example .env                 # TURSO_DATABASE_URL defaults to http://127.0.0.1:8080
-
-turso dev --db-file local.db         # serves local.db on :8080 — keep running (separate terminal)
-npm run db:push                      # apply the schema to local.db (first time)
-npm run db:seed                      # seed sample posts (first time)
-
-npm run dev                          # → http://localhost:3000
+npm run dev        # → http://localhost:4321
 ```
 
-If `turso dev` isn't running, the DB-backed routes (`/blog`) error, but the
-homepage hero still renders (it degrades gracefully).
+No runtime services, database, or env vars are needed — the whole site prerenders.
 
-Install the Turso CLI: `brew install tursodatabase/tap/turso` (or see
-<https://docs.turso.tech/cli>).
+```bash
+npm run build      # static build → dist/
+npm run preview    # serve dist/ locally on :4321
+npm run check      # astro check (type-check .astro + TS)
+```
+
+## Writing posts
+
+Posts live in `src/content/blog/*.mdx`. Frontmatter is validated at build by the
+schema in `src/content.config.ts`:
+
+```mdx
+---
+title: My post
+summary: One-line summary for cards + meta.
+tags: [astro, notes]
+publishedAt: 2026-06-18
+draft: false
+---
+
+Body in Markdown / MDX. Fenced code blocks are highlighted by Shiki at build.
+```
+
+To publish: add/commit the file and push to `main` — the deploy Action does the rest
+(~60s). Set `draft: true` to keep a post out of the build.
 
 ## Testing
 
 ```bash
-npm test          # Vitest unit tests (markdown pipeline + posts service)
-npm run test:e2e  # Playwright smoke tests (needs `turso dev` running for the blog test)
+npm run test:e2e   # Playwright smoke tests (builds + previews, then asserts)
 ```
 
-## Deploy (Cloudflare Workers + Turso cloud)
+First run only: `npx playwright install chromium` to fetch the browser binary.
 
-1. Create a Turso **cloud** database and get its URL + auth token.
-2. Set production secrets:
-   - `npx wrangler secret put TURSO_DATABASE_URL` — e.g. `libsql://<your-db>.turso.io`
-   - `npx wrangler secret put TURSO_AUTH_TOKEN`
-3. Apply migrations to the Turso db (set the same vars locally, then `npm run db:migrate`).
-4. Deploy: `npm run deploy` (runs the build + `wrangler deploy`).
+## Deploy (GitHub Pages)
+
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds with
+`withastro/action` and publishes to Pages. One-time setup: repo **Settings → Pages →
+Source = GitHub Actions**, and point `jeremn.dev` DNS at GitHub Pages
+(`public/CNAME` carries the custom domain).
 
 ## Notes
 
-- **Security:** agent/DB-sourced markdown is sanitized (`rehype-sanitize`) *before*
-  Shiki highlights it, server-side at render — see `src/lib/markdown.ts`.
-- **Performance:** the WebGL hero is a client-only, code-split island
-  (`src/components/hero/`); Three.js (~142 KB gzip) never ships to `/blog` or `/cv`.
+- **Security:** agent/author-authored markdown is sanitized (`rehype-sanitize`) at
+  build. The custom schema in `astro.config.mjs` preserves Shiki's inline token
+  colors while still stripping scripts, event handlers, and disallowed tags.
+- **Performance:** the WebGL hero is a client-only Astro island
+  (`src/components/hero/`); Three.js never ships to `/blog`, `/cv`, or `/freelance`.
 - **Fonts** are self-hosted via `@fontsource-variable/*` — no external font requests.
-- Shiki uses its **pure-JS regex engine** (no WASM) so highlighting runs in workerd.
+- `/hero-lab` is an unshipped page comparing six black-hole warp laws side by side.
