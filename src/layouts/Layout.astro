@@ -44,20 +44,19 @@ const ogImage = Astro.site ? new URL('/og-cover.jpg', Astro.site).href : '/og-co
     <meta name="twitter:image" content={ogImage} />
   </head>
   <body class="antialiased [overflow-wrap:anywhere]">
-    <!-- Header scrim: darkens the top band so the nav stays legible over the
-         galaxy hero. Invisible on dark pages (ground fading over ground). -->
-    <div class="pointer-events-none fixed inset-x-0 top-0 z-[5] h-28 bg-gradient-to-b from-ground/80 to-transparent"></div>
-    <header class="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:px-6">
-      <a href="/" class="font-grotesk text-lg font-extrabold tracking-tight text-ink no-underline">
-        jeremn<span class="text-accent">.</span>dev
-      </a>
-      <nav class="flex gap-4 sm:gap-7">
-        {nav.map((n) => (
-          <a href={n.href} class="group no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
-            <span class:list={['eyebrow transition-colors group-hover:text-accent', isActive(n.href) && 'text-accent']}>{n.label}</span>
-          </a>
-        ))}
-      </nav>
+    <header class="relative z-10 bg-ground">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:px-6">
+        <a href="/" class="font-grotesk text-lg font-extrabold tracking-tight text-ink no-underline">
+          jeremn<span class="text-accent">.</span>dev
+        </a>
+        <nav class="flex gap-4 sm:gap-7">
+          {nav.map((n) => (
+            <a href={n.href} class="group no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
+              <span class:list={['eyebrow transition-colors group-hover:text-accent', isActive(n.href) && 'text-accent']}>{n.label}</span>
+            </a>
+          ))}
+        </nav>
+      </div>
     </header>
 
     <slot />
