@@ -24,7 +24,9 @@ const meta = [date, readingTime(post.body), ...post.data.tags]
   <main class="relative z-10 mx-auto max-w-[68ch] px-6 pb-24 pt-2">
     <a href="/blog" class="no-underline"><Eyebrow class="text-accent">← Writing</Eyebrow></a>
     <h1 class="mt-4 font-display text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-5xl">{post.data.title}</h1>
-    <p class="mt-4 font-mono text-xs uppercase tracking-wider text-muted">{meta.join(' · ')}</p>
+    <div class="mt-6 border-y border-line py-3">
+      <p class="font-mono text-[11px] uppercase tracking-wider text-muted">{meta.join(' · ')}</p>
+    </div>
 
     {post.data.summary && (
       <p class="mt-6 font-display text-xl leading-snug text-ink/90 sm:text-2xl">{post.data.summary}</p>
@@ -52,3 +54,54 @@ const meta = [date, readingTime(post.body), ...post.data.tags]
     )}
   </main>
 </Layout>
+
+<script>
+  // Progressive enhancement for the article reading view: a header bar
+  // (language label + copy button) on each code block, and hover-revealed
+  // permalinks on headings. Heading ids already exist server-side, so deep
+  // links work without this; the visible # is just an affordance.
+  const article = document.querySelector('article.prose')
+  if (article) {
+    article.querySelectorAll('pre').forEach((pre) => {
+      const figure = document.createElement('figure')
+      figure.className = 'code-block'
+      const head = document.createElement('div')
+      head.className = 'code-block__head'
+
+      const label = document.createElement('span')
+      label.className = 'code-block__lang'
+      label.textContent = (pre.dataset.language || '').toUpperCase()
+
+      const copy = document.createElement('button')
+      copy.type = 'button'
+      copy.className = 'code-block__copy'
+      copy.textContent = 'Copy'
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pre.innerText)
+          copy.textContent = 'Copied'
+          copy.classList.add('is-copied')
+        } catch {
+          copy.textContent = 'Failed'
+        }
+        setTimeout(() => {
+          copy.textContent = 'Copy'
+          copy.classList.remove('is-copied')
+        }, 1600)
+      })
+
+      head.append(label, copy)
+      pre.replaceWith(figure)
+      figure.append(head, pre)
+    })
+
+    article.querySelectorAll('h2[id], h3[id]').forEach((heading) => {
+      const anchor = document.createElement('a')
+      anchor.className = 'heading-anchor'
+      anchor.href = '#' + heading.id
+      anchor.setAttribute('aria-label', 'Link to this section')
+      anchor.textContent = '#'
+      heading.append(anchor)
+    })
+  }
+</script>

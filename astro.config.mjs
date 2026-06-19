@@ -13,7 +13,7 @@ const sanitizeSchema = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
-    pre: [...(defaultSchema.attributes?.pre ?? []), 'className', 'style', 'tabIndex'],
+    pre: [...(defaultSchema.attributes?.pre ?? []), 'className', 'style', 'tabIndex', 'dataLanguage'],
     code: [...(defaultSchema.attributes?.code ?? []), 'className', 'style'],
     span: [...(defaultSchema.attributes?.span ?? []), 'className', 'style'],
   },
@@ -27,7 +27,23 @@ export default defineConfig({
   integrations: [mdx()],
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
-    shikiConfig: { theme: 'github-dark' },
+    shikiConfig: {
+      theme: 'github-dark',
+      // The fence language is only known inside Shiki — the highlighted <pre>
+      // carries no class. Stamp it onto the <pre> as data-language (permitted
+      // through sanitize via the `dataLanguage` allow-list above) so the client
+      // can render a language label on each code block.
+      transformers: [
+        {
+          pre(node) {
+            const lang = this.options?.lang
+            if (lang && lang !== 'plaintext' && lang !== 'text') {
+              node.properties.dataLanguage = lang
+            }
+          },
+        },
+      ],
+    },
     rehypePlugins: [[rehypeSanitize, sanitizeSchema]],
   },
   vite: { plugins: [tailwindcss()] },

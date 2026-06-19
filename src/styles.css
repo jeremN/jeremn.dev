@@ -70,4 +70,109 @@ p {
     text-transform: uppercase;
     color: var(--color-muted);
   }
+
+  /* ── Article reading view ─────────────────────────────────────────────── */
+
+  /* Code block: a mono header bar (language + copy) injected client-side,
+     fused to the highlighted <pre> below it. */
+  .code-block {
+    margin: 1.5rem 0;
+  }
+  .code-block__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0.8rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-bottom: 0;
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+  .code-block__lang {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .code-block__copy {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  .code-block__copy:hover,
+  .code-block__copy.is-copied {
+    color: var(--color-accent);
+  }
+  .code-block > pre {
+    margin: 0 !important;
+    border-top: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+  }
+
+  /* Heading permalinks — a trailing # revealed on hover/keyboard focus. */
+  .prose :is(h2, h3) {
+    position: relative;
+  }
+  .prose a.heading-anchor {
+    margin-left: 0.4em;
+    color: var(--color-line);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+  .prose :is(h2, h3):hover a.heading-anchor,
+  .prose a.heading-anchor:focus-visible {
+    opacity: 1;
+  }
+  .prose a.heading-anchor:hover {
+    color: var(--color-accent);
+  }
+
+  /* Prose tone — gold links, calm blockquote, inline-code chips, drop-cap lede. */
+  .prose a:not(.heading-anchor) {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .prose a:not(.heading-anchor):hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  .prose blockquote {
+    border-left-color: var(--color-accent);
+    color: var(--color-muted);
+    font-style: normal;
+    font-weight: 400;
+  }
+  .prose :not(pre) > code {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 0.3rem;
+    padding: 0.08rem 0.35rem;
+    font-size: 0.85em;
+    font-weight: 400;
+    color: var(--color-ink);
+  }
+  .prose :not(pre) > code::before,
+  .prose :not(pre) > code::after {
+    content: none;
+  }
+  .prose > p:first-child::first-letter {
+    float: left;
+    margin-right: 0.09em;
+    padding-top: 0.02em;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 3.1rem;
+    line-height: 0.78;
+    color: var(--color-ink);
+  }
 }
