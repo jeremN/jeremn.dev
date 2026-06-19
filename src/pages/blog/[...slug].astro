@@ -16,13 +16,48 @@ export async function getStaticPaths() {
 }
 
 const { post, newer, older } = Astro.props
-const { Content } = await render(post)
+const { Content, headings } = await render(post)
 const date = post.data.publishedAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 const meta = [date, readingTime(post.body), ...post.data.tags]
+// "On this page" rail — only worth showing once a post has real structure.
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3)
+const showToc = toc.length >= 2
 ---
 <Layout title={`${post.data.title} — jeremn.dev`} description={post.data.summary}>
-  <main class="relative z-10 mx-auto max-w-[68ch] px-6 pb-24 pt-2">
-    <a href="/blog" class="no-underline"><Eyebrow class="text-accent">← Writing</Eyebrow></a>
+  <main
+    class:list={[
+      'relative z-10 mx-auto px-6 pb-24 pt-2',
+      showToc
+        ? 'max-w-[68ch] lg:max-w-none lg:grid lg:grid-cols-[13rem_minmax(0,68ch)] lg:justify-center lg:gap-x-12'
+        : 'max-w-[68ch]',
+    ]}
+  >
+    {showToc && (
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24" aria-label="On this page">
+          <Eyebrow class="mb-3 block">On this page</Eyebrow>
+          <ul class="border-l border-line">
+            {toc.map((h) => (
+              <li>
+                <a
+                  href={`#${h.slug}`}
+                  data-toc={h.slug}
+                  class:list={[
+                    'toc-link -ml-px block border-l border-transparent py-1 font-mono text-xs leading-snug text-muted transition-colors hover:text-ink',
+                    h.depth === 3 ? 'pl-7' : 'pl-4',
+                  ]}
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+    )}
+
+    <div>
+      <a href="/blog" class="no-underline"><Eyebrow class="text-accent">← Writing</Eyebrow></a>
     <h1 class="mt-4 font-display text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-5xl">{post.data.title}</h1>
     <div class="mt-6 border-y border-line py-3">
       <p class="font-mono text-[11px] uppercase tracking-wider text-muted">{meta.join(' · ')}</p>
@@ -52,6 +87,7 @@ const meta = [date, readingTime(post.body), ...post.data.tags]
         ) : <span></span>}
       </nav>
     )}
+    </div>
   </main>
 </Layout>
 
@@ -103,5 +139,33 @@ const meta = [date, readingTime(post.body), ...post.data.tags]
       anchor.textContent = '#'
       heading.append(anchor)
     })
+
+    // Table-of-contents scroll-spy: mark the section currently in view.
+    const tocLinks = new Map(
+      [...document.querySelectorAll<HTMLElement>('[data-toc]')].map((a) => [a.dataset.toc, a]),
+    )
+    if (tocLinks.size) {
+      const headings = [...article.querySelectorAll('h2[id], h3[id]')]
+      const visible = new Set<Element>()
+      let activeId: string | null = null
+      const setActive = (id: string) => {
+        if (id === activeId) return
+        if (activeId) tocLinks.get(activeId)?.classList.remove('is-active')
+        activeId = id
+        tocLinks.get(id)?.classList.add('is-active')
+      }
+      const spy = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) visible.add(e.target)
+            else visible.delete(e.target)
+          }
+          const top = headings.find((h) => visible.has(h))
+          if (top) setActive(top.id)
+        },
+        { rootMargin: '0px 0px -75% 0px' },
+      )
+      headings.forEach((h) => spy.observe(h))
+    }
   }
 </script>
