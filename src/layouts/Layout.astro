@@ -13,6 +13,11 @@ const nav = [
   { href: '/freelance', label: 'Freelance' },
 ]
 const year = new Date().getFullYear()
+
+const pathname = Astro.url.pathname
+const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+const canonical = Astro.site ? new URL(pathname, Astro.site).href : pathname
+const ogImage = Astro.site ? new URL('/og-cover.jpg', Astro.site).href : '/og-cover.jpg'
 ---
 <!doctype html>
 <html lang="en">
@@ -22,19 +27,31 @@ const year = new Date().getFullYear()
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0b0a12" />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     {noindex && <meta name="robots" content="noindex" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="jeremn.dev" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
   </head>
   <body class="antialiased [overflow-wrap:anywhere]">
-    <header class="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+    <header class="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:px-6">
       <a href="/" class="font-grotesk text-lg font-extrabold tracking-tight text-ink no-underline">
         jeremn<span class="text-accent">.</span>dev
       </a>
-      <nav class="flex gap-7">
+      <nav class="flex gap-4 sm:gap-7">
         {nav.map((n) => (
-          <a href={n.href} class="group no-underline">
-            <span class="eyebrow transition-colors group-hover:text-accent">{n.label}</span>
+          <a href={n.href} class="group no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
+            <span class:list={['eyebrow transition-colors group-hover:text-accent', isActive(n.href) && 'text-accent']}>{n.label}</span>
           </a>
         ))}
       </nav>
@@ -43,7 +60,7 @@ const year = new Date().getFullYear()
     <slot />
 
     <footer class="relative z-10 bg-ground">
-      <div class="mx-auto max-w-5xl px-6 pb-16 pt-24">
+      <div class="mx-auto max-w-5xl px-6 pb-16 pt-16">
         {!hideFooterCta && (
           <Fragment>
             <span class="eyebrow">Get in touch</span>

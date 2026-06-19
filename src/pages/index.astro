@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content'
 import Layout from '../layouts/Layout.astro'
 import Eyebrow from '../components/site/Eyebrow.astro'
-import PostCard from '../components/site/PostCard.astro'
+import PostRow from '../components/site/PostRow.astro'
 import Hero from '../components/hero/Hero.astro'
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
@@ -20,7 +20,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         Jérémie <span class="text-accent">Néhlil</span>
       </h1>
       <p class="mt-6 max-w-[24ch] font-display text-xl text-ink sm:text-2xl">
-        I build web apps — <em class="italic text-[#ff8aa6]">and the tooling around them.</em>
+        I build web apps — <em class="italic text-ink/80">and the tooling around them.</em>
       </p>
       <span class="mt-8 inline-flex items-center gap-2.5 font-mono text-sm text-[#7ee0c8]">
         <span class="h-2 w-2 rounded-full bg-[#7ee0c8] shadow-[0_0_10px_#7ee0c8]"></span>
@@ -33,16 +33,21 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
   </section>
 
   <section class="relative z-10 bg-ground px-6 py-24">
-    <div class="mx-auto max-w-5xl">
-      <Eyebrow class="mb-8 block">Selected writing</Eyebrow>
+    <div class="mx-auto max-w-3xl">
+      <div class="flex items-baseline justify-between">
+        <Eyebrow class="block">Selected writing</Eyebrow>
+        <a href="/blog" class="font-mono text-xs text-muted no-underline transition-colors hover:text-accent">All writing →</a>
+      </div>
       {posts.length === 0 ? (
-        <p class="text-muted">Posts are coming soon.</p>
+        <p class="mt-8 text-muted">Posts are coming soon.</p>
       ) : (
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul class="mt-8">
           {posts.map((p) => (
-            <PostCard slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} />
+            <li>
+              <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   </section>

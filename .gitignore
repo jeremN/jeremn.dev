@@ -23,6 +23,11 @@ test-results
 playwright-report
 /playwright/.cache
 
+# Local Claude Code / agent skill installs — tooling, not part of the site
+.claude/skills/
+.agents/skills/
+skills-lock.json
+
 # Untracked design/spec/plan docs — never commit (project preference)
 docs/superpowers/
 design/

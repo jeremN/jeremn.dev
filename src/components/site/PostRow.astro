@@ -1,0 +1,23 @@
+---
+import { readingTime } from '../../lib/reading-time'
+
+interface Props {
+  slug: string
+  title: string
+  summary?: string
+  tags?: string[]
+  publishedAt: Date
+  body?: string
+}
+const { slug, title, summary = '', tags = [], publishedAt, body } = Astro.props
+const date = publishedAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+const meta = [...tags, readingTime(body)].join(' · ')
+---
+<a href={`/blog/${slug}`} class="group block border-t border-line py-8 no-underline">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+    <h2 class="font-display text-2xl font-semibold leading-tight text-ink transition-colors group-hover:text-accent sm:text-3xl">{title}</h2>
+    <span class="shrink-0 font-mono text-xs text-muted">{date}</span>
+  </div>
+  <p class="mt-2 font-mono text-xs uppercase tracking-wider text-muted">{meta}</p>
+  {summary && <p class="mt-3 text-muted">{summary}</p>}
+</a>

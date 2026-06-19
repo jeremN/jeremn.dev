@@ -38,6 +38,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Keyboard focus visibility — links are underline-free, so this matters. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Typographic niceties — balance display headings, prettify body wrapping. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
 @layer components {
   /* Tracked-uppercase mono eyebrow label (epic.net-style section meta). */
   .eyebrow {
