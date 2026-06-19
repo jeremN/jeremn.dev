@@ -38,11 +38,14 @@ const contacts = [
 
     <section class="mt-16">
       <Eyebrow class="block">What I do</Eyebrow>
-      <div class="mt-6 grid gap-6 sm:grid-cols-2">
-        {services.map((s) => (
-          <div class="rounded-lg border border-line bg-surface/40 p-6">
-            <h2 class="font-display text-xl font-semibold text-ink">{s.title}</h2>
-            <p class="mt-2 text-sm text-muted">{s.blurb}</p>
+      <div class="mt-6 border-t border-line">
+        {services.map((s, i) => (
+          <div class="grid grid-cols-[7rem_1fr] gap-x-5 border-b border-line py-5 sm:grid-cols-[10rem_1fr] sm:gap-x-10">
+            <span class="pt-1 font-mono text-xs uppercase tracking-wider text-muted">{String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <h2 class="font-display text-xl font-semibold text-ink">{s.title}</h2>
+              <p class="mt-1 text-sm text-muted">{s.blurb}</p>
+            </div>
           </div>
         ))}
       </div>
