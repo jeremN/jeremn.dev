@@ -33,3 +33,7 @@ docs/superpowers/
 design/
 design.html
 .playwright-mcp/
+
+# Scaffold leftovers
+.cta.json
+.vscode/
