@@ -5,8 +5,9 @@ backend:
   name: github
   repo: jeremN/jeremn.dev
   branch: main
-  # OAuth relay (sveltia-cms-auth Cloudflare Worker). Filled in at launch — Phase 2.
-  base_url: BASE_URL_PLACEHOLDER
+  # OAuth relay (sveltia-cms-auth Cloudflare Worker). The client secret cannot
+  # live in this static page, so the code-for-token exchange happens there.
+  base_url: https://sveltia-cms-auth.jeremn-code.workers.dev
 
 # Edit local files during `npm run dev` via the local-backend proxy (decap-server).
 local_backend: true
