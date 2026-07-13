@@ -92,13 +92,38 @@ Verified: `site_id=jeremn.dev` → 302 to GitHub OAuth; `evil.example`,
 
 ## Upgrading Sveltia
 
-The CMS loads from a version-pinned CDN with an integrity hash in
-`public/admin/index.html`. To upgrade, bump the version and recompute the hash —
-update **both** in the same edit:
+The CMS bundle is **self-hosted** at `public/admin/sveltia-cms.js` (~1.8 MB),
+not loaded from a CDN. Serving it from our own origin means a CDN outage can't
+take the CMS down — Subresource Integrity protects *integrity*, but not
+*availability*. The SRI hash is kept anyway: it pins the file to an exact
+upstream release and catches a corrupted vendored copy.
+
+To upgrade, replace the file and recompute the hash — update **both** in the
+same commit, or the browser will block the script and `/admin` will sit on the
+spinner forever:
 
 ```sh
 curl -sL https://unpkg.com/@sveltia/cms@<version>/dist/sveltia-cms.js \
-  | openssl dgst -sha384 -binary | openssl base64 -A
+  -o public/admin/sveltia-cms.js
+openssl dgst -sha384 -binary < public/admin/sveltia-cms.js | openssl base64 -A
+# paste the result into the integrity="sha384-…" attribute in admin/index.html
 ```
 
 Current pin: `@sveltia/cms@0.167.3`.
+
+> **`public/` is excluded in `tsconfig.json`.** Without that, `include: ["**/*"]`
+> pulls the 1.8 MB bundle into the TypeScript program and `astro check` dies with
+> a JS heap OOM. Don't remove the exclude.
+
+## Infra canary
+
+`scripts/infra-canary.sh` probes production (no secrets — all public endpoints)
+and fails if the TLS cert stops being Let's Encrypt (i.e. the DNS got proxied),
+the A records drift off GitHub Pages, or the OAuth relay stops rejecting foreign
+domains. It runs daily and on every push via `.github/workflows/canary.yml`.
+
+`scripts/infra-canary.test.sh` points the canary at deliberately wrong targets
+and asserts it *fails* — a monitor only ever seen passing is indistinguishable
+from one that can never fire.
+
+Run either locally: `bash scripts/infra-canary.sh`
