@@ -1,0 +1,26 @@
+name: Infra canary
+
+# Guards against the two regressions that are dangerous because they are SILENT:
+#   * proxying the DNS records (orange cloud) — site keeps working, then the TLS
+#     cert fails to renew ~90 days later
+#   * a Worker redeploy wiping ALLOWED_DOMAINS — the CMS keeps working, but the
+#     OAuth relay quietly becomes open to any site
+# Both would otherwise be discovered far too late, or never.
+
+on:
+  schedule:
+    # Daily. NOTE: GitHub disables scheduled workflows after 60 days of repo
+    # inactivity — which is why this also runs on push, so it cannot rot
+    # unnoticed while the repo is actually being worked on.
+    - cron: '17 6 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Probe production infrastructure
+        run: bash scripts/infra-canary.sh
