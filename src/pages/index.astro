@@ -40,7 +40,12 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         <a href={withBase('/blog')} class="font-mono text-xs text-muted no-underline transition-colors hover:text-accent">All writing →</a>
       </div>
       {posts.length === 0 ? (
-        <p class="mt-8 text-muted">Posts are coming soon.</p>
+        <div class="mt-8 border-t border-line pt-12">
+          <p class="max-w-[26ch] font-display text-2xl leading-tight text-ink">
+            Nothing has escaped the event horizon yet.
+          </p>
+          <p class="mt-4 font-mono text-xs text-muted">First post incoming.</p>
+        </div>
       ) : (
         <ul class="mt-8">
           {posts.map((p) => (

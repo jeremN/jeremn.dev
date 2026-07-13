@@ -9,15 +9,21 @@ test('home renders hero text + canvas', async ({ page }) => {
   await expect(page.locator('canvas#galaxy')).toBeAttached()
 })
 
-test('blog lists posts and article highlights code', async ({ page }) => {
+// TODO — restore the markdown-pipeline guard when the first real post ships.
+// The two seed posts were tests and have been deleted, so there is currently no
+// rendered article to assert against. The dropped assertion was:
+//
+//   await page.goto(`${BASE}/blog/<slug>`)
+//   await expect(page.locator('article pre span[style*="color"]').first()).toBeVisible()
+//
+// It proved Shiki's highlighting survives our custom `rehype-sanitize` schema —
+// sanitize runs AFTER Shiki and the default schema silently flattens code blocks
+// to plain text. That regression is real (we hit it once) and is now unguarded,
+// which matters because it would first bite on the very post that reintroduces it.
+test('blog shows the empty state while there are no posts', async ({ page }) => {
   await page.goto(`${BASE}/blog`)
   await expect(page.getByRole('heading', { name: 'Writing' })).toBeVisible()
-  await page.goto(`${BASE}/blog/hello-world`)
-  // Astro's Shiki colors each token with an inline `style="color:…"`. The
-  // `astro-code` class is stripped by rehype-sanitize, so assert on the
-  // surviving inline token color — proves highlighting actually rendered,
-  // independent of Astro's internal class names.
-  await expect(page.locator('article pre span[style*="color"]').first()).toBeVisible()
+  await expect(page.getByText(/event horizon/i)).toBeVisible()
 })
 
 // Guards the base prefix: with base misconfigured, links drop to '/cv' and the
