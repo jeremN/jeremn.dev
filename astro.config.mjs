@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config'
 import mdx from '@astrojs/mdx'
 import tailwindcss from '@tailwindcss/vite'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+import sitemap from '@astrojs/sitemap'
 import { SITE, BASE } from './site.config.mjs'
 
 // Sanitize agent/author-authored markdown (defense-in-depth) WITHOUT destroying
@@ -25,7 +26,9 @@ export default defineConfig({
   site: SITE,
   base: BASE || '/',
   output: 'static',
-  integrations: [mdx()],
+  // `/hero-lab` carries `noindex` — keep it out of the sitemap too, so we never
+  // invite a crawler to a page we then tell it to ignore.
+  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/hero-lab') })],
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
     shikiConfig: {
