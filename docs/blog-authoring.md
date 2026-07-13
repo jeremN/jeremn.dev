@@ -56,42 +56,39 @@ a static page — anyone could read it in View Source. So one small server-side
 component does the exchange. That relay is the *only* server in this otherwise
 fully-static architecture.
 
-### Setup state
+### Setup state — DONE
 
-- ✅ **Relay deployed:** <https://sveltia-cms-auth.jeremn-code.workers.dev>
+- **Relay:** <https://sveltia-cms-auth.jeremn-code.workers.dev>
   (from <https://github.com/sveltia/sveltia-cms-auth>, MIT).
-- ✅ **CMS pointed at it:** `base_url` in `public/admin/config.yml`.
-- ⬜ **GitHub OAuth App** — see below.
-- ⬜ **Worker variables** — see below.
+- **CMS points at it** via `base_url` in `public/admin/config.yml`.
+- **GitHub OAuth App** registered — callback `…workers.dev/callback`.
+- **Worker vars set:** `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (encrypted),
+  `ALLOWED_DOMAINS=jeremn.dev`.
 
-**Register a GitHub OAuth App** — Settings → Developer settings → OAuth Apps →
-New OAuth App:
+Verified: `site_id=jeremn.dev` → 302 to GitHub OAuth; `evil.example`,
+`notjeremn.dev`, and `jeremn.dev.evil.com` → `UNSUPPORTED_DOMAIN`.
 
-| Field | Value |
-| --- | --- |
-| Application name | `jeremn.dev CMS` |
-| Homepage URL | `https://jeremn.dev` |
-| Authorization callback URL | `https://sveltia-cms-auth.jeremn-code.workers.dev/callback` |
+> **`ALLOWED_DOMAINS` is a security control, not a nicety.** Left unset, the relay
+> completes an OAuth exchange for *any* site that calls it — an open relay for
+> your GitHub app. The check is anchored (`^…$`), so lookalike domains are
+> rejected too.
 
-Generate a client secret, then copy the **Client ID** and **Client Secret**.
+### Two traps if you ever redeploy the relay
 
-**Set the Worker variables** — Cloudflare dashboard → Workers & Pages →
-`sveltia-cms-auth` → Settings → Variables and Secrets:
+1. **Plain-text vars live in `wrangler.toml`, not just the dashboard.**
+   `ALLOWED_DOMAINS` and `GITHUB_CLIENT_ID` are declared in the Worker repo's
+   `wrangler.toml` `[vars]` block. A `wrangler deploy` from a *fresh clone* (which
+   has no `[vars]`) **wipes them**, silently turning the relay back into an open
+   relay. Re-add them, or set them in the dashboard, after any redeploy.
+   The client *secret* is a `secret_text` binding and does survive redeploys.
 
-| Name | Value | Type |
-| --- | --- | --- |
-| `GITHUB_CLIENT_ID` | the Client ID | Text |
-| `GITHUB_CLIENT_SECRET` | the Client Secret | **Secret** (encrypted) |
-| `ALLOWED_DOMAINS` | `jeremn.dev` | Text |
+2. **Cloudflare's edge caches the `/auth` 302.** If you probe `/auth` before the
+   vars are set, that redirect gets cached for that exact URL and keeps being
+   served even after you fix the config — making it look like the allowlist is
+   broken when it isn't. Add a throwaway query param (`&cb=<random>`) when
+   testing.
 
-> **`ALLOWED_DOMAINS` is a security control, not a nicety.** Left unset, the
-> relay will complete an OAuth exchange for *any* site that calls it, turning it
-> into an open relay for your GitHub app. It must be set.
-
-Deploying a new version of the Worker does **not** clear these — secrets and vars
-persist across `wrangler deploy`.
-
-`jeremn.dev/admin` then works from any browser, including a phone.
+`jeremn.dev/admin` works from any browser, including a phone.
 
 ## Upgrading Sveltia
 
