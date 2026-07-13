@@ -23,7 +23,7 @@ test('home renders hero text + canvas', async ({ page }) => {
 test('blog shows the empty state while there are no posts', async ({ page }) => {
   await page.goto(`${BASE}/blog`)
   await expect(page.getByRole('heading', { name: 'Writing' })).toBeVisible()
-  await expect(page.getByText(/event horizon/i)).toBeVisible()
+  await expect(page.getByText(/nothing published yet/i)).toBeVisible()
 })
 
 // Guards the base prefix: with base misconfigured, links drop to '/cv' and the

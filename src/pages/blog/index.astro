@@ -9,7 +9,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 )
 ---
 <Layout
-  title="Writing — jeremn.dev"
+  title="Writing · jeremn.dev"
   description="Essays and notes by Jérémie Néhlil on web development, performance, and the tooling around it."
 >
   <main class="relative z-10 mx-auto max-w-3xl px-6 pb-24 pt-2">
@@ -19,9 +19,9 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
     {posts.length === 0 ? (
       <div class="mt-12 border-t border-line pt-14">
         <p class="max-w-[26ch] font-display text-3xl leading-tight text-ink sm:text-4xl">
-          Nothing has escaped the event horizon yet.
+          Nothing published yet.
         </p>
-        <p class="mt-5 font-mono text-xs text-muted">First post incoming.</p>
+        <p class="mt-5 font-mono text-xs text-muted">The first post is in progress.</p>
       </div>
     ) : (
       <ul class="mt-12">

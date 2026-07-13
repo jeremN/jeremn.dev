@@ -22,7 +22,7 @@ export const VARIANTS: Variant[] = [
     name: 'Inverse-square (current)',
     law: 'pull = G / (d² + ε)',
     blurb:
-      'Softened Newtonian gravity. The ε prevents the singularity at d→0. Tight, very local pucker — only bricks right at the cursor move.',
+      'Softened Newtonian gravity. The ε prevents the singularity at d→0. Only bricks right at the cursor move.',
     accent: '#ffd34d',
   },
   {
@@ -30,7 +30,7 @@ export const VARIANTS: Variant[] = [
     name: 'Inverse-linear (lensing)',
     law: 'pull = G / (d + ε)',
     blurb:
-      'Gravitational-lensing deflection falls off as 1/d, not 1/d². More faithful, and the warp reaches gracefully across the whole arm.',
+      'Gravitational-lensing deflection falls off as 1/d, not 1/d². More faithful, and the warp reaches across the whole arm.',
     accent: '#ff9a3d',
   },
   {
@@ -38,7 +38,7 @@ export const VARIANTS: Variant[] = [
     name: 'Angular-momentum spiral',
     law: 'swirl ∝ pull · (a + k/d)',
     blurb:
-      'Infalling matter conserves angular momentum (v_θ ∝ 1/r), so the swirl intensifies near the centre — bricks whip into a true accretion spiral.',
+      'Infalling matter conserves angular momentum (v_θ ∝ 1/r), so the swirl intensifies near the centre. Bricks pull into an accretion spiral.',
     accent: '#ff6b86',
   },
   {
@@ -46,7 +46,7 @@ export const VARIANTS: Variant[] = [
     name: 'Orbit (stable disk)',
     law: 'tangential ≫ radial',
     blurb:
-      'Bias tangential over radial so bricks circle the hole instead of diving in. A swirling disk forms around the cursor and holds — calm, hypnotic.',
+      'Bias tangential over radial so bricks circle the hole instead of diving in. A disk forms around the cursor and holds.',
     accent: '#d24fc4',
   },
   {
@@ -54,7 +54,7 @@ export const VARIANTS: Variant[] = [
     name: 'Tidal spaghettification',
     law: 'stretch ∝ 1/d along r̂',
     blurb:
-      'Near the horizon, stretch each brick radially and thin it crosswise — the tidal elongation of matter falling in. Same pull, dramatic shape.',
+      'Near the horizon, each brick stretches radially and thins crosswise, the tidal elongation of matter falling in. Same pull, different shape.',
     accent: '#7a4fd0',
   },
   {
@@ -62,7 +62,7 @@ export const VARIANTS: Variant[] = [
     name: 'Gravitational redshift',
     law: 'colour → red → black, d < r_h',
     blurb:
-      'As bricks cross the horizon they redshift then darken — light climbing out of the well loses energy. Layered on the inflow as a per-brick colour fade.',
+      'As bricks cross the horizon they redshift then darken, because light climbing out of the well loses energy. Layered on the inflow as a per-brick colour fade.',
     accent: '#3f6ad0',
   },
 ]

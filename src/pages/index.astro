@@ -21,7 +21,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         Jérémie <span class="text-accent">Néhlil</span>
       </h1>
       <p class="mt-6 max-w-[24ch] font-display text-xl text-ink sm:text-2xl">
-        I build web apps — <em class="italic text-ink/80">and the tooling around them.</em>
+        I build web apps. <em class="italic text-ink/80">And the tooling around them.</em>
       </p>
       <span class="mt-8 inline-flex items-center gap-2.5 font-mono text-sm text-[#7ee0c8]">
         <span class="h-2 w-2 rounded-full bg-[#7ee0c8] shadow-[0_0_10px_#7ee0c8]"></span>
@@ -42,9 +42,9 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
       {posts.length === 0 ? (
         <div class="mt-8 border-t border-line pt-12">
           <p class="max-w-[26ch] font-display text-2xl leading-tight text-ink">
-            Nothing has escaped the event horizon yet.
+            Nothing published yet.
           </p>
-          <p class="mt-4 font-mono text-xs text-muted">First post incoming.</p>
+          <p class="mt-4 font-mono text-xs text-muted">The first post is in progress.</p>
         </div>
       ) : (
         <ul class="mt-8">

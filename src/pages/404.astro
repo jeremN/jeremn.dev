@@ -3,11 +3,11 @@ import Layout from '../layouts/Layout.astro'
 import Eyebrow from '../components/site/Eyebrow.astro'
 import { withBase } from '../lib/base'
 ---
-<Layout title="Not found — jeremn.dev" noindex hideFooterCta>
+<Layout title="Not found · jeremn.dev" noindex hideFooterCta>
   <main class="relative z-10 mx-auto flex min-h-[60vh] max-w-3xl flex-col justify-center px-6 pb-24 pt-2">
     <Eyebrow class="block text-accent">404</Eyebrow>
     <h1 class="mt-3 font-display text-5xl font-semibold tracking-tight text-ink sm:text-7xl">Lost in space</h1>
-    <p class="mt-6 max-w-[42ch] text-muted">This page drifted off the map. Let's get you back on course.</p>
+    <p class="mt-6 max-w-[42ch] text-muted">This page doesn't exist.</p>
     <div class="mt-8 flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm">
       <a href={withBase('/')} class="text-muted no-underline transition-colors hover:text-accent">← Home</a>
       <a href={withBase('/blog')} class="text-muted no-underline transition-colors hover:text-accent">Writing →</a>

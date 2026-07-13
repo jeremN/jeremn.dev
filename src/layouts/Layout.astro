@@ -4,7 +4,7 @@ import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
 interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean }
 const {
   title = 'Jérémie Néhlil',
-  description = 'Jérémie Néhlil — freelance software engineer. CV, writing, and a WebGL galaxy.',
+  description = 'Jérémie Néhlil, freelance software engineer. CV, writing, and a WebGL galaxy.',
   noindex = false,
   hideFooterCta = false,
 } = Astro.props
@@ -97,7 +97,7 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
             </a>
           </Fragment>
         )}
-        <p class="mt-8 font-mono text-xs text-muted">© {year} Jérémie Néhlil — jeremn.dev</p>
+        <p class="mt-8 font-mono text-xs text-muted">© {year} Jérémie Néhlil · jeremn.dev</p>
       </div>
     </footer>
 
