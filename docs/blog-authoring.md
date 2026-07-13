@@ -48,22 +48,50 @@ CMS commits the `.mdx` to `main` and the deploy Action rebuilds the site.
 Write access is gated by GitHub repo permissions: only a collaborator can
 commit, so the public `/admin` page is safe.
 
-### One-time setup (Phase 2 — needs your GitHub + Cloudflare accounts)
+### Why a relay is needed at all
 
-1. **Deploy the OAuth relay.** From <https://github.com/sveltia/sveltia-cms-auth>,
-   deploy to Cloudflare Workers (one-click button, or `wrangler deploy`). Note the
-   URL: `https://sveltia-cms-auth.<subdomain>.workers.dev`.
-2. **Register a GitHub OAuth App** (Settings → Developer settings → OAuth Apps):
-   - Authorization callback URL: `<worker-url>/callback`
-   - Generate a client secret; copy the **Client ID** and **Client Secret**.
-3. **Set Worker variables** (Workers → your service → Settings → Variables):
-   - `GITHUB_CLIENT_ID`
-   - `GITHUB_CLIENT_SECRET` (use Encrypt)
-   - `ALLOWED_DOMAINS` = `jeremn.dev`
-4. **Point the CMS at the relay.** In `public/admin/config.yml`, replace
-   `BASE_URL_PLACEHOLDER` with the worker URL, then commit.
+GitHub's OAuth flow exchanges a temporary `code` for an access token, and that
+exchange must be signed with the app's **client secret**. A secret can't live in
+a static page — anyone could read it in View Source. So one small server-side
+component does the exchange. That relay is the *only* server in this otherwise
+fully-static architecture.
 
-`jeremn.dev/admin` now works from any browser.
+### Setup state
+
+- ✅ **Relay deployed:** <https://sveltia-cms-auth.jeremn-code.workers.dev>
+  (from <https://github.com/sveltia/sveltia-cms-auth>, MIT).
+- ✅ **CMS pointed at it:** `base_url` in `public/admin/config.yml`.
+- ⬜ **GitHub OAuth App** — see below.
+- ⬜ **Worker variables** — see below.
+
+**Register a GitHub OAuth App** — Settings → Developer settings → OAuth Apps →
+New OAuth App:
+
+| Field | Value |
+| --- | --- |
+| Application name | `jeremn.dev CMS` |
+| Homepage URL | `https://jeremn.dev` |
+| Authorization callback URL | `https://sveltia-cms-auth.jeremn-code.workers.dev/callback` |
+
+Generate a client secret, then copy the **Client ID** and **Client Secret**.
+
+**Set the Worker variables** — Cloudflare dashboard → Workers & Pages →
+`sveltia-cms-auth` → Settings → Variables and Secrets:
+
+| Name | Value | Type |
+| --- | --- | --- |
+| `GITHUB_CLIENT_ID` | the Client ID | Text |
+| `GITHUB_CLIENT_SECRET` | the Client Secret | **Secret** (encrypted) |
+| `ALLOWED_DOMAINS` | `jeremn.dev` | Text |
+
+> **`ALLOWED_DOMAINS` is a security control, not a nicety.** Left unset, the
+> relay will complete an OAuth exchange for *any* site that calls it, turning it
+> into an open relay for your GitHub app. It must be set.
+
+Deploying a new version of the Worker does **not** clear these — secrets and vars
+persist across `wrangler deploy`.
+
+`jeremn.dev/admin` then works from any browser, including a phone.
 
 ## Upgrading Sveltia
 
