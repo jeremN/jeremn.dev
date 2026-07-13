@@ -1,15 +1,8 @@
 // Single source of truth for the deploy target, shared by astro.config.mjs,
-// playwright.config.ts, and the e2e specs.
-//
-// TEMPORARY: serving from the GitHub Pages project subpath while jeremn.dev is
-// unregistered. To go live on the apex domain, change these two lines only:
-//
-//   export const SITE = 'https://jeremn.dev'
-//   export const BASE = ''
-//
-// Everything else (links, canonicals, noindex, tests) derives from them.
+// playwright.config.ts, and the e2e specs. Links, canonicals, the noindex guard,
+// and the tests all derive from these two values.
 
-export const SITE = 'https://jeremn.github.io'
+export const SITE = 'https://jeremn.dev'
 
-/** URL path prefix. '' when served from the domain root. */
-export const BASE = '/jeremn.dev'
+/** URL path prefix. '' when served from the domain root (the apex domain). */
+export const BASE = ''
