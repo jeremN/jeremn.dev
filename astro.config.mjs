@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config'
 import mdx from '@astrojs/mdx'
 import tailwindcss from '@tailwindcss/vite'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+import { SITE, BASE } from './site.config.mjs'
 
 // Sanitize agent/author-authored markdown (defense-in-depth) WITHOUT destroying
 // Astro's Shiki highlighting. Astro runs its built-in Shiki before user rehype
@@ -21,8 +22,8 @@ const sanitizeSchema = {
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://jeremn.dev',
-  base: '/',
+  site: SITE,
+  base: BASE || '/',
   output: 'static',
   integrations: [mdx()],
   markdown: {

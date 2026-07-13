@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
 import Eyebrow from '../../components/site/Eyebrow.astro'
 import { readingTime } from '../../lib/reading-time'
+import { withBase } from '../../lib/base'
 
 export async function getStaticPaths() {
   const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
@@ -57,7 +58,7 @@ const showToc = toc.length >= 2
     )}
 
     <div>
-      <a href="/blog" class="no-underline"><Eyebrow class="text-accent">← Writing</Eyebrow></a>
+      <a href={withBase('/blog')} class="no-underline"><Eyebrow class="text-accent">← Writing</Eyebrow></a>
     <h1 class="mt-4 font-display text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-5xl">{post.data.title}</h1>
     <div class="mt-6 border-y border-line py-3">
       <p class="font-mono text-[11px] uppercase tracking-wider text-muted">{meta.join(' · ')}</p>
@@ -74,13 +75,13 @@ const showToc = toc.length >= 2
     {(newer || older) && (
       <nav class="mt-16 flex justify-between gap-6 border-t border-line pt-8">
         {newer ? (
-          <a href={`/blog/${newer.id}`} class="group max-w-[45%] no-underline">
+          <a href={withBase(`/blog/${newer.id}`)} class="group max-w-[45%] no-underline">
             <span class="block font-mono text-[10px] uppercase tracking-wider text-muted">← Newer</span>
             <span class="mt-1 block text-sm text-ink transition-colors group-hover:text-accent">{newer.data.title}</span>
           </a>
         ) : <span></span>}
         {older ? (
-          <a href={`/blog/${older.id}`} class="group max-w-[45%] text-right no-underline">
+          <a href={withBase(`/blog/${older.id}`)} class="group max-w-[45%] text-right no-underline">
             <span class="block font-mono text-[10px] uppercase tracking-wider text-muted">Older →</span>
             <span class="mt-1 block text-sm text-ink transition-colors group-hover:text-accent">{older.data.title}</span>
           </a>
