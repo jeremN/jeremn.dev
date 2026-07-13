@@ -38,7 +38,9 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     <meta name="theme-color" content="#0b0a12" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={withBase('/favicon.ico')} sizes="any" />
-    <link rel="apple-touch-icon" href={withBase('/logo192.png')} />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
+    <link rel="manifest" href={withBase('/manifest.json')} />
     {(noindex || isSubpathDeploy) && <meta name="robots" content="noindex" />}
 
     <meta property="og:type" content="website" />
