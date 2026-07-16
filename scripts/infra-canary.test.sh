@@ -45,6 +45,11 @@ expect_fail "allowlist check discriminates" CANARY_BAD_DOMAINS=jeremn.dev
 # A worker URL that isn't the relay at all.
 expect_fail "wrong worker URL" CANARY_WORKER=https://example.com
 
+# Demand absurd expiry headroom. A 200 on security.txt is easy to get right by
+# accident; this proves the check actually parses the date and compares it,
+# rather than passing on the mere presence of the file.
+expect_fail "security.txt expiry check discriminates" CANARY_SECURITY_TXT_MIN_DAYS=99999
+
 echo
 echo "And still green against the real thing:"
 expect_pass "production"

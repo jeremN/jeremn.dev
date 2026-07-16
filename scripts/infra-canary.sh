@@ -2,8 +2,8 @@
 #
 # Infra canary — guards the production setup against silent, delayed regressions.
 #
-# Two of the failure modes here are dangerous precisely because nothing looks
-# broken when they happen:
+# The failure modes here are dangerous precisely because nothing looks broken
+# when they happen:
 #
 #   * Proxying the DNS records through Cloudflare (orange cloud) keeps the site
 #     up today, but GitHub can no longer complete its ACME challenge — so the
@@ -13,6 +13,9 @@
 #   * Redeploying the OAuth relay Worker from a clean checkout drops its
 #     `[vars]`, wiping ALLOWED_DOMAINS. The CMS keeps working perfectly; the
 #     Worker just quietly becomes an open OAuth relay for anyone's site.
+#
+#   * security.txt carries a mandatory RFC 9116 `Expires` field and is invalid
+#     once past it. Nothing breaks, nothing warns — the file just stops counting.
 #
 # Everything probed here is a public endpoint — no secrets, no tokens.
 # Run locally with: bash scripts/infra-canary.sh
@@ -89,6 +92,38 @@ for bad in $BAD_DOMAINS; do
     fail "    'wrangler deploy' from a fresh clone, which has no [vars] block."
   fi
 done
+
+echo "== 7. security.txt is served and not close to lapsing =="
+# The third silent-decay mode, and the only one on a clock nobody sets: RFC 9116
+# makes `Expires` mandatory and an expired file INVALID, so this asset rots on
+# its own. Every deploy re-stamps it (src/pages/.well-known/security.txt.ts),
+# which means the real risk is simply not deploying for months — no push, no
+# refresh, no symptom until a would-be reporter finds an invalid file.
+MIN_DAYS="${CANARY_SECURITY_TXT_MIN_DAYS:-30}"
+sec=$(curl -s --max-time 20 "https://$SITE/.well-known/security.txt")
+if echo "$sec" | grep -qi '^Contact:'; then
+  pass "security.txt served with a Contact field"
+else
+  fail "security.txt missing, empty, or has no Contact field"
+fi
+# Parsed in python3 (already required by check 3): BSD and GNU `date` disagree
+# on parsing ISO 8601, and this has to run on both a Mac and ubuntu-latest.
+expiry=$(echo "$sec" | grep -i '^Expires:' | head -1 | sed 's/^[Ee]xpires:[[:space:]]*//' | tr -d '\r')
+days=$(python3 -c "
+import sys, datetime
+try:
+    e = datetime.datetime.fromisoformat(sys.argv[1].strip().replace('Z', '+00:00'))
+    print(int((e - datetime.datetime.now(datetime.timezone.utc)).total_seconds() // 86400))
+except Exception:
+    pass
+" "$expiry" 2>/dev/null)
+if [ -n "$days" ] && [ "$days" -ge "$MIN_DAYS" ]; then
+  pass "security.txt expires in ${days}d (>= ${MIN_DAYS}d of headroom)"
+else
+  fail "security.txt expiry is '${expiry:-<none>}' -> ${days:-unparseable} days (need >= $MIN_DAYS)"
+  fail "  ^ Push any commit to main to re-stamp it. Left alone it lapses and"
+  fail "    the file stops being valid under RFC 9116."
+fi
 
 echo
 if [ "$fails" -eq 0 ]; then
