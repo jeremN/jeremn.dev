@@ -1,0 +1,231 @@
+---
+title: 'Ten months of Svelte 5'
+summary: 'Atoms upward, Svelte 4 and Svelte 5 side by side the whole time, while the product kept shipping. Almost none of it hurt. This is the part that did.'
+publishedAt: 2026-07-17
+tags: [Svelte, Migration]
+draft: false
+---
+
+## Leaves first
+
+We migrated a large SvelteKit app to Svelte 5 across ten months and about two dozen merge
+requests, from March to the following January, ending with one titled "Svelte 5 migration
+final steps". None of it was a big bang, and that was the point.
+
+We went leaves first. The atoms in March. The design system through April: alerts, switches,
+inputs, selects, sliders, toasts, the skeleton components. Then the tool components. Then in
+May, the big stateful container and every child underneath it, eighty files in a single
+merge request. Then the data fragments, the third-party widgets, the list and filter
+components, and finally the pages, a group at a time, through the autumn.
+
+For all ten months, Svelte 4 and Svelte 5 components shipped side by side in production. The
+guide promises you can mix components using the new syntax with components using the old,
+and we leaned our whole plan on that sentence. It held. The migration did not get the
+codebase to itself either. Across that window the repository took around eleven hundred
+other commits, because the product does not stop so you can rewrite it.
+
+Today the app has 412 components. 291 of them take `$props()`. One still has an `export let`
+in it, and I have made my peace with that.
+
+## The codemod is more careful than I was
+
+The official migration script did the overwhelming majority of the work. Props became
+`$props()`, local variables became `$state()`, event handlers lost their colons. Most
+components went through and came out the other side working.
+
+It also did something I did not appreciate at the time. When the script meets a `$:` it
+reads as a side effect rather than a derivation, it does not hand you `$effect`. It hands
+you `run()` from `svelte/legacy`, and the migration guide states the reason outright:
+
+> since `$:` statements also ran on the server but `$effect` does not, it isn't safe to
+> transform it as such. Instead, `run` is used as a stopgap solution.
+
+That is careful tooling. It knows the swap is unsafe and declines to make it. Most of our
+`$:` statements were derivations anyway, and those became `$derived`, which is the guide's
+own spoiler alert: 90% of the time you want `$derived`. The May merge request landed 38 of
+them.
+
+## Month three
+
+The leaves had gone quietly. Atoms and design system components mostly do not hold state
+worth arguing about, and the ones that do hold it briefly. The container was the first thing
+we migrated that held real state, and it broke in a way that had nothing to do with syntax.
+
+We fixed it. We wrote the fixes down in a migration note, one line each, the way you do when
+the branch is three days old and the goal is to land it.
+
+We never wrote down the causes.
+
+I went back recently and reproduced the cases from that note against Svelte 4.2.20 and
+Svelte 5.56.6, side by side, same logic, console captured. The note recorded interventions
+rather than explanations, and two of the three recorded explanations do not survive a
+reproduction. The one that does survive is the one worth writing about, and it is the reason
+the next seven months went the way they did.
+
+The symptom, with the specifics filed off, was that an effect stops firing.
+
+There is no error, no warning, no hydration mismatch, nothing you can put a breakpoint on
+with confidence. A value changes, the code that is supposed to respond to it does not run,
+and the UI holds a stale answer. The build is green and the compiler has nothing to say
+about it.
+
+## "Mimics most of the characteristics"
+
+That phrase is the guide's, and it is the one I keep coming back to. `run` mimics *most* of
+the characteristics of `$:`, and the guide never says which ones fall outside most. That is
+a reasonable thing for a migration guide to leave alone. It is also the thing you want to
+know if you are holding a codebase full of `run()` calls.
+
+So I measured it. Three sandboxes with identical logic: Svelte 4 with `$:`, Svelte 5 with
+`run()`, Svelte 5 with `$effect`. I tested two axes, one shape each.
+
+Dependencies, via a ternary that only ever reads one of its two branches:
+
+```svelte
+<script>
+  let cond = $state(true)
+  let a = $state(1)
+  let b = $state(2)
+  run(() => {
+    console.log(`[deps] run() ran -> ${cond ? a : b}`)
+  })
+</script>
+```
+
+Timing, via a value that feeds a DOM node, read back from the node itself:
+
+```svelte
+<script>
+  let text = $state('initial')
+  let el
+  run(() => {
+    text
+    console.log(`[timing] run() sees DOM as: "${el?.textContent}"`)
+  })
+</script>
+
+<p bind:this={el}>{text}</p>
+```
+
+Set `b = 99` while `cond` is still `true`, then set `text = 'updated'`. What `run()` prints:
+
+```
+[deps]   run() ran -> 1
+[timing] run() sees DOM as: "undefined"
+--- change b (cond is true, so the ternary never reads b) ---
+                                          (nothing)
+--- change text to "updated" ---
+[timing] run() sees DOM as: "initial"
+--- DONE ---
+```
+
+Nothing on the `b` change. `"initial"` on the `text` change, meaning it ran before the DOM
+was patched. Put all three side by side and "which characteristics" has an answer:
+
+|                          | `$:`   | `run()` | `$effect` |
+| ------------------------ | ------ | ------- | --------- |
+| re-runs when `b` changes | yes    | no      | no        |
+| sees the DOM as          | before | before  | after     |
+
+`run()` splits the difference exactly down the middle. It restores the pre-DOM timing and
+the server pass, but not the dependency list.
+
+## Why the shim can't help you here
+
+`$:` is a compile-time construct. The Svelte 4 compiler reads the source of the statement,
+collects every reactive variable it references but does not assign to, and registers all of
+them. It does not care that the ternary can only reach one of `a` and `b` on any given run.
+It sees `cond`, `a` and `b` in the text, so the dependency list is `cond`, `a` and `b`,
+fixed before your code has run once.
+
+`$effect` is a runtime construct. It registers what the function actually read during its
+last execution. On that last run `cond` was `true`, so it read `cond` and `a`. It never
+touched `b`, because `b` sits in a branch that did not execute. `b` is therefore not a
+dependency, and writing to it is not an event the effect has any reason to hear about.
+
+`run()` becomes `$effect.pre` on the client, and `$effect.pre` tracks at runtime exactly
+like `$effect` does. That is the whole reason the shim cannot carry static dependencies
+across: there is no construct in runes mode that has them, so there was nothing for `run()`
+to be a shim for.
+
+The two axes end up in very different positions. Timing is recoverable. `run()` keeps it,
+`$effect.pre` keeps it, and you only lose it by taking the guide's own advice at the end of
+that same paragraph: *most likely you want to use `$effect` instead*. The nudge is correct,
+and it is opt-in. Dependencies are not recoverable at all, by any path, in runes mode. We
+took that one on the moment we entered runes mode, and no choice we made afterwards could
+have avoided it.
+
+The ternary is a compression. The shape you actually meet is a block that reads one field on
+the happy path and another inside a branch, and then a month later somebody changes the field
+in the branch and the block stays silent. The `$effect` docs make the same point with an `if`
+and a confetti call.
+
+## What we did about it
+
+The answer was `runed`'s `watch`, which takes an explicit getter for its dependencies and
+runs the callback when those change:
+
+```js
+watch(
+  () => [cond, a, b],
+  () => {
+    console.log(`ran -> ${cond ? a : b}`)
+  }
+)
+```
+
+`b` is in the dependency list because you put it there. That is what `$:` gave you for free,
+restored on purpose.
+
+This is the reason I went back at all. `"runed": "^0.25.0"` was added to the project by the
+May merge request itself, not by a follow-up or a patch two sprints later. The merge request
+that migrated the container also brought in the thing the codemod could not do for us. It
+shipped with 38 `$derived`, 7 `$effect(`, 1 `$effect.pre(`, and 2 `watch(` already in place.
+
+Those two `watch(` calls arrived with seven months of migration still in front of them, and
+the timing is the whole story. Today the codebase holds 36 `watch(` against 47 `$effect(`.
+Those 36 are a convention rather than 36 bugs, and it had every remaining merge request to
+spread through.
+
+It spread because the dependency list is written down, and a thing that is written down
+survives code review. A reviewer can see that `b` is missing from `() => [cond, a]`. Nobody
+can see that `b` is missing from an `$effect`, because an effect's dependency list has no
+text to read. It is a property of the last run, and the last run is not on the page in front
+of you. That matters most for whoever joined most recently, and over ten months plenty of
+people touched this code who were not in the room in May. Avoiding the footgun any other way
+means knowing that dependencies are tracked at runtime and that a branch you did not take is
+not a dependency, which is a poor thing to make correctness depend on.
+
+So the team had the right answer in month three and never had the explanation. We reached
+for `watch` because `$effect` was not doing what we expected and `watch` was, and that is a
+complete engineering justification when the branch needs to land. It is not an explanation.
+I only worked out why it was the right answer a year later, with three throwaway projects
+and a Playwright script.
+
+One honest caveat about all of this. The reproductions are simplified. They are not the real
+app, they do not have its component tree, its stores, or its data. When one of them fails to
+reproduce a bug from the note, that proves the shape we recorded is insufficient to cause
+it. It does not prove the bug was imaginary. Somebody hit it, somebody fixed it, and the fix
+shipped. What the reproduction establishes is that the note is not the cause. That is a
+smaller claim than it sounds like. For one of the cases, an infinite
+loop we recorded as a store problem, the actual cause is still unestablished. I am not going
+to guess at it here.
+
+## The takeaway
+
+`$effect` is not a worse `$:`. It is a different tool with a different dependency model, and
+it is very good at the thing it is for, which is synchronising with something outside the
+reactive graph after the DOM settles. Runtime dependencies are a real improvement. They are
+precise, and they do not re-run on values you never read, which is what most signals
+implementations settled on for good reasons.
+
+The docs told us the truth. The migration guide lists static analysis of dependencies among
+the gotchas of `$:`, notes that determining dependencies at runtime makes `$effect` immune to
+refactorings, and links from the `$:` conversion instruction straight to the section with
+that confetti example in it. Reading that dependencies are determined at runtime and working
+out that your block stops firing when somebody moves a field into a branch are two different
+acts. The docs did the first. We did not do the second until a year later, with a console
+log.
+
+So if your reactive block needs a dependency list that does not change when the code
+branches, say so out loud. `watch` says it out loud. `$effect` was never going to.
