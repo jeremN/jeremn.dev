@@ -1,0 +1,225 @@
+---
+title: 'Renovate: automating dependency management'
+summary: 'Installing the bot took an afternoon. Teaching it what our repository actually was took a year, and most of that is grouping, a regex, and a CI job that writes changesets on its behalf.'
+publishedAt: 2026-07-20
+tags: [Renovate, Dependencies, CI]
+draft: false
+---
+
+## The batch sweep
+
+For the first year or so of this repository, updating dependencies was an event.
+Somebody would notice it had been a while, cut a branch, run the update, and push
+one commit that touched everything. The subjects are still in the log:
+
+```
+chore(updates): update all dependencies to latest
+chore(updates): non-breaking dependency updates
+chore(deps): minor updates for bff and minor+major updates for web
+chore(updates): update dependencies to latest as of 29.04.2024 excluding some major breaking
+```
+
+That last subject is the whole problem in one line. Somebody had to decide what
+"some major breaking" meant, by hand, in the moment, and the decision left no
+record.
+
+One of those every five or six weeks. Each was a single commit, a single review,
+a single CI run, and a single undifferentiated bisect surface if anything came
+out wrong. Worse, the interval was set by whoever happened to remember.
+
+In June 2024 we installed Renovate. This post is about the first half of that:
+what it is, how it runs, and what it takes to teach it a repository it knows
+nothing about. A second post will cover refining the configuration once it was
+running, and what happened when we let it merge things by itself.
+
+## What it is, and how it runs
+
+Renovate reads the manifests in your repository, checks what each dependency's
+registry says the current version is, and opens a merge request per update. That
+much sounds like `npm-check-updates` with a CI job attached. The difference is
+the far end of the loop: Renovate can also decide the merge request is safe,
+wait for the pipeline, and merge it without anyone opening the tab. The version
+bump is the easy half. Owning the decision about whether the bump lands is the
+half that changes how a team works.
+
+It runs three ways, and the choice is mostly about who operates it.
+
+The first is self-hosted, as a scheduled CI job. We ran it that way for
+twenty-one months. It was thirty-three lines of GitLab YAML around a pinned
+image:
+
+```yaml
+variables:
+  RENOVATE_PLATFORM: gitlab
+  RENOVATE_BRANCH_PREFIX: chore(deps)/
+  RENOVATE_PR_CONCURRENT_LIMIT: 10
+  RENOVATE_PR_HOURLY_LIMIT: 10
+  RENOVATE_ALLOWED_COMMANDS: '["^pnpm install --no-frozen-lockfile$"]'
+
+renovate:
+  stage: renovate
+  image: <internal-registry>/renovate/renovate:41.97.10-full
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_JOB == "renovate"'
+      when: always
+  script:
+    - renovate $RENOVATE_EXTRA_FLAGS # add --dry-run to test without creating MRs
+```
+
+Three of those variables will matter before you expect them to. The concurrency
+limits exist because the first thing an unconstrained bot does to a monorepo is
+open every merge request it can think of at once. `RENOVATE_ALLOWED_COMMANDS` is
+an allowlist for any shell Renovate is permitted to run on your behalf, and it is
+responsible for one of the better disasters in part two. And `--dry-run` in a
+trailing comment does more work than anything else in the file, because a bot you
+can run in a mode where it only reports is a bot you can debug.
+
+The second way is a platform-managed service, which is where we ended up: the
+same bot, operated by somebody else, configured by the same `renovate.json`. The
+third is the vendor-hosted app, which on GitHub is two clicks and an onboarding
+merge request. Nothing in this post is GitHub-specific except that sentence.
+
+## The first configuration
+
+`renovate.json` landed on 2024-06-05. The bot's first merged commit is dated
+2024-07-11. Thirty-six days sit between them, and they were not idle.
+
+The config that landed on day one is almost entirely made of refusals:
+
+```json
+{
+  "extends": ["config:base", "schedule:weekly", "group:allNonMajor", ":semanticCommits"],
+  "rangeStrategy": "bump",
+  "enabledManagers": ["pnpm", "gitlabci"],
+  "automerge": false,
+  "packageRules": [
+    { "packagePatterns": ["peerDependencies", "engines"], "enabled": false },
+    { "description": "Disable MAJOR update types", "matchUpdateTypes": ["major"], "enabled": false }
+  ]
+}
+```
+
+That is abridged; the real file also carried labels, a custom MR title, and
+`osvVulnerabilityAlerts`, which was there from the first day and matters in part
+two. But the shape is the point. Automerge off. Majors off entirely. A weekly
+schedule so it could not talk more than once every seven days. Six days later a
+commit added `baseBranches` pointed at a throwaway branch, so that for a
+fortnight the bot could open all the merge requests it liked against something
+nobody shipped from.
+
+That fortnight is the part I would keep if I did this again. A bot aimed at a
+branch nobody deploys from is a bot you can be wrong about for free. You find out
+what it wants to do to your repository before it can do any of it, and every
+refusal in that config came off later, one at a time, once we had a reason.
+
+If you want a mental model for the config surface: `extends` pulls in presets,
+which are just published config objects, and most organisations end up with an
+internal one on a private registry. `packageRules` is an ordered list of
+matchers where later rules override earlier ones, which is the source of roughly
+every surprising Renovate behaviour you will ever debug. `schedule` bounds when
+the bot may act. `automerge` decides whether a green pipeline is enough. And
+`minimumReleaseAge` refuses to propose a version until it has existed for a given
+number of days, which is a supply-chain control and the subject of a long section
+in part two.
+
+One setup step worth doing on day one rather than after your first bad
+afternoon: Renovate ships a validator for its own config, and it fits in a
+pre-commit hook.
+
+```json
+"lint-staged": {
+  "renovate.json": "npx --yes --package renovate -- renovate-config-validator"
+}
+```
+
+The failure it catches is the config that is valid JSON and nonsense as policy.
+Nothing else in your toolchain will tell you about that, because to every other
+tool it is a well-formed object.
+
+## Changesets, automated
+
+This repo releases through Changesets, where a package is only versioned if a
+merge request carries a changeset file, and CI blocks merge requests that do not.
+
+Renovate does not write changesets. Nothing about that is a bug; it has no way to
+know your release tooling exists. But left alone it means every dependency merge
+request the bot opens is either blocked outright or lands without releasing
+anything, which is the quieter and worse of the two.
+
+The fix is a CI job scoped to the bot's own branches. It checks out the branch,
+works out which dependencies moved, writes a `patch` changeset describing them,
+and pushes it back:
+
+```yaml
+renovate-changeset:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^renovate\//'
+  script:
+    - npm run renovate-changeset
+    - git push "https://gitlab-ci-token:$RENOVATE_TOKEN@..." "HEAD:$CI_COMMIT_REF_NAME"
+```
+
+It is a small job and the whole automation rests on it. This is the first place
+where the work stops being Renovate configuration and starts being a description
+of your own repository, and it is the shape of everything that follows: the bot
+handles npm, and the parts of your project that are not npm are yours to teach it.
+
+## The Playwright pair
+
+Playwright is two things that have to agree. There is the npm package your tests
+import, and there is the Docker image your CI runs them in. If the versions
+diverge, the browser binaries in the image do not match the client, and the
+failure surfaces as something that looks nothing like a version mismatch.
+
+Renovate's npm manager bumps the package. Nothing bumps the image tag, because
+the image tag is a string in a YAML file and no dependency manager has ever heard
+of it.
+
+A custom regex manager closes the gap. You tell Renovate that a particular
+substring in a particular file is really a version of a particular npm package,
+and from then on it keeps the two in step:
+
+```json
+{
+  "customType": "regex",
+  "managerFilePatterns": ["ci/gitlab/e2e-test.yml", "ci/gitlab/test.yml", "ci/gitlab/lint-tests.yml"],
+  "matchStrings": ["image: docker-public\\.example\\.com/playwright:v(?<currentValue>\\d+\\.\\d+\\.\\d+)-jammy"],
+  "packageNameTemplate": "@playwright/test",
+  "datasourceTemplate": "npm",
+  "versioningTemplate": "semver"
+}
+```
+
+There are three files in that list and they arrived one at a time, more than a
+year apart end to end. The manager was written against one file. Months later
+somebody found a second that had drifted. The third turned up later still. Nobody
+ever sat down and enumerated where the image tag appeared, because you cannot
+grep for a problem you have not had yet.
+
+That is the honest shape of this work. You do not configure a bot once. You
+notice one drifted thing at a time, and each time you write down something about
+your repository that was previously only in somebody's head.
+
+## Less to remember
+
+Nothing in this post is really about dependency versions. It is about the things
+Renovate could not know: that our releases need a file it does not write, that a
+version string in a YAML file is secretly an npm package, that Storybook has a
+CLI, that one group should be noisy and another should be quiet.
+
+The payoff is not that upgrades got faster. It is that a category of thing
+stopped needing to be remembered. Nobody tracks how long it has been. Nobody
+proposes a dependency sprint. Nobody has to decide what "excluding some major
+breaking" means at eleven at night, because the updates arrive one at a time,
+already separated, already tested by the pipeline, with a changelog attached.
+
+The mental space that used to hold *we should update soon* is simply free, and
+the config file is where all the knowledge that used to live in that space now
+lives instead. That makes it the most honest documentation in the project.
+
+None of this is the finished state. What is described here is a bot that opens
+correct merge requests and waits for a person on every single one, which is a
+long way from the thing being useful. The next post is about refining that:
+grouping so the output stays readable, the supply-chain controls that decide what
+it is allowed to propose, moving off our own scheduled job onto a managed
+service, and finally letting minor and patch updates merge themselves.

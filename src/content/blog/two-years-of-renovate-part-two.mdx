@@ -1,0 +1,397 @@
+---
+title: 'Renovate: refining the automation'
+summary: 'Grouping so the output stays readable, cooldowns that had to be taught not to fight each other, moving onto a managed swarm, and finally letting minor and patch updates merge themselves.'
+publishedAt: 2026-07-21
+tags: [Renovate, Dependencies, CI]
+draft: true
+---
+
+The [first post](/blog/two-years-of-renovate-part-one) covered installing
+Renovate and teaching it what our repository actually was: a CI job to write the
+changesets it does not write itself, a regex manager so it would notice a version
+string in a YAML file.
+
+That left us with a bot that opened correct merge requests and waited for a
+person on every one of them. Useful, but not yet worth the trouble. Everything
+below is the two years of refinement between that state and the current one,
+where most updates land without anybody looking at them.
+
+## Refining the configuration
+
+### The schedule
+
+This one is a comedy. The install config extended `schedule:weekly`. Six days
+later a commit dropped it, and the repository then ran with no schedule at all
+for twenty-one months, which means the bot was allowed to act at any hour of any
+day. A schedule came back as Mondays only, then widened to Monday through
+Thursday:
+
+```json
+"schedule": ["* 8 * * 1-4"],
+"timezone": "Europe/Paris"
+```
+
+The timezone line was added two months after the hour was set. For those two
+months, `8` meant eight o'clock UTC, which is not when anyone on this team starts
+work. As for why Friday is excluded, I do not know. The commit body is empty,
+like nearly all of them. The obvious guess is that nobody wants dependency
+updates automerging into a weekend, and I am not going to write that down as a
+reason when the repository does not say it.
+
+### The lockfile
+
+The longest-running problem here, and the one I would warn anyone about first.
+Renovate updates `package.json` and then regenerates the lockfile in a separate
+step, and that second step can fail on its own. When it does, you get a branch
+with a bumped manifest and a stale lockfile, and every downstream job dies on a
+frozen-lockfile install.
+
+The first fix added a post-upgrade task to repair it:
+
+```json
+"postUpgradeTasks": {
+  "commands": ["pnpm install --no-frozen-lockfile"],
+  "executionMode": "branch",
+  "fileFilters": ["pnpm-lock.yaml", "package.json"]
+}
+```
+
+That commit landed at 10:34. A second commit landed at 18:28 the same day, and
+all it did was add the same string to `allowedCommands`. Post-upgrade commands do
+not run unless they are explicitly allowlisted, so for eight hours the repository
+contained a fix that was configured, committed, reviewed, and inert.
+
+It was not the end of it. A month later, a run of further attempts inside two
+hours and fifteen minutes: bump the Renovate image and hope, rip out both
+previous attempts and replace them with a single `updateLockFiles`, restructure
+the CI includes so the scheduled pipeline and the merge request pipeline stop
+overlapping, then remove the post-upgrade block again in a commit whose entire
+subject is `chore(Renovate): test`. The block was eventually deleted for good in
+favour of `rangeStrategy: "update-lockfile"` with lockfile maintenance enabled,
+which is the setting we should have reached for at the start.
+
+The problem outlived all of that and resurfaced a year later, by which point the
+repair could no longer live in `renovate.json` at all. That story is in the swarm
+section below.
+
+### When the bot edits its own config
+
+Two of the worst incidents here have the same cause. Renovate cuts a branch, the
+config changes on `main`, and the branch merges carrying the old config forward.
+A routine `fix(deps): update all minor patch` commit, authored by Renovate,
+silently deleted the entire `schedule` block and reverted `rangeStrategy`.
+
+The schedule came back three days later. I assumed a person fixed it, and a
+person did not. It was restored inside another Renovate commit, one whose subject
+is a security bump of an unrelated web framework. The config healed as a side
+effect of a branch that happened to be cut after the damage and before the fix,
+which is the same mechanism that broke it.
+
+A month later Renovate's own config migration rewrote the Playwright regex
+manager's file patterns with doubled slashes and broke it quietly. That one took
+a week to notice, because a regex manager that matches nothing does not fail. It
+just stops finding updates.
+
+That is the failure mode to watch for. A bot that breaks loudly is a bot you fix.
+A bot that silently stops looking at three files is one you keep trusting.
+
+## Grouping, or keeping it readable
+
+A pnpm monorepo does not produce dependency updates in batches. It produces a
+drip, a package at a time, several times a week. Ungrouped, that is a project
+whose notifications everyone has muted by the second week, which converts an
+automation win into a review-quality loss.
+
+Grouping is how you get that back, and the thing nobody tells you is that it does
+two opposite jobs depending on the update type.
+
+For minor and patch updates you group to reduce noise. The ideal is one merge
+request containing a pile of boring bumps that nobody needs to read line by line,
+because reading them individually has no value and reading none of them is what
+actually happens.
+
+For majors you group to isolate risk. The ideal is one merge request per family,
+so that when the Vite upgrade breaks the build it is not sitting in the same
+branch as the Prisma upgrade:
+
+```json
+{ "groupName": "Vitest [major]", "matchPackageNames": ["/^@vitest/", "/vitest/"],
+  "matchUpdateTypes": ["major"] }
+```
+
+Same mechanism, opposite goal. Our grouping started as families of minor and
+patch packages and drifted over two years into mostly major-only families, which
+is that realisation stated in config.
+
+Three groups sit outside both jobs, and their reasons are written down, though
+not in git. They are in the team's internal page for the bot, which turns out to
+be where the reasoning went:
+
+- **Storybook** is grouped and held for manual approval because Storybook is
+  meant to be upgraded through its own CLI, which runs codemods. A version bump
+  in `package.json` is not the upgrade, it is a fraction of it.
+- **Changesets** gets its own merge request because updates to it have broken CI
+  before. It is the tool that gates every other merge request, so it is the one
+  package you never want batched with the rest. It is still automerged though,
+  which is a more confident position than the note implies: the isolation is so
+  that a bad release is legible when CI goes red, not so that a human reads it
+  first.
+- **Playwright** gets its own because of the npm package and Docker image pairing
+  from part one.
+
+None of that is deducible from the config. A rule that says `"automerge": false`
+tells you a decision was made and nothing about why, and three years from now the
+person reading it is going to assume it was caution.
+
+## Security
+
+`minimumReleaseAge` refuses to propose a version until it has been on the
+registry for a given time. It arrived in a commit that says what it is for:
+mitigating the risk of malware in freshly published packages. The attack it
+defends against is a maintainer account compromise, where a malicious version is
+published and pulled within hours. A cooldown means your bot is never the first
+to install anything.
+
+It arrived as separate copies of `"7 days"` pasted into each package rule, and
+its history since is not a straight line. It vanished, came back as a single
+top-level seven, vanished again two days later, and settled months afterwards as
+a top-level eight. Two removals inside a fortnight of config churn, neither
+explained. The reason for eight rather than seven is written down, though in a
+different file:
+
+```yaml
+minimumReleaseAge: 10080 # 7 days; renovate.json uses 8 days so Renovate's picks always clear this window
+```
+
+pnpm has its own cooldown, and it is set to seven days. Renovate's is set to
+eight so that anything Renovate proposes has already cleared pnpm's gate by the
+time the install runs. Two independent controls, deliberately offset by one day
+so they cannot disagree. Without the offset you get merge requests that cannot be
+installed, which is a failure mode that looks like a broken bot rather than a
+working policy.
+
+The second control is provenance attestation. pnpm's trust policy rejects a
+package whose published version is less attested than the one it replaces, and
+this is where it gets awkward, because the two controls can point in opposite
+directions. If a package publishes a version without attestation and fixes it in
+the next patch, the cooldown-aged version is the broken one and the attested
+version is too new to install. The escape hatch is an exclusion list, and the
+entries carry their own reasoning:
+
+```yaml
+minimumReleaseAgeExclude:
+  # <pkg> 5.21.1 was published WITHOUT provenance attestation (upstream release
+  # hiccup, fixed in 5.21.2), so trustPolicy no-downgrade rejects it. Excluded
+  # from the cooldown so ^5.21.1 resolves to the attested 5.21.2 instead of the
+  # unattested cooldown-aged version.
+```
+
+Most exclusions are pinned to an exact version rather than a package name, so
+they expire on their own, and a scheduled job prunes the entries once the pinned
+version ages past the window. The two oldest entries are bare package names with
+no version, which is exactly why the convention got written down underneath them:
+an exception list that cannot be cleaned up becomes permanent by default.
+
+Everything so far slows updates down. One control pulls the other way. Renovate
+can check dependencies against the OSV vulnerability database and open a merge
+request when one has a known advisory, and on our platform those merge requests
+are exempt from the cap on how many the bot may have open at once. The cooldown
+exists because a brand-new version might be malicious. The vulnerability alert
+exists because the version you are already running is known to be exploitable,
+and that is not a situation where you wait eight days.
+
+Two caveats, and neither is visible in our repository, which is itself the point.
+Renovate's OSV checking covers direct dependencies only, so a vulnerability three
+levels down your tree does not produce an alert. And the setting that enables it
+is not in our config at all any more: it was there on day one, and today it
+arrives from the organisation-wide preset we extend.
+
+The last control is where the human stays. Majors are enabled, but they do not
+open a merge request on their own:
+
+```json
+"major": {
+  "enabled": true,
+  "prCreation": "approval",
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": true
+}
+```
+
+Renovate lists every pending major on a dashboard issue and waits for a checkbox.
+Getting here took three days of iteration, each attempt a different theory of how
+to gate majors: a single catch-all group, then per-family groups with approval on
+each, then a pass to fix the patterns, then deleting the catch-all in favour of a
+top-level rule, then adding the dashboard. There is no revert in that sequence,
+only successive attempts, and the shape it settled on has survived seventeen
+months since.
+
+That block is also where incidents get recorded, because commit bodies here are
+almost always empty and the `description` field is the only durable place to put
+a reason:
+
+```json
+{
+  "description": "adapter-node 5.5.5 introduced a circular dependency between server init
+   and hook retrieval that crashes the app on startup: the top-level await server.init()
+   never settles, so the server never listens and the review deploy times out. Fixed
+   upstream in 5.5.6. package.json pins 5.5.4 (last good); allowedVersions >=5.5.6 skips
+   the broken release and lets Renovate adopt the fix once it clears the cooldown.",
+  "matchPackageNames": ["@sveltejs/adapter-node"],
+  "allowedVersions": ">=5.5.6"
+}
+```
+
+That is a hole cut around one bad release with the reason written next to it, and
+it is the closest thing to an incident report this repository contains. Four days
+after it was committed, Renovate opened and merged the bump to the fixed version.
+Nobody was involved.
+
+## Adopting the swarm
+
+For twenty-one months we ran our own scheduled job. Then the organisation stood
+up a Renovate-as-a-Service platform, built on Renovate's swarm mode, and we
+migrated onto it. The self-hosted job file and its pipeline stage were deleted
+outright.
+
+What changes is less than you would expect and more than is comfortable.
+Onboarding becomes a topic on the project rather than a job you maintain: the
+platform discovers the repository and runs against it. The same `renovate.json`
+still drives behaviour, so the grouping and the package rules carry over
+unchanged. The platform scans continuously, but your `schedule` window still
+governs when merge requests may actually appear, which means the schedule stops
+being a way to save CI minutes and becomes purely a policy about when you want to
+be interrupted.
+
+What you give up is arbitrary execution. A shared platform will not let one
+project run whatever shell it likes during a Renovate run, which is a reasonable
+thing for it to refuse and also precisely the mechanism our lockfile repair
+depended on. Five days after the migration, the `postUpgradeTasks` block came
+out. Nothing in the repository says why, but that is the only explanation that
+fits, and our internal notes say as much.
+
+So the lockfile repair moved into CI instead, as a non-fatal step on the bot's
+own branches. The comment on it is the most precise description of the problem
+anywhere in the repository, and it is a comment rather than a commit message,
+which by now will not surprise you:
+
+> Renovate's artifact-update step sometimes fails on its side (pnpm trustPolicy /
+> minimumReleaseAge), pushing manifest bumps WITHOUT regenerating pnpm-lock.yaml,
+> the setup job then fails with `ERR_PNPM_OUTDATED_LOCKFILE` or
+> `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`.
+
+The lesson generalises past this one bug. An escape hatch that lives in your
+bot's config is only yours for as long as you operate the bot. If you are on a
+managed platform, the durable place to put a workaround is your own pipeline.
+
+The other thing inherited from a shared platform is defaults. Ours supplies the
+recommended preset, the vulnerability alerting, the concurrency cap and the
+registry configuration, which is why several settings that used to be in our file
+are not there any more. That is mostly good and occasionally disorienting: the
+answer to "why is it doing that" sometimes is not in your repository at all.
+
+One related failure looks alarming and is not. Renovate regenerates the lockfile
+by running pnpm, pnpm enforces its own cooldown, and if a transitive dependency
+resolves to something published in the last few days, the install is rejected
+with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` and the merge request goes red.
+Nothing is broken. The package needs to get older. It resolves itself on the next
+run, and the team's runbook says exactly that: check whether it is the transient
+one, and if so click rebase and move on.
+
+## Automerge, for minor and patch
+
+Off at install, and off for a year and a half. That is the single decision I
+would defend hardest to anyone impatient: everything above is a reason the team
+was right to be slow. You do not want a bot merging on your behalf until you know
+what it does when the lockfile step fails, what it does to its own config on a
+stale branch, and what it is not allowed to propose.
+
+The first `"automerge": true` here is a one-line diff scoped to exactly one
+group, the minor and patch catch-all. Not global, not majors, not the packages
+with known sharp edges. Four months later it extended to a second group. Thirteen
+days after that it moved to the top level, with named exceptions rather than
+named inclusions, which is the flip that matters: the default became yes.
+
+Storybook and Playwright are still the holdouts, both `"automerge": false` on
+purpose, for the reasons in the grouping section.
+
+The bot's throughput tells you when that flipped without your having to look at
+the config. It ran flat for well over a year, then stepped up sharply and stayed
+there. Enabling automerge did not make Renovate find more updates. It made the
+ones it already found stop waiting for a human.
+
+## The loop that is left
+
+The config is only half of this. The other half is the runbook, and it is short
+enough to quote the shape of.
+
+Renovate opens its merge requests early in the week, and every Tuesday the team
+spends a few minutes on whatever is still open and assigns it. Since automerge
+went on, the standing instruction is that minor and patch updates merge
+themselves, and a human touches exactly three things: automerges that went red,
+Storybook, and majors.
+
+For anything in those three categories, the procedure is not light. Assign
+yourself. Open a tracking ticket linking the merge request. Read the changelogs
+Renovate collected into the description. Check the branch out locally, install,
+then:
+
+```shell
+pnpm ci:check
+pnpm build
+pnpm test
+```
+
+Then run the app and exercise the features that moved, by hand. Then route it for
+validation, to the tech lead for Storybook, Changesets and Playwright, to QA for
+everything else.
+
+That is the real unit cost of a dependency update, and none of it got cheaper.
+Renovate did not make reviewing an upgrade faster. What changed is how often
+anybody has to do it.
+
+## What actually changed
+
+I went looking for the number that shows this paid off, and I did not find one I
+would stand behind. Counting hands-on dependency work before and after gives you
+whatever answer you were hoping for, depending on how you phrase the query, and I
+nearly published a flattering version before noticing I had counted the two
+windows two different ways. Nobody logged hours against any of this either, so
+there is no honest figure to quote.
+
+What the log will support is a change of kind rather than of quantity. Before:
+
+```
+chore(updates): update all dependencies
+chore: update dependencies
+chore(updates): update dependencies to latest as of 29.04.2024 excluding some major breaking
+```
+
+After:
+
+```
+chore(deps): Upgrade/vite 6.4.1 to 7.2.1
+chore(deps): major upgrade @graphql-eslint/eslint-plugin to v4
+chore(deps): upgrade normalize-url from v8 to v9
+```
+
+The first list is somebody clearing a backlog nobody was tracking. The second is
+somebody upgrading one thing on purpose, with a ticket and a changelog and a
+manual pass over the screens it touches. Hands-on dependency work did not vanish.
+It stopped being undifferentiated.
+
+Everything else moved underneath that line, into merge requests that opened, went
+green and merged without ever reaching a person. Those have no counterpart at all
+in the before window, and they are the whole difference. Nobody has to remember
+when we last updated, because the answer is always this week.
+
+adapter-node is the argument in miniature. A bad release shipped, one config line
+excluded it, the fix arrived automatically four days later, and the reason is
+still readable in the file. Under the old regime that breakage lands inside a
+sweep of forty packages and costs somebody an afternoon finding it.
+
+Renovate did not reduce the number of dependency decisions. It made each one small
+enough to be wrong on its own.
+
+Part three is about what happened when we pointed agents at the majors this config
+still refuses to merge.
