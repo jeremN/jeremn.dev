@@ -3,7 +3,7 @@ title: 'Renovate: refining the automation'
 summary: 'Grouping so the output stays readable, cooldowns that had to be taught not to fight each other, moving onto a managed swarm, and finally letting minor and patch updates merge themselves.'
 publishedAt: 2026-07-21
 tags: [Renovate, Dependencies, CI]
-draft: true
+draft: false
 ---
 
 The [first post](/blog/two-years-of-renovate-part-one) covered installing
@@ -115,13 +115,17 @@ so that when the Vite upgrade breaks the build it is not sitting in the same
 branch as the Prisma upgrade:
 
 ```json
-{ "groupName": "Vitest [major]", "matchPackageNames": ["/^@vitest/", "/vitest/"],
-  "matchUpdateTypes": ["major"] }
+{
+  "groupName": "Vitest [major]",
+  "matchPackageNames": ["/^@vitest/", "/vitest/"],
+  "matchUpdateTypes": ["major"]
+}
 ```
 
 Same mechanism, opposite goal. Our grouping started as families of minor and
-patch packages and drifted over two years into mostly major-only families, which
-is that realisation stated in config.
+patch packages and drifted over two years into mostly major-only families. The
+noise had other fixes by then. Isolating risk did not, so that is the job the
+groups kept.
 
 Three groups sit outside both jobs, and their reasons are written down, though
 not in git. They are in the team's internal page for the bot, which turns out to
