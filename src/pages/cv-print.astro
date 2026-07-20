@@ -1,5 +1,8 @@
 ---
 import { profile, experiences, stack, education, certs, links } from '../lib/cv'
+import '@fontsource-variable/fraunces'
+import '@fontsource-variable/hanken-grotesk'
+import '@fontsource-variable/jetbrains-mono'
 ---
 <!doctype html>
 <html lang="en">
@@ -7,12 +10,8 @@ import { profile, experiences, stack, education, certs, links } from '../lib/cv'
     <meta charset="utf-8" />
     <meta name="robots" content="noindex" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{profile.name} — CV</title>
+    <title>{profile.name} · CV</title>
     <style is:global>
-      @import '@fontsource-variable/fraunces';
-      @import '@fontsource-variable/hanken-grotesk';
-      @import '@fontsource-variable/jetbrains-mono';
-
       :root {
         --ink: #1a1613;
         --muted: #5b5548;
