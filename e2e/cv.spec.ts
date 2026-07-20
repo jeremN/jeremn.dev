@@ -41,3 +41,15 @@ test('cv-print stays out of the sitemap', async ({ request }) => {
   expect(res.status()).toBe(200)
   expect(await res.text()).not.toContain('cv-print')
 })
+
+test('the CV PDF is downloadable', async ({ request }) => {
+  const res = await request.get(`${BASE}/cv.pdf`)
+  expect(res.status()).toBe(200)
+  expect(res.headers()['content-type']).toContain('pdf')
+  expect(Number(res.headers()['content-length'])).toBeGreaterThan(15000)
+})
+
+test('cv page links to the downloadable PDF', async ({ page }) => {
+  await page.goto(`${BASE}/cv`)
+  await expect(page.getByRole('link', { name: /Download PDF/ })).toHaveAttribute('href', `${BASE}/cv.pdf`)
+})

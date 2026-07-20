@@ -15,6 +15,7 @@ import { profile, experiences, stack, education, certs, links } from '../lib/cv'
     <p class="mt-4 font-mono text-xs text-muted">{profile.location} · {profile.languages}</p>
     <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-sm">
       <a href={`mailto:${profile.email}`} class="text-accent no-underline transition-colors hover:text-ink">{profile.email}</a>
+      <a href="/cv.pdf" class="text-accent no-underline transition-colors hover:text-ink">Download PDF ↓</a>
     </div>
 
     <section class="mt-16">
