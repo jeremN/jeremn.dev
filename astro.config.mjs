@@ -28,7 +28,7 @@ export default defineConfig({
   output: 'static',
   // `/hero-lab` carries `noindex` — keep it out of the sitemap too, so we never
   // invite a crawler to a page we then tell it to ignore.
-  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/hero-lab') })],
+  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/hero-lab') && !page.includes('/cv-print') })],
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
     shikiConfig: {

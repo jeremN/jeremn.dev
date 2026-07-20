@@ -24,3 +24,20 @@ test('cv exposes a contact email', async ({ page }) => {
     page.getByRole('link', { name: 'jeremie.nehlil.freelance@proton.me' }),
   ).toHaveAttribute('href', 'mailto:jeremie.nehlil.freelance@proton.me')
 })
+
+test('cv-print renders every experience for the PDF source', async ({ page }) => {
+  await page.goto(`${BASE}/cv-print`)
+  await expect(page.locator('[data-experience]')).toHaveCount(experiences.length)
+  await expect(page.locator('[data-mission]')).toHaveCount(missionCount)
+})
+
+test('cv-print is marked noindex', async ({ page }) => {
+  await page.goto(`${BASE}/cv-print`)
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+})
+
+test('cv-print stays out of the sitemap', async ({ request }) => {
+  const res = await request.get('/sitemap-0.xml')
+  expect(res.status()).toBe(200)
+  expect(await res.text()).not.toContain('cv-print')
+})
