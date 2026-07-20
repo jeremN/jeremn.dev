@@ -1,0 +1,283 @@
+---
+title: 'Two years of Renovate in a monorepo, part one: making it fit'
+summary: 'Installing the bot took an afternoon. Teaching it what our repository actually was took a year, and most of that is grouping, a regex, and a CI job that writes changesets on its behalf.'
+publishedAt: 2026-07-20
+tags: [Renovate, Dependencies, CI]
+draft: true
+---
+
+## The batch sweep
+
+For the first fourteen months of this repository, updating dependencies was an
+event. Somebody would notice it had been a while, cut a branch, run the update,
+and push one commit that touched everything. The subjects are still in the log:
+
+```
+chore(updates): update all dependencies to latest
+chore(updates): non-breaking dependency updates
+chore(deps): minor updates for bff and minor+major updates for web
+chore(updates): update dependencies to latest as of 29.04.2024 excluding some major breaking
+```
+
+That last subject is the whole problem in one line. Somebody had to decide what
+"some major breaking" meant, by hand, in the moment, and the decision left no
+record.
+
+There were about twelve of those in fourteen months, one every five or six
+weeks. Each one was a single commit, a single review, a single CI run, and a
+single undifferentiated bisect surface if anything came out wrong.
+
+In June 2024 we installed Renovate. Two years later the bot has 228 commits on
+`main`, which makes it the sixth most prolific author in the repository, one
+commit behind the fifth.
+
+This post is about the first half of that: what Renovate is, how it runs, and
+what it takes to make it fit a repository it knows nothing about. [Part
+two](/blog/two-years-of-renovate-part-two) is about what happened once we
+started trusting it, which is where the interesting failures are.
+
+## What it is, and how it runs
+
+Renovate reads the manifests in your repository, checks what each dependency's
+registry says the current version is, and opens a merge request per update. That
+much sounds like `npm-check-updates` with a CI job attached. The difference is
+the far end of the loop: Renovate can also decide the merge request is safe,
+wait for the pipeline, and merge it without anyone opening the tab. The version
+bump is the easy half. Owning the decision about whether the bump lands is the
+half that changes how a team works.
+
+It runs three ways, and the choice is mostly about who operates it.
+
+The first is self-hosted, as a scheduled CI job. We ran it that way for
+twenty-one months. It was thirty-three lines of GitLab YAML around a pinned
+image:
+
+```yaml
+variables:
+  RENOVATE_PLATFORM: gitlab
+  RENOVATE_BRANCH_PREFIX: chore(deps)/
+  RENOVATE_PR_CONCURRENT_LIMIT: 10
+  RENOVATE_PR_HOURLY_LIMIT: 10
+  RENOVATE_ALLOWED_COMMANDS: '["^pnpm install --no-frozen-lockfile$"]'
+
+renovate:
+  stage: renovate
+  image: <internal-registry>/renovate/renovate:41.97.10-full
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_JOB == "renovate"'
+      when: always
+  script:
+    - renovate $RENOVATE_EXTRA_FLAGS # add --dry-run to test without creating MRs
+```
+
+Three of those variables are worth noticing before you need them. The
+concurrency limits exist because the first thing an unconstrained bot does to a
+monorepo is open forty merge requests at once. `RENOVATE_ALLOWED_COMMANDS` is an
+allowlist for any shell Renovate is permitted to run on your behalf, and it is
+responsible for one of the better disasters in part two. And `--dry-run` in a
+trailing comment is the single most useful thing in the file, because a bot you
+can run in a mode where it only reports is a bot you can debug.
+
+The second way is a platform-managed service, which is where we ended up: the
+same bot, operated by somebody else, configured by the same `renovate.json`. The
+third is the vendor-hosted app, which on GitHub is two clicks and an onboarding
+merge request. Nothing in this post is GitHub-specific except that sentence.
+
+### Installing it is not the same as adopting it
+
+`renovate.json` landed on 2024-06-05. The bot's first merged commit is dated
+2024-07-11. Thirty-six days sit between them, and they were not idle.
+
+The config that landed on day one is worth reading, because it is almost
+entirely made of refusals:
+
+```json
+{
+  "extends": ["config:base", "schedule:weekly", "group:allNonMajor", ":semanticCommits"],
+  "rangeStrategy": "bump",
+  "enabledManagers": ["pnpm", "gitlabci"],
+  "automerge": false,
+  "packageRules": [
+    { "packagePatterns": ["peerDependencies", "engines"], "enabled": false },
+    { "description": "Disable MAJOR update types", "matchUpdateTypes": ["major"], "enabled": false }
+  ]
+}
+```
+
+That is abridged; the real file also carried labels, a custom MR title, and
+`osvVulnerabilityAlerts`, which was there from the first day and matters in part
+two. But the shape is the point. Automerge off. Majors off entirely. A weekly
+schedule so it could not talk more than once every seven days. Six days later a
+commit added `baseBranches` pointed at a throwaway branch, so that for a
+fortnight the bot could open all the merge requests it liked against something
+nobody shipped from. Then that guard came off and the real onboarding started.
+
+Every one of those refusals was reversed eventually, and the order in which we
+reversed them is the spine of both posts.
+
+### The config surface
+
+Five keys carry most of the behaviour, and they are the vocabulary for
+everything after this.
+
+`extends` pulls in presets, which are just published config objects. Most
+organisations end up with an internal one on a private registry, and this repo
+is no exception. `packageRules` is an ordered list of matchers, and later rules
+override earlier ones, which is the source of roughly every surprising Renovate
+behaviour you will ever debug. `schedule` bounds when the bot may act.
+`automerge` decides whether a green pipeline is enough. And `minimumReleaseAge`
+refuses to propose a version until it has existed for a given number of days.
+
+That last one did not exist in our config for the first fifteen months. Part two
+is largely about the fifteen months after somebody noticed.
+
+## Grouping, or the notification firehose
+
+A pnpm monorepo does not produce dependency updates in batches. It produces a
+drip. The bot averaged nine merge requests a month across two years and peaked
+at thirty-two in a single month. Ungrouped, that is a project whose
+notifications everyone has muted by the second week, which converts an
+automation win into a review-quality loss.
+
+Grouping is the answer, and ours was born maximal. The commit that introduced it
+created eight named groups at once plus an "All minor patch" catch-all to sweep
+up whatever the named ones missed. Two and a half months later another commit
+folded three of them, eslint, node and auth, back into the catch-all. The subject
+says exactly that and nothing else, because almost no commit in this repository
+has a body.
+
+The matching style was the fragile one:
+
+```json
+{
+  "groupName": "All minor patch",
+  "matchPackagePatterns": [
+    "*", "!^@storybook", "!storybook",
+    "!@changesets/cli", "!changesets-gitlab", "!@playwright/test"
+  ]
+}
+```
+
+A wildcard with a list of exceptions negated after it. It reads fine and it is
+very hard to keep correct, because the meaning of any one line depends on every
+other line in the array. When we enabled major updates, the majors catch-all went
+in carrying the family patterns without their negations, next to a wildcard:
+
+```json
+"matchPackagePatterns": ["*", "^@turf", "^@unocss", "^@vitest", "^@prisma"]
+```
+
+Every one of those families had just been given its own group in the same commit,
+and the catch-all was quietly claiming them all back. The fix, a day later, was to
+put the exclamation marks in.
+
+The response to that was good, and I would repeat it anywhere. A commit added
+Renovate's own config validator to the pre-commit hooks:
+
+```json
+"lint-staged": {
+  "renovate.json": "npx --yes --package renovate -- renovate-config-validator"
+}
+```
+
+The class of bug was "the config is syntactically valid JSON and semantically
+nonsense", and the fix was to make the file machine-checkable before it could be
+committed. The same commit fixed the patterns.
+
+Here is the part I did not expect until I counted. The repository had nine groups
+when grouping was introduced and has nine today, which looks like nothing
+happened. Almost none of them are the same job. The original set was mostly minor
+and patch families. Six of the current nine are major-only:
+
+```json
+{ "groupName": "Vitest [major]", "matchPackageNames": ["/^@vitest/", "/vitest/"],
+  "matchUpdateTypes": ["major"] }
+```
+
+Grouping did two opposite jobs and we discovered them in sequence. For minor and
+patch updates, you group to reduce noise, and the ideal is one merge request
+containing forty boring bumps that nobody needs to read. For majors, you group to
+isolate risk, and the ideal is one merge request per family so that when the Vite
+upgrade breaks the build it is not sitting in the same branch as the Prisma
+upgrade. Same mechanism, opposite goal, and the config only stops fighting you
+once you notice they are different.
+
+Three groups sit outside both jobs, and their reasons are written down, though
+not in git. They are in the team's internal page for the bot, which turns out to
+be where the reasoning went:
+
+- **Storybook** is grouped and held for manual approval because Storybook is
+  meant to be upgraded through its own CLI, which runs codemods. A version bump
+  in `package.json` is not the upgrade, it is a fraction of it.
+- **Changesets** gets its own merge request because updates to it have broken CI
+  before. It is the tool that gates every other merge request, so it is the one
+  package you never want batched with forty others. Worth noting that it is
+  still automerged, which is a more confident position than the note implies. The
+  isolation is so that a bad Changesets release is legible when CI goes red, not
+  so that a human reads it first.
+- **Playwright** gets its own because of the image-tag pairing below.
+
+None of that is deducible from the config. A rule that says
+`"automerge": false` tells you a decision was made and nothing about why, and
+three years from now the person reading it is going to assume it was caution.
+
+## Teaching it your repository
+
+Renovate understands npm. Everything else about your repository is yours to
+explain to it, and both of the following exist because something drifted while
+nobody was watching.
+
+**Changesets.** This repo releases through Changesets, where a package is only
+versioned if a merge request carries a changeset file, and CI blocks merge
+requests that do not. Renovate does not write changesets. Left alone, every one
+of those 228 merge requests would have been blocked or would have released
+nothing at all. A CI job back-fills one: it checks out the bot's branch, works
+out which dependencies moved, writes a `patch` changeset, and pushes it back.
+Sixteen lines when it was written. The whole automation depends on it.
+
+**The Playwright version pair.** Playwright is two things that must agree: the
+npm package your tests import, and the Docker image your CI runs them in. If the
+versions diverge, the browser binaries in the image do not match the client, and
+the failure is not obvious from the error. Renovate's npm manager bumps the
+package. Nothing bumped the image tag, because the image tag is a string in a
+YAML file and no dependency manager has ever heard of it.
+
+A custom regex manager fixes that by telling Renovate that a particular substring
+in a particular file is a version of a particular npm package:
+
+```json
+{
+  "customType": "regex",
+  "managerFilePatterns": ["ci/gitlab/e2e-test.yml", "ci/gitlab/test.yml", "ci/gitlab/lint-tests.yml"],
+  "matchStrings": ["image: docker-public\\.example\\.com/playwright:v(?<currentValue>\\d+\\.\\d+\\.\\d+)-jammy"],
+  "packageNameTemplate": "@playwright/test",
+  "datasourceTemplate": "npm",
+  "versioningTemplate": "semver"
+}
+```
+
+There are three files in that list and they were added one at a time, fourteen
+months apart end to end. The manager was written against one file. Three months
+later somebody noticed a second file had drifted, and added it. Eleven months
+after that a third arrived, and not from a person: Renovate added it itself,
+during one of its own config migrations. Nobody ever sat down and enumerated
+where the image tag appeared, because you cannot grep for a problem you have not
+had yet.
+
+## What fitting it actually meant
+
+Nothing in this post is about dependency versions. It is about the things
+Renovate could not know: that our releases need a file it does not write, that a
+version string in a YAML file is secretly an npm package, that Storybook has a
+CLI, that one group should be noisy and another should be quiet.
+
+That is the real install cost, and it is not the afternoon you spend on
+`renovate.json`. It is the year of noticing, one drifted file at a time, that
+your repository has rules nobody ever wrote down. The config is where they end up
+written down, which makes it the most honest documentation in the project.
+
+[Part two](/blog/two-years-of-renovate-part-two) covers what happened once we let
+it merge things by itself: eighteen months of not trusting it, the lockfile
+failure that took three attempts and came back a year later, two supply-chain
+cooldowns that had to be taught not to fight each other, and what two years of
+this did to the numbers.
