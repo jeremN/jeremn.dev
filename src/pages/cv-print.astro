@@ -1,0 +1,121 @@
+---
+import { profile, experiences, stack, education, certs, links } from '../lib/cv'
+import '@fontsource-variable/fraunces'
+import '@fontsource-variable/hanken-grotesk'
+import '@fontsource-variable/jetbrains-mono'
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{profile.name} · CV</title>
+    <style is:global>
+      :root {
+        --ink: #1a1613;
+        --muted: #5b5548;
+        --faint: #857e6e;
+        --line: #d8d2c4;
+        --accent: #97640f;
+        --serif: 'Fraunces Variable', Georgia, serif;
+        --sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
+        --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+      }
+      @page { size: A4; margin: 14mm 15mm; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: #fff; color: var(--ink); }
+      body { font-family: var(--sans); font-size: 10pt; line-height: 1.5; }
+      .sheet { padding: 4mm 0; }
+
+      .name { font-family: var(--serif); font-size: 22pt; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+      .role { font-family: var(--mono); font-size: 8pt; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin: 2pt 0 0; }
+      .contact { font-family: var(--mono); font-size: 8pt; color: var(--muted); margin: 6pt 0 0; }
+      .contact a { color: var(--muted); text-decoration: none; }
+
+      h2.section { font-family: var(--mono); font-size: 8pt; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); margin: 16pt 0 6pt; padding-top: 6pt; border-top: 0.75pt solid var(--line); }
+
+      .exp { break-inside: avoid; padding: 6pt 0; }
+      .exp + .exp { border-top: 0.5pt solid var(--line); }
+      .exp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8pt; }
+      .company { font-family: var(--serif); font-size: 13pt; font-weight: 600; margin: 0; }
+      .meta { font-family: var(--mono); font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); white-space: nowrap; }
+      .exp-role { font-family: var(--mono); font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 1pt 0 0; }
+      .blurb { margin: 3pt 0 0; color: var(--ink); }
+      .tags { margin: 3pt 0 0; color: var(--muted); font-size: 8.5pt; }
+
+      .missions { margin: 5pt 0 0; padding-left: 8pt; border-left: 0.75pt solid var(--line); }
+      .mission { break-inside: avoid; margin: 5pt 0 0; }
+      .mission-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8pt; }
+      .client { font-family: var(--serif); font-size: 10.5pt; font-weight: 600; margin: 0; }
+      .note { font-style: italic; color: var(--muted); margin: 2pt 0 0; font-size: 8.5pt; }
+
+      .grid { display: grid; grid-template-columns: 26mm 1fr; gap: 3pt 8pt; }
+      .grid dt { font-family: var(--mono); font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); }
+      .grid dd { margin: 0; }
+      .links { font-family: var(--mono); font-size: 8pt; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="sheet">
+      <p class="name">{profile.name}</p>
+      <p class="role">{profile.title}</p>
+      <p class="contact">
+        {profile.location} · {profile.languages} · <a href={`mailto:${profile.email}`}>{profile.email}</a> · jeremn.dev
+      </p>
+
+      <h2 class="section">Experience</h2>
+      {experiences.map((p) => (
+        <div class="exp" data-experience>
+          <div class="exp-head">
+            <p class="company">{p.company}</p>
+            <span class="meta">{p.period} · {p.kind === 'agency' ? 'Agency / ESN' : 'Freelance'}{p.location ? ` · ${p.location}` : ''}</span>
+          </div>
+          <p class="exp-role">{p.role}</p>
+          <p class="blurb">{p.blurb}</p>
+          <p class="tags">{p.stack.join(' · ')}</p>
+          {p.missions && (
+            <div class="missions">
+              {p.missions.map((m) => (
+                <div class="mission" data-mission>
+                  <div class="mission-head">
+                    <p class="client">{m.client}</p>
+                    <span class="meta">{m.period}</span>
+                  </div>
+                  <p class="blurb">{m.blurb}</p>
+                  {m.note && <p class="note">{m.note}</p>}
+                  <p class="tags">{m.stack.join(' · ')}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      <h2 class="section">Stack</h2>
+      <dl class="grid">
+        {stack.map((group) => (
+          <>
+            <dt>{group.label}</dt>
+            <dd>{group.items.join(' · ')}</dd>
+          </>
+        ))}
+      </dl>
+
+      <h2 class="section">Education &amp; certifications</h2>
+      <dl class="grid">
+        {education.map((e) => (
+          <>
+            <dt>{e.year}</dt>
+            <dd><strong>{e.title}</strong> · {e.detail}</dd>
+          </>
+        ))}
+        <dt>Certs</dt>
+        <dd>{certs.join(' · ')}</dd>
+      </dl>
+
+      <h2 class="section">Links</h2>
+      <p class="links">{links.map((l) => l.href.replace(/^https?:\/\//, '')).join('  ·  ')}</p>
+    </div>
+  </body>
+</html>
