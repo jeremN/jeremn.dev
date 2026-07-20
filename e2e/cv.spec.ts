@@ -1,0 +1,26 @@
+import { test, expect } from '@playwright/test'
+import { BASE } from '../site.config.mjs'
+import { experiences } from '../src/lib/cv'
+
+const missionCount = experiences.reduce((n, e) => n + (e.missions?.length ?? 0), 0)
+
+test('cv lists every experience and mission with no silent drop', async ({ page }) => {
+  await page.goto(`${BASE}/cv`)
+  await expect(page.locator('[data-experience]')).toHaveCount(experiences.length)
+  await expect(page.locator('[data-mission]')).toHaveCount(missionCount)
+})
+
+test('cv shows the agency employers and their nested client missions', async ({ page }) => {
+  await page.goto(`${BASE}/cv`)
+  await expect(page.getByRole('heading', { name: 'Fidesio' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Liamone Web' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'France Télévisions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Groupe PSA / Citroën' })).toBeVisible()
+})
+
+test('cv exposes a contact email', async ({ page }) => {
+  await page.goto(`${BASE}/cv`)
+  await expect(
+    page.getByRole('link', { name: 'jeremie.nehlil.freelance@proton.me' }),
+  ).toHaveAttribute('href', 'mailto:jeremie.nehlil.freelance@proton.me')
+})
