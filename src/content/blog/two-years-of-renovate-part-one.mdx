@@ -29,8 +29,9 @@ out wrong. Worse, the interval was set by whoever happened to remember.
 
 In June 2024 we installed Renovate. This post is about the first half of that:
 what it is, how it runs, and what it takes to teach it a repository it knows
-nothing about. A second post will cover refining the configuration once it was
-running, and what happened when we let it merge things by itself.
+nothing about. [A second post](/blog/two-years-of-renovate-part-two) covers
+refining the configuration once it was running, and what happened when we let it
+merge things by itself.
 
 ## What it is, and how it runs
 
@@ -219,7 +220,8 @@ lives instead. That makes it the most honest documentation in the project.
 
 None of this is the finished state. What is described here is a bot that opens
 correct merge requests and waits for a person on every single one, which is a
-long way from the thing being useful. The next post is about refining that:
+long way from the thing being useful. [The next
+post](/blog/two-years-of-renovate-part-two) is about refining that:
 grouping so the output stays readable, the supply-chain controls that decide what
 it is allowed to propose, moving off our own scheduled job onto a managed
 service, and finally letting minor and patch updates merge themselves.
