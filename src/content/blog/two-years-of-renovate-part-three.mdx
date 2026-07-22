@@ -1,0 +1,153 @@
+---
+title: 'Renovate: a small agent for the common failures'
+summary: 'Automated dependency merge requests fail in a handful of predictable ways. A small model clears the mechanical ones, and when it cannot, it writes down what it found.'
+publishedAt: 2026-07-22
+tags: [Renovate, Agents, CI]
+draft: false
+---
+
+Part two was the first narrowing: the updates safe enough to merge unwatched. This
+post is the second, the failures. Merging unwatched only works while the pipeline
+is green, and a dependency bump is one of the more reliable ways to turn it red. This series has tried to be honest about the red ones too.
+What follows is an account of how those merge requests fail in practice, the
+small model we pointed at the failures, and the one habit that makes it worth
+running: when it cannot fix something, it leaves a comment explaining why.
+
+## What actually breaks
+
+A dependency merge request fails in a short list of ways, and the list barely
+changes from one week to the next.
+
+The lockfile drifts. Renovate updates the manifest and regenerates the lockfile in
+a separate step, and that second step can fail on its own. When it does you get a
+bumped `package.json` against a stale lock, and every downstream job dies on a
+frozen install. The errors say exactly this:
+
+```
+ERR_PNPM_OUTDATED_LOCKFILE
+ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
+```
+
+The package is too new. The supply-chain cooldown from part two refuses a version
+that has not aged the required number of days, and the install stops with
+`ERR_PNPM_NO_MATURE_MATCHING_VERSION` or a trust-policy error. Nothing is broken
+here. The control is working, and the package needs to get older.
+
+The types moved. A minor bump tightens a signature or renames an export, and the
+type-check goes red against code that compiled yesterday.
+
+A snapshot moved. A dependency changes its output by a whitespace and a snapshot
+test stops matching.
+
+None of these is interesting. The same four shapes account for most of what a
+person used to open the merge request to deal with, and none of them needs a
+judgement call. Each one just has to be spotted and matched to a fix.
+
+## A small model, on purpose
+
+The agent is a job inside the merge request pipeline that only wakes when a
+Renovate branch has a failed pipeline. It lists the failed jobs, reads their logs,
+and works down a decision tree. Then it either pushes a fix or says why it cannot.
+
+```yaml
+renovate-fix:
+  rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^renovate\//'
+      when: on_failure
+```
+
+The model is `gpt-5-mini`, and the size is deliberate. The failures above are
+small, mechanical problems. Recognising a stale lockfile and running an install
+does not need a frontier model, and a frontier model would only buy reasoning the
+task never uses.
+
+The fair question is why a model at all, when the four shapes are enumerable and
+their fixes are close to deterministic. A shell script could match the error codes
+and run the install. The answer is the fifth shape, the one not on the list. A
+script handles exactly what you enumerated and produces nothing for anything else,
+and on automated merge requests "nothing" is indistinguishable from success until
+someone notices the branch has been red for a week. The model is there for the
+failures nobody enumerated in advance, the ones a script has no branch for.
+
+## What it may do, and what it may not
+
+The decision tree is a list of permissions.
+
+On a stale lockfile it runs the install and commits the lockfile alone. If the
+install produces no diff, the branch was already repaired by an earlier run and it
+stops without a commit. On a too-new package it does not try to override the
+cooldown; it recommends a newer attested version, or a scoped cooldown exception where
+the case for one holds up, and it never weakens the global trust policy. On a type
+error it makes the narrow fix, updating the call site to the renamed export or the
+tightened signature. On a failing test it first writes down why the test broke, in
+terms of the dependency that changed, and only then may it act, inside a small
+allowlist: update a snapshot, adjust a type fixture, migrate a matcher to one that
+is at least as strict.
+
+Everything outside that allowlist is refused. It may not weaken an assertion, skip
+or delete a test, edit a fixture so the failing path is never taken, or touch the
+production code the test covers.
+
+The allowlist is written around what a model does when you tell it to turn a red
+build green. Left to itself it finds the cheapest path, and the cheapest path is
+almost always to weaken the test rather than fix the code. So the allowlist
+refuses exactly that move.
+
+## When it cannot
+
+When the failure is not one of the known shapes, or the only available fix falls
+outside the allowlist, the agent stops and writes a comment on the merge request:
+what failed, which logs it read, and why it could not fix it.
+
+Even when it cannot fix the branch, that comment gives whoever triages it next a
+diagnosis to start from.
+
+It also closes something this series keeps circling. Part one had a decision about
+what counted as breaking that left no record. Part two had the sharpest description
+of a bug living in a CI comment because the commit that fixed it carried an empty
+body. The repository keeps losing its own reasoning, and here the agent, at the
+moment it fails, writes the reasoning down.
+
+## The label it must not waste
+
+One small mechanic decides whether the agent fails safely. To stop it from
+re-attempting the same merge request on every pipeline, a completed attempt marks
+the merge request with a label, and that label switches the agent off for that
+branch from then on.
+
+Which makes the label expensive. Spend it on a non-attempt, an infrastructure
+hiccup, a tool timeout, a run that died before it decided anything, and you have
+permanently disabled the one job that would have fixed the branch on the next
+pipeline. So it marks the merge request only on a definitive outcome: a pushed fix,
+or a written "I cannot fix this". If it could not get that far, it exits having
+touched nothing, and the next run gets a clean attempt. The rule is two lines, and
+without it a single failed run would disable the fixer for good.
+
+## The one that went back to being a script
+
+Not everything that started as an agent stayed one. The job that labels merge
+requests by type, reading the branch prefix, the title, and the files touched, then
+applying the right labels, used to be an agent. It is a plain script now, its rules
+in a tested function, and it can only ever apply a label that already exists on the
+project rather than invent one.
+
+Going back to a script was the right move. Labelling by branch prefix is a lookup:
+the labels are fixed, the inputs are structured, and there is nothing to weigh, so
+a tested function decides it without the cost or the nondeterminism a model brings.
+What actually needs a model is a different kind of task, where the answer depends
+on reading something unstructured and deciding what it means. Recognising why a
+test broke from a log is that. The fix agent stays a model because its useful
+output, on the branches it cannot fix, is written prose.
+
+## The account
+
+The failures on automated dependency merge requests are few, and they repeat. A
+small model clears the mechanical ones cheaply. What earns it a place, though, is
+the failure it cannot fix: instead of forcing a bad change or leaving the branch
+red without a word, it writes down what it found. Work that used to depend on
+somebody remembering to check a stalled branch now leaves a record either way.
+
+This was the small end of the problem: the updates that were allowed to open a
+merge request in the first place. The next post is about the ones that are not, the
+majors this configuration still refuses to merge, and what happened when we pointed
+a much larger agent at them, and then a different one.
