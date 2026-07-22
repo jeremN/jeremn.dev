@@ -1,18 +1,17 @@
 ---
 title: 'Renovate: a small agent for the common failures'
-summary: 'The automated dependency merge requests fail in a handful of predictable ways. A small model clears the mechanical ones, and when it cannot, it writes down what it found.'
+summary: 'Automated dependency merge requests fail in a handful of predictable ways. A small model clears the mechanical ones, and when it cannot, it writes down what it found.'
 publishedAt: 2026-07-22
 tags: [Renovate, Agents, CI]
-draft: true
+draft: false
 ---
 
-Part two ended with minor and patch updates merging themselves, which is the good
-case. This series has been honest about the other one. Automerge on a green
-pipeline only helps when the pipeline is green, and a dependency bump is one of the
-more reliable ways to turn it red. What follows is an account of how those merge
-requests fail in practice, the small model we pointed at the failures, and the one
-habit that makes it worth running: when it cannot fix something, it writes down
-what it found instead of going quiet.
+Part two was the first narrowing: the updates safe enough to merge unwatched. This
+post is the second, the failures. Merging unwatched only works while the pipeline
+is green, and a dependency bump is one of the more reliable ways to turn it red. This series has tried to be honest about the red ones too.
+What follows is an account of how those merge requests fail in practice, the
+small model we pointed at the failures, and the one habit that makes it worth
+running: when it cannot fix something, it leaves a comment explaining why.
 
 ## What actually breaks
 
@@ -40,9 +39,9 @@ type-check goes red against code that compiled yesterday.
 A snapshot moved. A dependency changes its output by a whitespace and a snapshot
 test stops matching.
 
-None of these is interesting, and that is the point. The same four shapes account
-for most of what a person used to open the merge request to deal with, and none of
-them asks for judgement. They ask for recognition.
+None of these is interesting. The same four shapes account for most of what a
+person used to open the merge request to deal with, and none of them needs a
+judgement call. Each one just has to be spotted and matched to a fix.
 
 ## A small model, on purpose
 
@@ -57,10 +56,10 @@ renovate-fix:
       when: on_failure
 ```
 
-The model is `gpt-5-mini`, and the size is a decision rather than a budget
-compromise. The failures above are small, shaped problems. Recognising a stale
-lockfile and running an install does not need a frontier model, and paying for one
-would be paying for reasoning the task never uses.
+The model is `gpt-5-mini`, and the size is deliberate. The failures above are
+small, mechanical problems. Recognising a stale lockfile and running an install
+does not need a frontier model, and a frontier model would only buy reasoning the
+task never uses.
 
 The fair question is why a model at all, when the four shapes are enumerable and
 their fixes are close to deterministic. A shell script could match the error codes
@@ -68,48 +67,46 @@ and run the install. The answer is the fifth shape, the one not on the list. A
 script handles exactly what you enumerated and produces nothing for anything else,
 and on automated merge requests "nothing" is indistinguishable from success until
 someone notices the branch has been red for a week. The model is there for the
-case the script cannot have a branch for.
+failures nobody enumerated in advance, the ones a script has no branch for.
 
 ## What it may do, and what it may not
 
-The decision tree is really a list of permissions.
+The decision tree is a list of permissions.
 
 On a stale lockfile it runs the install and commits the lockfile alone. If the
 install produces no diff, the branch was already repaired by an earlier run and it
-stops without a commit. On a too-new package it does not try to out-argue the
+stops without a commit. On a too-new package it does not try to override the
 cooldown; it recommends a newer attested version, or a scoped cooldown exception where
 the case for one holds up, and it never weakens the global trust policy. On a type
-error it makes the narrow fix. On a failing test it first writes down why the test
-broke, in terms of the dependency that changed, and only then may it act, inside a
-small allowlist: update a snapshot, adjust a type fixture, migrate a matcher to one
-that is at least as strict.
+error it makes the narrow fix, updating the call site to the renamed export or the
+tightened signature. On a failing test it first writes down why the test broke, in
+terms of the dependency that changed, and only then may it act, inside a small
+allowlist: update a snapshot, adjust a type fixture, migrate a matcher to one that
+is at least as strict.
 
 Everything outside that allowlist is refused. It may not weaken an assertion, skip
 or delete a test, edit a fixture so the failing path is never taken, or touch the
 production code the test covers.
 
-The forbidden list is the design. A model told to turn a red build green will, left
-to itself, find the cheapest path to green, and the cheapest path is almost always
-to lower the bar until the bar is met. The allowlist exists so that the one move it
-is not permitted to make is the exact move it would otherwise reach for first.
+The allowlist is written around what a model does when you tell it to turn a red
+build green. Left to itself it finds the cheapest path, and the cheapest path is
+almost always to weaken the test rather than fix the code. So the allowlist
+refuses exactly that move.
 
 ## When it cannot
 
 When the failure is not one of the known shapes, or the only available fix falls
-outside the allowlist, the agent does not force something and does not fall silent.
-It writes a comment on the merge request: what failed, which logs it read, and why
-it stopped.
+outside the allowlist, the agent stops and writes a comment on the merge request:
+what failed, which logs it read, and why it could not fix it.
 
-That comment is what pays for the model. The fallback is a diagnosis rather than a
-fix, left where the next person to triage the merge request starts from an
-explanation instead of a red pipeline. It turns a dead branch into a handoff.
+Even when it cannot fix the branch, that comment gives whoever triages it next a
+diagnosis to start from.
 
 It also closes something this series keeps circling. Part one had a decision about
 what counted as breaking that left no record. Part two had the sharpest description
 of a bug living in a CI comment because the commit that fixed it carried an empty
 body. The repository keeps losing its own reasoning, and here the agent, at the
-moment it fails, writes the reasoning down. The thing that could not fix the problem
-at least refuses to hide it.
+moment it fails, writes the reasoning down.
 
 ## The label it must not waste
 
@@ -123,8 +120,8 @@ hiccup, a tool timeout, a run that died before it decided anything, and you have
 permanently disabled the one job that would have fixed the branch on the next
 pipeline. So it marks the merge request only on a definitive outcome: a pushed fix,
 or a written "I cannot fix this". If it could not get that far, it exits having
-touched nothing, and the next run gets a clean attempt. It is a two-line rule, and
-it is the difference between an agent that fails safe and one that fails locked.
+touched nothing, and the next run gets a clean attempt. The rule is two lines, and
+without it a single failed run would disable the fixer for good.
 
 ## The one that went back to being a script
 
@@ -134,25 +131,21 @@ applying the right labels, used to be an agent. It is a plain script now, its ru
 in a tested function, and it can only ever apply a label that already exists on the
 project rather than invent one.
 
-The move was a downgrade in name and an upgrade in everything else. Labelling by
-branch prefix is a lookup: fixed rules, structured inputs, nothing to weigh. A
-tested function does it deterministically, for none of the cost and none of the
-nondeterminism a model brings. The tell that a task actually wants a model is that
-the answer depends on reading something unstructured and deciding what it means.
-Recognising why a test broke from a log is that. Mapping a branch prefix to a label
-is not. The fix agent stays a model because its fallback is a paragraph of prose;
-the labeller became a script because its output is a set membership.
+Going back to a script was the right move. Labelling by branch prefix is a lookup:
+the labels are fixed, the inputs are structured, and there is nothing to weigh, so
+a tested function decides it without the cost or the nondeterminism a model brings.
+What actually needs a model is a different kind of task, where the answer depends
+on reading something unstructured and deciding what it means. Recognising why a
+test broke from a log is that. The fix agent stays a model because its useful
+output, on the branches it cannot fix, is written prose.
 
 ## The account
 
 The failures on automated dependency merge requests are few, and they repeat. A
-small model clears the mechanical ones for about what it costs to run, which is not
-much, because the model is small and the problems are smaller. But the fixes are
-not the reason to keep it. The reason is the failure that is not on the list, where
-the model neither papers over the problem nor goes quiet, and leaves a note
-instead. Nothing on these merge requests fails silently any more, and for a
-category of work that used to depend on somebody remembering to look, that is the
-whole of the win.
+small model clears the mechanical ones cheaply. What earns it a place, though, is
+the failure it cannot fix: instead of forcing a bad change or leaving the branch
+red without a word, it writes down what it found. Work that used to depend on
+somebody remembering to check a stalled branch now leaves a record either way.
 
 This was the small end of the problem: the updates that were allowed to open a
 merge request in the first place. The next post is about the ones that are not, the
