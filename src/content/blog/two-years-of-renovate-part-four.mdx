@@ -1,0 +1,193 @@
+---
+title: 'Renovate: the cost of a locked-down agent'
+summary: 'The major upgrades the automation will not open on its own. A frontier agent on a locked-down runner produced confident, wrong merge requests, because the safeguards that hardened it also cut it off from what it needed. Run without those constraints, a different agent could verify the same upgrade. The problem was never the model.'
+publishedAt: 2026-07-23
+tags: [Renovate, Agents, CI]
+draft: false
+---
+
+Majors are the updates the configuration will not merge on its own. Everything in
+the first three posts was about narrowing what a person has to look at: group the
+noise, let the small updates merge themselves, point a cheap model at the failures
+that repeat. A major upgrade is where that narrowing stops. Renovate is told never
+to open the merge request for one.
+
+```json
+{
+  "packageRules": [
+    { "matchUpdateTypes": ["major"], "prCreation": "approval" }
+  ]
+}
+```
+
+So a major does not arrive as a merge request. It arrives as a line in the
+dependency dashboard, an unchecked box waiting for someone to decide it is worth
+the work. This post is about handing that work to an agent, twice, and about the
+wall both attempts ran into.
+
+## The triage that only recommends
+
+A small model reads the dashboard. For each pending major it researches the
+breaking changes and opens one issue: a short risk note and a brief for whoever
+picks it up. It recommends and nothing more. It does not check the box, open a
+merge request, or touch the code.
+
+The issue is the whole interface, and assigning it is the approval. A person who
+decides a major is worth doing assigns the issue to the coding agent. There is no
+other switch.
+
+One part of this we got wrong first. The brief has to be written into the issue
+body by a script, not by the triage model. When the triage model wrote the brief
+itself, it guessed at how a library was used and sent the coding agent to the
+wrong API: it described the migration as if the project used `commander` when the
+code imported `cac`. The issue body is the one channel the coding agent reads
+reliably. A file committed to the repository that explains how to do the upgrades
+is not read at all. We probed for that twice and got nothing back either time.
+
+The instructions have to go where the agent actually reads them, which is the
+issue body, and go in the same way every time.
+
+## The bigger model, under lockdown
+
+Assigning the issue wakes the platform's hosted coding agent, a frontier model of
+the Codex class. It reads the issue, makes the change, and opens the merge request
+unattended.
+
+The runner it works on is locked down, and every lock on it is defensible. No
+network, no secrets, a memory cap. That is a reasonable posture for a machine that
+runs a language model with write access to a company's repositories. The trouble is
+what the safeguards add up to. Each lock is sensible. Stacked, they leave the agent
+unable to do the work: it cannot fetch the package's migration guide or reach the
+registry for anything the lockfile does not already pin, and the generators and
+integration steps that need a network do not run. It works from the code in front
+of it and its own training, and from nothing else.
+
+On most majors that is survivable. On one it was not. The new major had removed
+support for the database the service runs on. No version of the change could work.
+The agent did not know that, because knowing it needed release notes it could not
+read, and so it produced a clean, well-structured merge request: the bump applied,
+the obvious call sites updated, the description sure of itself. It looked finished
+and could not work, which is worse than a messy diff, because it asks the reviewer
+to trust it.
+
+The agent was capable enough. It was cut off from everything it needed to check its
+own work, and confidence on top of that is the failure you get. You cannot
+constrain an agent this hard and still expect it to judge whether an upgrade is
+even possible. A smarter model on the same runner runs into the same walls. The
+constraint was the problem, not the model.
+
+Two things follow, and both are built into the system rather than asked of the
+agent. The merge request pipeline stays the authority on whether a change is good,
+ahead of the agent's confidence and ahead of the brief. And the parts of the
+design that have to hold no matter what the agent does are keyed to identity. The
+changeset job from the first two posts is the case in point: it runs on these
+merge requests because they are authored by the agent's identity, not because the
+agent was asked to add a changeset. It even survived a bug worth naming. The
+coding agent tends to push more than one commit, the bump and then a follow-up
+fix, so a diff taken against the previous commit missed the bump and skipped the
+changeset. The repair was to diff against the merge request's base instead. The
+agent can ignore an instruction. It cannot change who GitLab records as the author
+of its merge request, and the job keys off that.
+
+## The same major, without the locks
+
+The next thing to try was the same hard major with the constraints off. So we ran
+one locally with Claude Code, where it could read the package documentation and run
+the gates the locked runner cannot.
+
+Take the code-generator major, a GraphQL codegen going from version six to seven,
+which changed its config format and the shape of the generated types. On the locked runner the
+bot had produced a plausible diff, propped up with type casts to make the new
+output compile. Run locally, with the docs and the generator itself available, the
+same migration came out differently. Many of those casts were avoidable, replaced
+by a `satisfies` or a filled-in field once the real types were visible, and the
+few that stayed could be defended in the description rather than buried. The diff
+moved from plausible to checked.
+
+The docs and the gates are what changed the outcome. Give an agent them and a major
+that was guesswork becomes something you can verify; without them the best model
+available keeps guessing. What Claude got locally was the capability the locked
+runner withheld, and with the docs and the gates in reach it could get the migration
+right.
+
+## The publish it cannot do
+
+The local run could verify the major. It could not open the merge request.
+
+From a developer's machine `git push` works, but the call that opens a merge
+request goes through the GitLab API, and that API sits behind a firewall that
+filters on where the request comes from. Off the corporate network it refuses. So
+the agent that could verify the upgrade had no way to publish it. The one agent
+that could publish, the platform bot inside the network, was the one still under
+lockdown.
+
+That asymmetry is also the way through. The firewall blocks the API from outside
+the network. It does not block it from a runner inside the network. The platform's
+own jobs prove this daily: the triage and the coding agent both open merge
+requests from CI, from inside. So the autonomous path for an agent you can steer
+is the same path. Run it in CI, in the network, where the publish call is allowed.
+
+That is the next logical step, and on paper it is a small job. A pipeline schedule
+wakes it, it reads the major-upgrade issues assigned to the agent, and it runs the
+upgrade from inside the network, where the firewall allows the publish.
+
+```yaml
+# A scheduled job: take a major-upgrade issue assigned to the agent, do the
+# upgrade, and open the merge request from inside the network, where the
+# firewall allows it. The next step, pending platform approval.
+claude-major-upgrade:
+  image: $CLAUDE_CODE_IMAGE   # mirrored into the internal registry
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  variables:
+    ANTHROPIC_BASE_URL: $LLM_GATEWAY_URL   # internal proxy, no egress
+    ANTHROPIC_AUTH_TOKEN: $LLM_GATEWAY_TOKEN
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+  script:
+    - >
+      claude -p "Take the oldest open issue labelled renovate-major
+      assigned to the agent, follow its brief, apply the upgrade, and
+      open a merge request that closes it. If it cannot be done,
+      comment on the issue and stop."
+      --model sonnet
+      --permission-mode acceptEdits
+      --allowedTools "Bash,Read,Edit,Write,mcp__gitlab"
+      --mcp-config "$GITLAB_MCP_CONFIG"
+```
+
+The YAML is the short part. What the job needs is not code: a way for the runner
+to reach a model without opening its egress, a mirrored image to run, and a token
+scoped to open a merge request, all of which belong to the platform team. Those are
+what the next step waits on. Approve them and the job runs; until then it does not.
+
+## The one that is already autonomous
+
+There is an agent opening major merge requests inside the network today, and it is
+the one under lockdown. Assign the issue and the platform's hosted agent opens the
+merge request on its own. The catch is the same one: the team cannot steer it. Its model, its prompt, its skills are the platform's, not the
+project's. The reason to want a Claude job in CI was simple: it would put an agent you can
+actually instruct into the one place where the publish is allowed.
+
+So here is the shape of it. The agent that is autonomous is the one you
+cannot control. The agent you can control is not autonomous yet.
+
+## The account
+
+Every wall in this post was a constraint someone chose to impose. A locked-down
+runner turned a frontier agent's work into a merge request that could not merge; a
+firewall let the capable agent verify but never publish; the platform owns the only
+agent that is already autonomous. Change the model at any of those points and
+nothing moves.
+
+What survives all of it is the part of the design that does not depend on the
+agent behaving well: the pipeline as the authority on a change, the jobs keyed to
+identity, the brief placed where the agent actually reads. Rely on what the bot
+is, not on what you told it, and build the guarantees into CI, where they hold
+whether or not the agent cooperates.
+
+And the end of it, honestly. The upgrade that gets verified today is the one run
+by hand, off the locked runner. The autonomous version, the one that runs itself
+inside the network, is designed and not yet built. When a first run opens a real
+major from inside the network, there will be something to say about how it went.
+There is not yet, and that is a more useful place to stop than a claim that it is
+solved.
