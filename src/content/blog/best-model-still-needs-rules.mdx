@@ -1,0 +1,154 @@
+---
+title: 'The best model still needs rules'
+summary: 'A refactor that could not be avoided turned into a fair test of coding agents, because it had to actually ship. The strongest model produced mediocre code on its own. What made it useful was the structure built around it, one correction at a time, and the limit that structure never removed was knowing the work was correct.'
+publishedAt: 2026-07-28
+tags: [Agents, Svelte, Refactoring]
+draft: false
+---
+
+Some refactors you choose. This one we could not avoid. The library we used to
+read and write URL search params had stopped being maintained, its Svelte 5
+support had sat in beta for a year, and the bugs we hit were not going to be
+fixed by anyone but us. The typing was thin on top of that: every component that
+read a query parameter guessed at its shape, and the default values were
+copy-pasted from one file to the next.
+
+A refactor you cannot avoid is a fair way to test a coding agent. It is real work
+with a real bar. It has to compile, it has to pass review, and it has to ship. So
+while the change had to happen, it was also a chance to see how far the current
+agents could take it, and where they stopped.
+
+We wrote one brief and gave it to four agents unchanged. Read the current code
+and list what it does. Look at three ways to replace it. Sketch each in
+pseudo-code before writing anything. The constraints were narrow: use Zod to
+serialise and deserialise, and target Svelte 5. Past that they were free to ask
+questions and to propose something we had not thought of.
+
+## What a raw agent produces
+
+The four agents failed in two familiar ways. One kind over-built, rewriting
+methods that already existed in the codebase and reaching for a general solution
+where a local one was sitting right there. The other followed the documentation
+loosely and invented APIs that were never in it, confident about calls that did
+not exist.
+
+The strongest raw output came from Claude, running Opus. It stood out from the
+others, and it was still mediocre. The code was generic, written to no particular
+codebase: it imported from barrel files we do not use, and it mixed Svelte 4 and
+Svelte 5 idioms in the same file. Left alone, even the best model available
+produced code we would not merge.
+
+The model was not the problem, and a better model would not have fixed it. What
+the agent lacked was everything specific to this codebase, and none of that is in
+its training.
+
+## Correcting it once
+
+The fix was a place to write down what the agent got wrong, so it would get it
+wrong only once. A better prompt was never going to do that.
+
+The loop is dull and it works. The agent produces something. It navigates with
+the framework's generic helper instead of the project's typed one. I correct it:
+use the codec, not the helper. That correction goes into a conventions file the
+agent reads at the start of every session, and the mistake does not come back.
+
+```md
+## Search params
+Read and write them through their codec, never `goto()` or the framework's
+generic navigation helper. The codec is the only typed path in and out.
+```
+
+Do that for a week and the file becomes a decent description of how this codebase
+actually wants to be written. Local hooks for lint and tests close the loop from
+the other side, so a broken build tells the agent directly instead of me relaying
+it.
+
+## When one file is not enough
+
+The conventions file has a ceiling. Everything in it loads into every session, and
+past a point that is a lot of context spent on rules most tasks never touch. The
+answer was to split it. General conventions stayed in the file that always loads.
+The rest moved into skills, each scoped to one area: one for SvelteKit's routing
+and data loading, one for Vitest, one for Playwright. A skill loads only when the
+task calls for it, so the context stays light and the relevant rules are still
+there when they matter.
+
+## Working like a developer, not a code generator
+
+An agent that only writes code is a faster way to type. The larger change was
+giving it the shape of the work a developer actually does. Explore the options
+before committing to one. Break the change into steps and name the risks. Write
+the test first. Review the result against the project's own standards. These are
+commands now, not habits I hope the agent remembers.
+
+Once each step is its own instruction, the steps can run in parallel. The refactor
+stopped being one agent working through a queue while I watched, and became several
+agents working at once while I directed them: one on the migration, one on the
+tests, one on the end-to-end coverage, reviewed and committed together. The old
+ceiling was the context window of a single conversation. The new limit is how many
+seats you can usefully direct at the same codebase.
+
+## What the structure does not fix
+
+All of that makes the agent productive. None of it makes it trustworthy, and the
+two are easy to confuse.
+
+The first limit is that a model does not hold a long conversation well. Early on
+its reasoning is reliable. As the session fills up it loses the thread, and past a
+point it forgets earlier decisions and blends things that should stay separate.
+The defences are unglamorous: a persistent notes file the agent writes to and
+reads back, so decisions survive between sessions; short, focused conversations
+rather than one long one; and keeping the token cost of each exchange down.
+
+The second limit is judgement. Architecture is still better done by a person. So
+is anything that turns on a decision the code does not state, the kind of implicit
+business reason a model has no way to know. And testing rewards being explicit: a
+clear spec and a test written first give the agent far less room to produce
+something plausible and wrong.
+
+That last one is the limit under all the others. An agent can produce work that
+looks finished and reads as confident, and being sure it is actually correct is
+the hard part. Generation has run ahead of verification. Until that gap closes,
+correctness is established by a person reading the work, and none of the structure
+above removes that. It makes the agent faster and more consistent. It does not
+make it right on its own.
+
+## What it came to
+
+The refactor shipped. The clearest signal was the shape of the effort across it.
+The first files needed several corrections each. By the last stretch they needed
+none, because every correction along the way had become a rule the agent already
+followed. The work compounded: the agent got better at this
+codebase as more of the codebase was converted to match its own rules.
+
+The estimate going in was roughly a month. It came in at a few days. And the code
+that came out is the code we wanted. Instead of every component guessing at the
+shape of a query parameter, each search reads a typed codec:
+
+```ts
+// The search params for a page, described once:
+const SearchPageCodec = z.object({
+  page: z.number().default(1),
+  q: z.string().optional(),
+})
+
+// Before: each component guessed the shape, inline.
+const page = queryParam('page', ssp.number(1))
+
+// After: one typed read, validated on the way in and out.
+const params = searchParams(SearchPageCodec)
+```
+
+## The companion, not the author
+
+The word that kept fitting was companion. The agent changed what the developer
+spent the day doing, away from typing out each file and toward describing what
+correct looked like, catching the misses, and steering several agents at once.
+
+This is one of two ways to work with these tools, and the more hands-on of them.
+The other is the fully automated kind, an agent left to run on its own in CI,
+which I wrote about in the [Renovate series](/blog/two-years-of-renovate-part-one).
+That one is about how little a person can be in the loop. This one is about how
+much a person still has to be. Both land in the same place: a pipeline, or a
+reviewer, that decides whether the work is good, because the agent cannot be the
+one to certify itself.
