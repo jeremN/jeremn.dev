@@ -4,7 +4,7 @@ import Layout from '../../layouts/Layout.astro'
 import Eyebrow from '../../components/site/Eyebrow.astro'
 import PostRow from '../../components/site/PostRow.astro'
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+const posts = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).sort(
   (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
 )
 ---

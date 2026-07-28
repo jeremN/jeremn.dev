@@ -6,7 +6,7 @@ import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
 
 export async function getStaticPaths() {
-  const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  const posts = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).sort(
     (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
   )
   // Newest-first: index i has its newer neighbour at i-1, older at i+1.
