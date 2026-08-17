@@ -9,15 +9,22 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  /* Palette. Light is canonical, so each token declares both values once via
-     light-dark(). Token names deliberately avoid Tailwind built-ins: `ground`
-     not `base`, so the `text-base` font-size utility is never shadowed. */
-  --color-ground: light-dark(#ece3d1, #0b0a12);
-  --color-surface: light-dark(#f7f1e2, #15131f);
-  --color-ink: light-dark(#211c15, #f3ecdd);
-  --color-muted: light-dark(#6b6253, #9a93a8);
-  --color-accent: light-dark(#97640f, #e8b65a);
-  --color-line: light-dark(#d8ccb2, #2a2536);
+  /* Palette — design system v2, "Editorial Flow". Light is canonical.
+     `accent` is the code name for the system's Electric. It must keep this
+     name: ten markup files use the `text-accent` utility, and removing the
+     token would delete the utility. Inside `.legacy` the same token is gold.
+     Electric is lifted on dark because #145BFF only reaches 3.5:1 there. */
+  --color-ground: light-dark(#faf8f3, #14120e);
+  --color-surface: light-dark(#ffffff, #1e1b16);
+  --color-ink: light-dark(#071b46, #f1ece1);
+  --color-muted: light-dark(#5a6480, #a69c89);
+  --color-accent: light-dark(#145bff, #759fff);
+  --color-line: light-dark(#d9dce3, #2b2721);
+
+  /* Illustration accents only. Never a button, never a text colour: lavender
+     measures 3.09:1 on the dark ground and would fail AA. */
+  --color-butter: light-dark(#f8dea0, #b08d3b);
+  --color-lavender: light-dark(#ded6f5, #6a54ab);
 
   /* Type — hybrid: grotesque hero, serif content, mono meta. */
   --font-display: "Fraunces Variable", Georgia, serif;
