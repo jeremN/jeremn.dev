@@ -41,6 +41,21 @@
   color-scheme: dark;
 }
 
+/* ── Legacy scope ─────────────────────────────────────────────────────────
+   /cv and /freelance are not redesigned in v2 yet. This class pins the v1
+   palette onto them so the global tokens can move to v2 without changing how
+   they look. `accent` is gold here and Electric globally, which is the whole
+   reason the scope exists. Delete this block and its two call sites when
+   those pages migrate. */
+.legacy {
+  --color-ground: light-dark(#ece3d1, #0b0a12);
+  --color-surface: light-dark(#f7f1e2, #15131f);
+  --color-ink: light-dark(#211c15, #f3ecdd);
+  --color-muted: light-dark(#6b6253, #9a93a8);
+  --color-accent: light-dark(#97640f, #e8b65a);
+  --color-line: light-dark(#d8ccb2, #2a2536);
+}
+
 /* The galaxy hero is opaque-dark in any theme, so its band keeps dark tokens —
    text and accents stay readable over the WebGL background even in light mode. */
 .hero-dark {

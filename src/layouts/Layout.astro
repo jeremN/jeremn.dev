@@ -1,12 +1,13 @@
 ---
 import '../styles.css'
 import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
-interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean }
+interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean; legacy?: boolean }
 const {
   title = 'Jérémie Néhlil',
   description = 'Jérémie Néhlil, freelance software engineer. CV, writing, and a WebGL galaxy.',
   noindex = false,
   hideFooterCta = false,
+  legacy = false,
 } = Astro.props
 const nav = [
   { href: '/blog', label: 'Writing' },
@@ -55,7 +56,7 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
   </head>
-  <body class="antialiased [overflow-wrap:anywhere]">
+  <body class:list={['antialiased', '[overflow-wrap:anywhere]', legacy && 'legacy']}>
     <header class="relative z-10 bg-ground">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:px-6">
         <a href={withBase('/')} class="font-grotesk text-lg font-extrabold tracking-tight text-ink no-underline">

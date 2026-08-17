@@ -65,3 +65,45 @@ test.describe('theme resolves in three states', () => {
     await ctx.close()
   })
 })
+
+/**
+ * Resolve a token to the `rgb(r, g, b)` the browser actually paints, inside a
+ * given scope.
+ *
+ * A custom property MUST NOT be read with getPropertyValue here. Its computed
+ * value is the substituted token stream, so `--color-ground` comes back as the
+ * literal string "light-dark(#ece3d1, #0b0a12)" in BOTH themes. light-dark()
+ * only resolves when the token is used in a colour context, so we probe it.
+ */
+const token = (page: import('@playwright/test').Page, scope: string, name: string) =>
+  page.evaluate(
+    ([sel, n]) => {
+      const host = document.querySelector(sel)
+      if (!host) throw new Error(`no element matches ${sel}`)
+      const probe = document.createElement('span')
+      probe.style.position = 'absolute'
+      probe.style.opacity = '0'
+      probe.style.color = `var(${n})`
+      host.appendChild(probe)
+      const value = getComputedStyle(probe).color
+      probe.remove()
+      return value
+    },
+    [scope, name],
+  )
+
+const LEGACY_GROUND = { dark: 'rgb(11, 10, 18)', light: 'rgb(236, 227, 209)' }
+
+test.describe('the legacy scope pins the old palette', () => {
+  for (const path of ['/cv', '/freelance']) {
+    for (const scheme of ['dark', 'light'] as const) {
+      test(`${path} keeps the legacy ground in ${scheme}`, async ({ browser }) => {
+        const ctx = await browser.newContext({ colorScheme: scheme })
+        const page = await ctx.newPage()
+        await page.goto(`${BASE}${path}`)
+        expect(await token(page, '.legacy', '--color-ground')).toBe(LEGACY_GROUND[scheme])
+        await ctx.close()
+      })
+    }
+  }
+})
