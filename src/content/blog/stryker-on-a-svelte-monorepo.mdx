@@ -1,0 +1,197 @@
+---
+title: 'Making Stryker run on a Svelte monorepo'
+summary: "The practical half: how the configs are split, what a surviving mutant is actually telling you, the four fixes that cover most of them, and the details that cost real time to get right when the whole thing has to run on every merge request."
+publishedAt: 2026-08-17
+tags: [Testing, Svelte, CI]
+draft: false
+---
+
+[The previous post](/blog/who-checks-the-agents-tests) was about where a checker
+belongs and what it has to prove before it can block anything. This one is the
+practical half. How Stryker is set up across a Svelte monorepo, what a surviving
+mutant is actually telling you, and what it takes to run the whole thing on every
+merge request without it quietly lying to you.
+
+## Four configs, one runner
+
+Mutation testing has no test files of its own. It takes the sources you already
+have, changes them, and reruns your suite. So the only thing to configure is
+which sources it is allowed to touch and which Vitest setup runs against them.
+
+That splits four ways here: the web app's TypeScript, the web app's Svelte
+components, the BFF, and the shared business library. Each gets its own config,
+because each has a different test runner setup behind it.
+
+The exclusions matter more than the includes. Generated output is the obvious
+one, and mutating it produces survivors nobody can act on. Type-only files and
+barrel exports are the other: there is no behaviour in them to break, so every
+mutant is either equivalent or noise.
+
+```jsonc
+{
+  "mutate": [
+    "src/**/*.ts",
+    "src/**/*.svelte",
+    "!src/**/*.test.ts",
+    "!src/**/*.stories.svelte",
+    "!src/**/types.ts"
+  ],
+  "thresholds": { "high": 80, "low": 60, "break": null },
+  "incremental": true,
+  "concurrency": "50%"
+}
+```
+
+Targeting at the command line is what you actually use day to day. A whole
+package takes ten minutes or more. One file takes one to three.
+
+```sh
+pnpm exec stryker run --mutate "src/lib/utils/distance.ts"
+```
+
+Aim as narrowly as you can. The score for a package is a number for a report. The
+score for the file you just wrote a test for is something you can act on in the
+next minute.
+
+## Reading a survivor
+
+The output names the mutation, the place, and the tests that ran and did not
+care.
+
+```
+[Survived] ConditionalExpression
+src/lib/utils/file.ts:42:7
+-   if (value > 0) {
++   if (true) {
+Tests ran:
+    should handle positive values
+```
+
+Five statuses, and only two of them are yours to fix. Killed means a test failed,
+which is the good case. Survived means every test passed with the code broken.
+NoCoverage means nothing runs that line at all. RuntimeError and Timeout both
+count as killed, because the mutant did not get away with it.
+
+Four patterns cover most survivors.
+
+**ConditionalExpression**, where `if (x)` becomes `if (true)`. You tested the
+branch that works and never the one that returns early. Write the second test.
+
+**EqualityOperator**, where `>` becomes `>=`. The boundary is untested. Your
+cases sit either side of it and never on it.
+
+```ts
+it('returns false when length equals index', () => {
+  expect(fn(exactBoundary)).toBe(expected)
+})
+```
+
+**LogicalOperator**, where `&&` becomes `||`. Both operands are always in the
+same state in your tests, so the two operators cannot be told apart. The fix is a
+case where exactly one side is true.
+
+```ts
+// Before: both dates undefined, so && and || agree
+it('returns Off when no dates', () => { ... })
+
+// After: one date present, so only && gives Off
+it('returns Off when only checkin provided', () => { ... })
+```
+
+**StringLiteral**, where `'foo'` becomes `''`. You asserted the shape and not the
+value.
+
+```ts
+// Before
+expect(typeof result).toBe('string')
+
+// After
+expect(result).toBe('expected-value')
+```
+
+Read as a group, these say something consistent. Almost every surviving mutant is
+an assertion that checks a category when it could have checked a value, or a test
+suite that never varies one input independently of another.
+
+## The survivors you cannot kill
+
+Some mutants change nothing observable. A `typeof` guard that exists only so
+TypeScript narrows a union, where the call behind it already handles the other
+case. A string replace for a token the template never contains. A null check
+inside a handler where the value is the event target and cannot be null.
+
+Break any of those and the program behaves identically, so no assertion can
+separate the two versions. They are reported as gaps and they are not gaps. The
+only move is to suppress them in the source, with the reason written down.
+
+```ts
+// Stryker disable next-line ConditionalExpression: typeof guard for TS narrowing
+return typeof value === 'string' && SUPPORTED_PLATFORMS.includes(value)
+```
+
+The reason is the whole point of the comment. Without it you have a line that
+turns off a safety check for no stated cause, and in six months nobody will touch
+it because nobody will know what it was protecting.
+
+## Incremental mode
+
+A full package run is minutes. Almost all of that is repeated work, because most
+of the file has not changed since last time.
+
+With `incremental` on, Stryker writes its analysis to a file and reads it back on
+the next run, replaying only the mutants affected by what changed. Seconds
+instead of minutes, which is the difference between a tool you run while working
+and one you run when you remember.
+
+Two things to know. The cache is keyed to the analysis, not the report, so treat
+those files as separate concerns. And when you want the real number rather than
+the fast one, there is a full variant of each script that ignores the cache.
+
+## Running it in continuous integration
+
+The job works out which files the merge request touched, mutates only those, and
+posts the survivors into a comment. Three details cost real time to get right.
+
+**It runs serially, not as a parallel matrix.** All the units write into the same
+section of the same comment, and that is a read, then a modify, then a write,
+with no locking anywhere. Run them concurrently and they overwrite each other. One
+job, one writer.
+
+**The cache holds the analysis file and not the report directory.** Caching the
+report is the obvious thing to do and it is a trap: when a run crashes, the
+previous pipeline's report is still on disk and gets posted as though it were
+this one's. The report is deleted immediately before each run, so the job can only
+ever find one it produced itself.
+
+**Component tests are left out of it.** Vitest browser mode defeats Stryker's
+related-tests optimisation, because the module graph it consults lives on the
+Node side. Turning that optimisation off makes a component run require the entire
+component suite to pass under Stryker's dry run, which is a condition no other
+job checks, so the leg would break on any unrelated component test and the
+failure would look like a mutation problem. Components stay a deliberate local
+run.
+
+## Small traps
+
+The config path is a positional argument. There is no `--configFile` flag and the
+CLI rejects it outright.
+
+```sh
+# Works
+pnpm exec stryker run stryker.component.config.json --mutate "..."
+```
+
+Under pnpm's strict isolation the plugin autoloader finds nothing, so every
+config has to name its runner explicitly in a `plugins` array. And passing
+`--mutate` through a package script with `--` does not reach Stryker. Call the
+binary directly when you want to target a file.
+
+## What it is worth
+
+The setup cost here was not small, and most of it went on the parts nobody
+demonstrates: deciding what not to mutate, keeping one writer on the comment,
+making sure a crashed run cannot pass off an old number as a new one.
+
+It bought one thing, and it is the thing the previous post was about. Every other
+signal in the suite tells you code ran. This is the only one that tells you
+somebody would notice if that code were wrong.

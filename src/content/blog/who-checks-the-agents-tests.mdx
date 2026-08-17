@@ -1,0 +1,189 @@
+---
+title: "Who checks the agent's tests"
+summary: "Coverage says a line ran, not that anything was verified, and an agent asked for tests will happily produce the difference. Mutation testing tells the two apart. Putting it inside the agent's loop failed in exactly the way it was built to catch, and repairing that is what earns an automated check the right to block."
+publishedAt: 2026-08-17
+tags: [Agents, Testing, Svelte]
+draft: false
+---
+
+An agent will write you a test that proves nothing, and the coverage report will
+call it green.
+
+```ts
+function isAdult(age: number) {
+  return age >= 18
+}
+
+it('detects adults', () => {
+  isAdult(25)
+})
+```
+
+That is full coverage on `isAdult`. The line ran. Nothing was checked. Change the
+`>=` to `>`, or to `<=`, and the test passes both times.
+
+This is not a contrived example. It is the shape you get when a model is asked to
+add tests to a file and has no way to know what the file is for.
+
+An agent is eager to reach green. That is not a flaw in any particular model, it
+is what the visible signal rewards. The suite passes, the coverage number goes
+up, and the task reports itself finished. Nothing in that loop can tell the
+difference between a test that holds the code to something and a test that runs
+it.
+
+## What a mutant is
+
+Coverage asks whether a line ran. The question we actually care about is whether
+anyone would notice if the line were wrong.
+
+Stryker answers that one. It makes a small change to the source, one at a time,
+and runs the suite against each version. Each changed version is a mutant. A test
+fails, the mutant is killed. Every test passes, the mutant survived, and a
+survivor is a missing assertion with a file and a line number attached to it.
+
+Run it on the code above and the score is zero. Two mutants, both alive, and one
+test sitting there looking productive.
+
+## Putting it in the agent's loop
+
+The first version ran inside the session. A hook fired after every write or edit
+the agent made, worked out which source file the edited test covered, ran Stryker
+on that one file, and printed the score back to the agent as text. It ran
+asynchronously so the agent could keep working.
+
+The idea was that the agent would find out mid-task whether the test it had just
+written was real, and fix it before moving on. Nobody has to read anything. The
+loop closes itself.
+
+It did not work, and the way it failed is the reason I am writing this.
+
+The hook had three separate ways to produce no output. Stryker takes a minute or
+more per file and an agent edits faster than that, so a lock stopped runs from
+stacking up, and while one run was going every other trigger exited early.
+Stryker silently does nothing when handed a file outside its mutate glob, which
+the script's own comment noted. And the call was wrapped so that a crash could
+not take the session down, which also meant a crash produced nothing.
+
+Each of those is defensible on its own. Together they meant the hook stayed quiet
+for three different reasons, and staying quiet is also what it did when the tests
+were genuinely fine.
+
+The agent read silence as a pass.
+
+So the check we built to catch tests that verify nothing had become a check that
+verified nothing, and it reported that fact the same way those tests do: by
+looking green. We deleted it from all three coding agents we run.
+
+## Where it went instead
+
+It is a CI job now.
+
+It works out which source files the merge request actually touches and mutates
+only those. Incremental mode means it reuses the previous analysis, so a run
+takes seconds rather than the several minutes a full package needs.
+
+And it does not block anything. The job is marked to allow failure, which matches
+the thresholds in every Stryker config in the repo: a high mark, a low mark, and
+no breaking score. Its only output is a section in a comment on the merge
+request, listing each surviving mutant with its file, its line, and the operator
+that survived. A bare score tells a reviewer nothing they can act on.
+
+A person reads it, and decides. That is where it stands today, and it is a stage
+rather than a conclusion.
+
+## Why it does not block yet
+
+The reason is not modesty about mutation testing. It is that a check earns the
+right to stop a merge only once it can be trusted to speak, and everything in
+this system starts out able to fail quietly.
+
+Stryker's Svelte support is the clearest case. It parses expressions in the
+markup as if they were statements, so an attribute holding an object with two
+keys fails outright on a missing semicolon. That one is loud and you fix it. But
+an object with a single key is a valid labelled block in JavaScript. It parses.
+Stryker then mutates a construct that does not exist in your file and reports a
+score for it. No error, no warning, a number that describes code you never wrote.
+That is patched locally, and the upstream fix covers only half of it.
+
+The cache had the same shape of problem. Caching the report directory between
+pipelines looks obviously right, and it means that when Stryker crashes the
+previous run's report is still sitting on disk, ready to be posted as though it
+described the current change. Only the incremental analysis file is cached now,
+and the report is deleted immediately before each run so the job can only ever
+find one it produced itself.
+
+Even posting nothing turned out to be wrong. The comment lives in a note that
+outlives the pipeline, so a commit that removes the last mutation target has to
+actively clear the section. Otherwise last week's score stays on the merge
+request, describing a diff that no longer exists. The script runs even when it
+measured nothing at all, precisely so it can say so.
+
+Three ways for the verifier to be confidently wrong, all of them found while
+wiring up a single job. Each one is closed now. That is the real work, and it is
+not raising the score: it is removing every path by which the job can produce
+nothing and have that read as fine.
+
+## The part that does not automate
+
+There is a ceiling above all of that, and it is not a bug.
+
+Some survivors cannot be killed by any test. A `typeof` guard that exists only so
+TypeScript narrows a union. A string replace for a token the template never
+contains. A null check inside a handler where the value is the event target and
+cannot be null. Change any of them and the program behaves identically, so no
+assertion can tell the two versions apart. Stryker reports them as gaps in your
+tests. They are not gaps.
+
+The only way through is for somebody to read each one and decide, then write the
+reason down next to the suppression. Without the reason it becomes a line nobody
+will dare touch in six months.
+
+That sounds like a limit, and it is also what makes the number stable. Once a
+judgement is written into the source with its reason attached, it stops being
+re-litigated on every run. The human part does not disappear. It gets recorded.
+
+## Automated red
+
+The tool earns its place because of what it does to the eagerness problem.
+
+Test-driven development already has an answer to it. Write the failing test
+first. The red proves the test is capable of failing, so the green that follows
+means something. Ask an agent to work that way and it will, and it will also
+sometimes produce a red for the wrong reason and a green that never depended on
+the behaviour under test. The ritual is easy to satisfy without the substance.
+
+A surviving mutant is a test that cannot go red. Stryker breaks the code on
+purpose and checks that somebody notices, which is the same proof the first step
+of the cycle is supposed to give you, applied to every assertion and repeated
+after the fact. It does not replace writing the test first. It checks that the
+test you wrote first was ever really red.
+
+That is the specific reason it belongs in the toolbox rather than in a list of
+nice practices. It targets a failure mode these tools have by construction.
+
+## Earning the gate
+
+The [last thing I wrote here](/blog/best-model-still-needs-rules) ended on the
+agent not being able to certify its own work. Building the thing that checks the
+agent turned out to have the same problem one level up, and the way out was not a
+better tool. It was making the checker unable to stay quiet.
+
+So the next step is already decided. The job stops allowing failure and starts
+blocking the merge. Same job, same output, one flag removed.
+
+What makes that reasonable has nothing to do with the score going up. It is that
+the job can no longer report nothing and have it read as a pass. A gate whose
+silence is ambiguous is worse than no gate at all, because it turns "did not run"
+into "approved" and puts a green tick next to it. Once silence is impossible,
+blocking on the result stops being a gamble.
+
+None of this is settled. We are still working out which parts of the loop to
+close mechanically and which to leave to a person, and every few months the
+models change enough that some of those answers move. What has held so far is
+narrower than a methodology. An automated check earns the right to block when it
+can no longer fail quietly, and until it can clear that bar it is a comment,
+addressed to somebody who has to decide anyway.
+
+The mechanics behind all of this, including how a surviving mutant gets read and
+what it takes to run the job on every merge request, are in
+[the second part](/blog/stryker-on-a-svelte-monorepo).
