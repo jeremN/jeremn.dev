@@ -9,15 +9,15 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  /* Palette — warm dark editorial base. (Flip to a light base here if desired.)
-     Token names deliberately avoid Tailwind built-ins: `ground` not `base`,
-     so the `text-base` font-size utility is never shadowed. */
-  --color-ground: #0b0a12; /* near-black warm ground (echoes the galaxy bg) */
-  --color-surface: #15131f; /* raised panels / cards */
-  --color-ink: #f3ecdd; /* warm cream text */
-  --color-muted: #9a93a8; /* secondary text */
-  --color-accent: #e8b65a; /* gold (echoes the galaxy core/halo) */
-  --color-line: #2a2536; /* hairline borders */
+  /* Palette. Light is canonical, so each token declares both values once via
+     light-dark(). Token names deliberately avoid Tailwind built-ins: `ground`
+     not `base`, so the `text-base` font-size utility is never shadowed. */
+  --color-ground: light-dark(#ece3d1, #0b0a12);
+  --color-surface: light-dark(#f7f1e2, #15131f);
+  --color-ink: light-dark(#211c15, #f3ecdd);
+  --color-muted: light-dark(#6b6253, #9a93a8);
+  --color-accent: light-dark(#97640f, #e8b65a);
+  --color-line: light-dark(#d8ccb2, #2a2536);
 
   /* Type — hybrid: grotesque hero, serif content, mono meta. */
   --font-display: "Fraunces Variable", Georgia, serif;
@@ -26,22 +26,19 @@
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 }
 
+/* ── Theme resolution, three states ───────────────────────────────────────
+   `light dark` lets the OS preference govern when the visitor has made no
+   choice. The data-theme attribute pins either theme and wins in both
+   directions. Unlayered on purpose so it beats the @theme defaults
+   regardless of cascade layers. */
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
-
-/* ── Light theme ──────────────────────────────────────────────────────────
-   Every Tailwind utility compiles to var(--color-*), so re-pointing the six
-   tokens here flips the whole site. Unlayered + attribute selector so it wins
-   over the @theme defaults regardless of cascade layers. */
-html[data-theme="light"] {
+:root[data-theme="light"] {
   color-scheme: light;
-  --color-ground: #ece3d1; /* warm paper */
-  --color-surface: #f7f1e2; /* raised panels */
-  --color-ink: #211c15; /* near-black, warm */
-  --color-muted: #6b6253; /* secondary text */
-  --color-accent: #97640f; /* gold, darkened for contrast on cream */
-  --color-line: #d8ccb2; /* hairline borders */
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* The galaxy hero is opaque-dark in any theme, so its band keeps dark tokens —

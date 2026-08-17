@@ -22,20 +22,21 @@ const canonical = Astro.site ? new URL(withBase(route), Astro.site).href : withB
 const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href : withBase('/og-cover.jpg')
 ---
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
-      // Apply the saved theme before paint to avoid a flash. Default: dark.
+      // Apply a SAVED theme before paint to avoid a flash. With no saved choice we
+      // stamp nothing, so `color-scheme: light dark` lets the OS decide.
       try {
         const t = localStorage.getItem('theme')
-        document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : 'dark'
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
       } catch (e) {}
     </script>
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0a12" />
+    <meta name="theme-color" id="theme-color" content="#ece3d1" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={withBase('/favicon.ico')} sizes="any" />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
@@ -102,9 +103,22 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     </footer>
 
     <script>
+      const GROUND = { light: '#ece3d1', dark: '#0b0a12' }
+
+      const syncMeta = (theme: 'light' | 'dark') => {
+        document.getElementById('theme-color')?.setAttribute('content', GROUND[theme])
+      }
+
+      const effective = (): 'light' | 'dark' =>
+        (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) ??
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+
+      syncMeta(effective())
+
       document.getElementById('theme-toggle')?.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+        const next = effective() === 'dark' ? 'light' : 'dark'
         document.documentElement.dataset.theme = next
+        syncMeta(next)
         try {
           localStorage.setItem('theme', next)
         } catch (e) {}
