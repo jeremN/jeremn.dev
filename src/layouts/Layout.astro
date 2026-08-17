@@ -103,22 +103,27 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     </footer>
 
     <script>
-      const GROUND = { light: '#ece3d1', dark: '#0b0a12' }
-
-      const syncMeta = (theme: 'light' | 'dark') => {
-        document.getElementById('theme-color')?.setAttribute('content', GROUND[theme])
+      // Reads the resolved --color-ground off document.body's computed style
+      // rather than duplicating the palette's hex values here. A custom
+      // property itself computes to the unresolved `light-dark(...)` token
+      // stream, but the property a rule actually assigns (body's
+      // background-color) resolves to `rgb(r, g, b)`, which stays correct
+      // even after Task 3 swaps the palette.
+      const syncMeta = () => {
+        const ground = getComputedStyle(document.body).backgroundColor
+        document.getElementById('theme-color')?.setAttribute('content', ground)
       }
 
       const effective = (): 'light' | 'dark' =>
         (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) ??
         (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 
-      syncMeta(effective())
+      syncMeta()
 
       document.getElementById('theme-toggle')?.addEventListener('click', () => {
         const next = effective() === 'dark' ? 'light' : 'dark'
         document.documentElement.dataset.theme = next
-        syncMeta(next)
+        syncMeta()
         try {
           localStorage.setItem('theme', next)
         } catch (e) {}
