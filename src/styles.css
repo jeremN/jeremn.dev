@@ -325,3 +325,31 @@ p {
   border-bottom-color: var(--color-accent);
   color: var(--color-ink);
 }
+
+/* Article section ordinals. A CSS counter numbers the h2s so the Markdown never
+   carries "01 " in the heading text, which would leak into the table of
+   contents, the document outline and any RSS summary. */
+article.prose {
+  counter-reset: article-section;
+}
+article.prose h2 {
+  counter-increment: article-section;
+}
+article.prose h2::before {
+  content: counter(article-section, decimal-leading-zero);
+  position: absolute;
+  top: 0.35em;
+  left: -3.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--color-accent);
+}
+
+/* The gutter only exists once the column has room for it. Below that the
+   ordinal would overlap the text, so it is dropped rather than crowded. */
+@media (max-width: 63rem) {
+  article.prose h2::before {
+    display: none;
+  }
+}
