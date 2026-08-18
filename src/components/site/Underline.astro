@@ -1,0 +1,12 @@
+---
+// The hand-drawn Electric underline from the comps. Colour arrives from the
+// parent's text-* utility through currentColor, so this is correct in any
+// context by construction. Stretches to the width of its container.
+import Mark from '../../assets/doodles/underline.svg'
+
+interface Props { class?: string }
+const { class: cls = '' } = Astro.props
+---
+<span data-doodle="underline" aria-hidden="true" class:list={['pointer-events-none block', cls]}>
+  <Mark class="h-[0.4em] w-full" />
+</span>

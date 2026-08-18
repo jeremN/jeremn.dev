@@ -30,6 +30,12 @@
   --color-butter: light-dark(#f8dea0, #b08d3b);
   --color-lavender: light-dark(#ded6f5, #6a54ab);
 
+  /* Illustration stroke width. Light strokes on a dark ground optically bloom
+     and read heavier at the same width, so dark draws them thinner. This is
+     the only place where dark needs different geometry rather than a
+     different colour. */
+  --doodle-stroke: 1.6;
+
   /* Type — the serif creates personality, the sans carries usability, the
      monospace is an accent and never the default voice. */
   --font-display: "Newsreader Variable", Georgia, serif;
@@ -50,6 +56,30 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+}
+
+/* The dark stroke correction follows the same three states as the palette:
+   the OS preference governs when the visitor has made no choice, and
+   data-theme pins it in either direction. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --doodle-stroke: 1.45;
+  }
+}
+:root[data-theme="dark"] {
+  --doodle-stroke: 1.45;
+}
+
+/* Doodle stroke weights. The .ds class takes the theme's base width; .ds--thin
+   is a deliberately lighter stroke within the same asset. The numeric
+   stroke-width attribute in each .svg stays as the no-CSS fallback and carries
+   the same proportion. A CSS variable inside an SVG presentation attribute is
+   not reliably substituted, so the token is applied here instead. */
+[data-doodle] .ds {
+  stroke-width: var(--doodle-stroke);
+}
+[data-doodle] .ds--thin {
+  stroke-width: calc(var(--doodle-stroke) * 0.7);
 }
 
 /* The galaxy hero is opaque-dark in any theme, so its band pins the dark
