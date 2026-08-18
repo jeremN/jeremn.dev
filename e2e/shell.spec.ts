@@ -34,3 +34,18 @@ test.describe('site header', () => {
     await expect(page.locator('[data-availability] [data-pulse]')).not.toHaveClass(/is-first-load/)
   })
 })
+
+test.describe('site footer', () => {
+  test('carries the three meta columns', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const footer = page.locator('footer')
+    await expect(footer).toContainText(`© ${new Date().getFullYear()} jeremn.dev`)
+    await expect(footer).toContainText('Based in France')
+    await expect(footer).toContainText('Remote friendly')
+  })
+
+  test('keeps the contact CTA until the Contact page exists', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('footer a[href$="/freelance"]')).toBeVisible()
+  })
+})

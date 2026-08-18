@@ -91,19 +91,28 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
 
     <slot />
 
-    <footer class="relative z-10 bg-ground">
-      <div class="mx-auto max-w-5xl px-6 pb-16 pt-16">
+    <footer class="relative z-10 border-t border-line bg-ground">
+      <div class="mx-auto max-w-[1440px] px-6">
         {!hideFooterCta && (
-          <Fragment>
-            <span class="eyebrow">Get in touch</span>
-            <a href={withBase('/freelance')} class="block no-underline">
-              <h2 class="mt-3 font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
+          <div class="py-20 sm:py-28">
+            <span class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</span>
+            <a href={withBase('/freelance')} class="mt-3 block no-underline">
+              <h2 class="font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
                 Work with me
               </h2>
             </a>
-          </Fragment>
+          </div>
         )}
-        <p class="mt-8 font-mono text-xs text-muted">© {year} Jérémie Néhlil · jeremn.dev</p>
+        <div
+          class:list={[
+            'flex flex-col gap-3 py-8 font-mono text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between',
+            !hideFooterCta && 'border-t border-line',
+          ]}
+        >
+          <span>© {year} jeremn.dev</span>
+          <span>Based in France</span>
+          <span>Remote friendly</span>
+        </div>
       </div>
     </footer>
 
