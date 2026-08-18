@@ -16,7 +16,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@theme {
+/* `static` forces every declared variable into the built CSS. Tailwind v4
+   drops an unused @theme variable, and butter and lavender feed SVG
+   illustrations that arrive in a later step, not any class in this repo yet. */
+@theme static {
   /* Palette — design system v2, "Editorial Flow". Light is canonical.
      `accent` is the code name for the system's Electric. It must keep this
      name: nine markup files use the `text-accent` utility, and removing the
