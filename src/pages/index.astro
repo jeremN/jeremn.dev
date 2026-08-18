@@ -7,6 +7,7 @@ import HeroLandscape from '../components/site/HeroLandscape.astro'
 import LivingCanvas from '../components/site/LivingCanvas.astro'
 import PostRow from '../components/site/PostRow.astro'
 import { profile } from '../lib/cv'
+import { services } from '../lib/services'
 import { withBase } from '../lib/base'
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
@@ -17,41 +18,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 // Three posts, so the cycle never repeats a colour on screen.
 const ACCENTS = ['butter', 'lavender', 'none'] as const
 
-// Copy comes from /freelance, which is the author's own wording. Two entries
-// split its "Fullstack features" row, because the icon set gives the interface
-// and the service layer separate marks.
-const services = [
-  {
-    icon: 'svc-frontend',
-    title: 'Frontend web apps',
-    blurb: 'SvelteKit, Next.js, React and TypeScript. Accessible UIs that stay maintainable past launch.',
-  },
-  {
-    icon: 'svc-fullstack',
-    title: 'Fullstack features',
-    blurb: 'End-to-end delivery, from the interface down to the data it reads.',
-  },
-  {
-    icon: 'svc-backend',
-    title: 'APIs and backends',
-    blurb: 'Node and Fastify services, GraphQL and REST.',
-  },
-  {
-    icon: 'svc-performance',
-    title: 'Performance rebuilds',
-    blurb: 'Refactoring high-traffic sites for speed and Core Web Vitals.',
-  },
-  {
-    icon: 'svc-automation',
-    title: 'Tooling and DX',
-    blurb: 'CI/CD, testing, design systems and internal tools.',
-  },
-  {
-    icon: 'svc-ai',
-    title: 'LLM tooling and agents',
-    blurb: 'Agent harnesses, MCP servers, retrieval and evals.',
-  },
-] as const
 ---
 <Layout hideFooterCta>
   <main class="relative z-10">
