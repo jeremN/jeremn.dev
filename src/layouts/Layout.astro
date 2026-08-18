@@ -9,10 +9,15 @@ const {
   noindex = false,
   hideFooterCta = false,
 } = Astro.props
+// Four primary destinations, matching the comp minus Stack (dropped: no page
+// backs it) and minus Services (a homepage section, not a route). /freelance
+// is not in the comp's nav and Contact now covers the same intent, so it moves
+// to the footer rather than being orphaned.
 const nav = [
   { href: '/blog', label: 'Writing' },
+  { href: '/about', label: 'About' },
   { href: '/cv', label: 'CV' },
-  { href: '/freelance', label: 'Freelance' },
+  { href: '/contact', label: 'Contact' },
 ]
 const year = new Date().getFullYear()
 
@@ -96,7 +101,7 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
         {!hideFooterCta && (
           <div class="py-20 sm:py-28">
             <span class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</span>
-            <a href={withBase('/freelance')} class="mt-3 block no-underline">
+            <a href={withBase('/contact')} class="mt-3 block no-underline">
               <h2 class="font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
                 Work with me
               </h2>
@@ -110,6 +115,7 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
           ]}
         >
           <span>© {year} jeremn.dev</span>
+          <a href={withBase('/freelance')} class="text-muted no-underline transition-colors hover:text-ink">Freelance</a>
           <span>Based in France</span>
           <span>Remote friendly</span>
         </div>
