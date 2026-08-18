@@ -1,0 +1,52 @@
+---
+// One entry point for every hand-drawn mark. Strokes are currentColor, so a
+// doodle takes its colour from the parent's text-* utility and is correct in
+// any context by construction. The two fills that exist (butter sun, lavender
+// blob) resolve per theme through their tokens.
+//
+// Astro's SVG components are static imports, so the whole set is named here
+// rather than resolved from a path at runtime.
+import Braces from '../../assets/doodles/mark-braces.svg'
+import Code from '../../assets/doodles/mark-code.svg'
+import DotGrid from '../../assets/doodles/mark-dotgrid.svg'
+import Nodes from '../../assets/doodles/mark-nodes.svg'
+import Padlock from '../../assets/doodles/mark-padlock.svg'
+import Plane from '../../assets/doodles/mark-plane.svg'
+import Plant from '../../assets/doodles/mark-plant.svg'
+import Water from '../../assets/doodles/mark-water.svg'
+import SvcAi from '../../assets/doodles/svc-ai.svg'
+import SvcAutomation from '../../assets/doodles/svc-automation.svg'
+import SvcBackend from '../../assets/doodles/svc-backend.svg'
+import SvcDatabases from '../../assets/doodles/svc-databases.svg'
+import SvcFrontend from '../../assets/doodles/svc-frontend.svg'
+import SvcFullstack from '../../assets/doodles/svc-fullstack.svg'
+
+const DOODLES = {
+  braces: Braces,
+  code: Code,
+  dotgrid: DotGrid,
+  nodes: Nodes,
+  padlock: Padlock,
+  plane: Plane,
+  plant: Plant,
+  water: Water,
+  'svc-ai': SvcAi,
+  'svc-automation': SvcAutomation,
+  'svc-backend': SvcBackend,
+  'svc-databases': SvcDatabases,
+  'svc-frontend': SvcFrontend,
+  'svc-fullstack': SvcFullstack,
+} as const
+
+export type DoodleName = keyof typeof DOODLES
+
+interface Props {
+  name: DoodleName
+  class?: string
+}
+const { name, class: cls = '' } = Astro.props
+const Mark = DOODLES[name]
+---
+<span data-doodle={name} aria-hidden="true" class:list={['pointer-events-none block', cls]}>
+  <Mark class="h-full w-full" />
+</span>

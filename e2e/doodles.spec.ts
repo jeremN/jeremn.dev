@@ -54,3 +54,42 @@ test.describe('doodle authoring contract', () => {
     expect(dark).toBeLessThan(light)
   })
 })
+
+test.describe('writing row marks', () => {
+  test('every row carries a mark', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const rows = page.locator('[data-post-row]')
+    const count = await rows.count()
+    expect(count).toBeGreaterThan(0)
+    for (let i = 0; i < count; i++) {
+      await expect(rows.nth(i).locator('[data-doodle]')).toHaveCount(1)
+    }
+  })
+
+  test('the mark matches the row subject', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    // A Svelte-tagged post takes braces unless a more specific tag precedes it.
+    const row = page.locator('[data-post-row]', { has: page.locator('[data-meta]') }).first()
+    const name = await row.locator('[data-doodle]').getAttribute('data-doodle')
+    expect(['code', 'braces', 'nodes', 'dotgrid', 'padlock']).toContain(name)
+  })
+
+  test('a mark inherits the row colour rather than baking one in', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const stroke = await page
+      .locator('[data-post-row] [data-doodle]')
+      .first()
+      .evaluate((el) => {
+        // The mark transitions its colour on hover, so a computed read taken
+        // straight after the assignment returns the pre-transition value.
+        // Kill the transition first, or this measures the old colour.
+        ;(el as HTMLElement).style.transition = 'none'
+        ;(el as HTMLElement).style.color = 'rgb(4, 5, 6)'
+        const shape = el.querySelector('path, rect, circle, ellipse')!
+        const s = getComputedStyle(shape)
+        // dot-grid marks are filled, every other mark is stroked
+        return s.stroke === 'none' ? s.fill : s.stroke
+      })
+    expect(stroke).toBe('rgb(4, 5, 6)')
+  })
+})
