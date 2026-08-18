@@ -1,0 +1,8 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path class="ds" d="M8 32a16 16 0 0 1 32 0"/>
+  <path class="ds--thin" d="M11 22.5l2.6 1.5M24 15v3M37 22.5l-2.6 1.5"/>
+  <path class="ds" d="M24 32l8.5-7"/>
+  <circle class="ds" cx="24" cy="32" r="2.2"/>
+  <path class="ds--thin" d="M12 38h24"/>
+</svg>

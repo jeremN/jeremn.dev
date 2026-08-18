@@ -1,8 +1,5 @@
 <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect class="ds" x="4" y="9" width="40" height="30" rx="3" stroke="currentColor" stroke-width="2"/>
-  <path class="ds" d="M4 17h40" stroke="currentColor" stroke-width="2"/>
-  <circle cx="9.5" cy="13" r="1.3" fill="currentColor"/>
-  <circle cx="14" cy="13" r="1.3" fill="currentColor"/>
-  <path class="ds ds--thin" d="M9 24h11M9 29h8M9 34h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-  <path class="ds ds--thin" d="M27 24h12M27 29h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path class="ds" d="M15 16 L5 24 L15 32" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="ds" d="M33 16 L43 24 L33 32" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="ds" d="M27 13 L21 35" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
 </svg>
