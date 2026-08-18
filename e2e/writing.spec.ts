@@ -76,12 +76,14 @@ test.describe('writing index filter', () => {
   })
 })
 
-test.describe('no v1 typeface survives on the migrated pages', () => {
-  // The four v1 faces stay installed, because /cv, /freelance and /cv-print
-  // still render them. This guards that they never leak onto a v2 page.
+test.describe('no v1 typeface survives', () => {
+  // The four v1 faces are uninstalled: /cv-print was the last consumer and it
+  // joined v2 too. The names stay in this list on purpose. A rule that still
+  // asks for "Fraunces" would now fall through to a system serif and look
+  // almost right, which is exactly the kind of regression that goes unnoticed.
   const LEGACY = ['Fraunces', 'Hanken', 'Inter', 'JetBrains']
 
-  for (const path of ['/blog', '/blog/stryker-on-a-svelte-monorepo']) {
+  for (const path of ['/', '/blog', '/blog/stryker-on-a-svelte-monorepo', '/cv', '/about', '/contact', '/freelance', '/404']) {
     test(`no legacy face is painted on ${path}`, async ({ page }) => {
       await page.goto(`${BASE}${path}`)
       const families = await page.evaluate(() =>
