@@ -121,6 +121,13 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
 
       syncMeta()
 
+      // With no stored choice, the OS preference decides the theme (see the
+      // inline script in <head>). Sync the meta on every OS change too, so
+      // browser chrome does not go stale while the page stays open.
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (!document.documentElement.dataset.theme) syncMeta()
+      })
+
       document.getElementById('theme-toggle')?.addEventListener('click', () => {
         const next = effective() === 'dark' ? 'light' : 'dark'
         document.documentElement.dataset.theme = next
