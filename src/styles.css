@@ -19,7 +19,7 @@
 @theme {
   /* Palette — design system v2, "Editorial Flow". Light is canonical.
      `accent` is the code name for the system's Electric. It must keep this
-     name: ten markup files use the `text-accent` utility, and removing the
+     name: nine markup files use the `text-accent` utility, and removing the
      token would delete the utility. Inside `.legacy` the same token is gold.
      Electric is lifted on dark because #145BFF only reaches 3.5:1 there. */
   --color-ground: light-dark(#faf8f3, #14120e);

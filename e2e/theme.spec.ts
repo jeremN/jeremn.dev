@@ -109,6 +109,53 @@ test.describe('the legacy scope pins the old palette', () => {
 })
 
 /**
+ * The first family in a computed `font-family` stack, unquoted.
+ *
+ * getComputedStyle returns the full fallback stack, for example
+ * `"Fraunces Variable", Georgia, serif`. Fonts carry no light-dark(). The
+ * value resolves directly from the DOM. No probe span is needed here, unlike
+ * the colour tokens above.
+ */
+const firstFont = (page: import('@playwright/test').Page, selector: string) =>
+  page.evaluate((sel) => {
+    const el = document.querySelector(sel)
+    if (!el) throw new Error(`no element matches ${sel}`)
+    const stack = getComputedStyle(el).fontFamily
+    return stack.split(',')[0].trim().replace(/^["']|["']$/g, '')
+  }, selector)
+
+// Expected first font per page. `/blog` reads the four global tokens.
+// `/cv` and `/freelance` read the same four tokens through the `.legacy` pin.
+const FONT_CASES: Array<{
+  path: string
+  sans: string
+  display: string
+  mono: string
+  grotesk: string
+}> = [
+  { path: '/blog', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable', grotesk: 'Geist Variable' },
+  { path: '/cv', sans: 'Inter Variable', display: 'Fraunces Variable', mono: 'JetBrains Mono Variable', grotesk: 'Hanken Grotesk Variable' },
+  { path: '/freelance', sans: 'Inter Variable', display: 'Fraunces Variable', mono: 'JetBrains Mono Variable', grotesk: 'Hanken Grotesk Variable' },
+]
+
+test.describe('the legacy scope pins the old fonts', () => {
+  for (const { path, sans, display, mono, grotesk } of FONT_CASES) {
+    test(`${path} resolves all four font tokens`, async ({ page }) => {
+      await page.goto(`${BASE}${path}`)
+
+      // body carries no font-* utility. It inherits --font-sans through
+      // `body { font-family: var(--font-sans) }`. `.legacy` sits on that
+      // same <body>, so its override wins here. This is the path a future
+      // refactor could break without anyone noticing.
+      expect(await firstFont(page, 'body')).toBe(sans)
+      expect(await firstFont(page, 'h1')).toBe(display) // --font-display
+      expect(await firstFont(page, '.font-mono')).toBe(mono) // --font-mono
+      expect(await firstFont(page, 'header a')).toBe(grotesk) // --font-grotesk, the wordmark
+    })
+  }
+})
+
+/**
  * WCAG 2.1 relative luminance, from an `rgb(r, g, b)` string.
  *
  * The `rgb(` guard is deliberate. A plain token probes back as `rgb(...)`, but
