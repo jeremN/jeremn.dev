@@ -12,7 +12,9 @@ export type Variant = {
   law: string
   /** One-sentence physics rationale + what it looks like. */
   blurb: string
-  /** Tile accent (matches a galaxy hue) for the label. */
+  /** Tile accent (matches a galaxy hue) for the label. The label sits on the
+   *  overlay card, which pins the dark tokens, so every value here has to clear
+   *  AA against that card. The two violets were lifted for exactly that. */
   accent: string
 }
 
@@ -55,7 +57,7 @@ export const VARIANTS: Variant[] = [
     law: 'stretch ∝ 1/d along r̂',
     blurb:
       'Near the horizon, each brick stretches radially and thins crosswise, the tidal elongation of matter falling in. Same pull, different shape.',
-    accent: '#7a4fd0',
+    accent: '#a689e8',
   },
   {
     id: 6,
@@ -63,6 +65,6 @@ export const VARIANTS: Variant[] = [
     law: 'colour → red → black, d < r_h',
     blurb:
       'As bricks cross the horizon they redshift then darken, because light climbing out of the well loses energy. Layered on the inflow as a per-brick colour fade.',
-    accent: '#3f6ad0',
+    accent: '#7f9fee',
   },
 ]

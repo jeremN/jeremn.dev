@@ -148,8 +148,9 @@
    tokens. Text and accents stay readable over the WebGL background in the
    light theme too. The values are the v2 dark palette, written as literals
    because light-dark() would resolve to the light half here.
-   The galaxy left the homepage in step 5. This block went with it and now
-   serves /hero-lab/galaxy only. */
+   The galaxy left the homepage in step 5. This block went with it. Two places
+   use it now: /hero-lab/galaxy, and the tile overlay on /hero-lab, whose canvas
+   is opaque black in either theme. */
 .hero-dark {
   --color-ground: #14120e;
   --color-surface: #1e1b16;
@@ -191,15 +192,6 @@ p {
 }
 
 @layer components {
-  /* Tracked-uppercase mono eyebrow label (epic.net-style section meta). */
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-
   /* ── Article reading view ─────────────────────────────────────────────── */
 
   /* Code block: a mono header bar (language + copy) injected client-side,
