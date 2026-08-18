@@ -144,14 +144,19 @@ p {
   .code-block {
     margin: 1.5rem 0;
   }
+  /* The colours below are literal, not tokens. Shiki always renders the <pre>
+     in `github-dark` (astro.config.mjs), so the header matches it in both
+     themes instead of following the page palette. Revert to tokens once
+     Shiki gets a light theme. Measured contrast: #8b949e on #24292e is
+     4.77:1, and #759fff on #24292e is 5.70:1. Both clear WCAG AA. */
   .code-block__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     padding: 0.45rem 0.8rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-line);
+    background: #24292e;
+    border: 1px solid #30363d;
     border-bottom: 0;
     border-radius: 0.5rem 0.5rem 0 0;
   }
@@ -160,20 +165,20 @@ p {
     font-size: 0.625rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-muted);
+    color: #8b949e;
   }
   .code-block__copy {
     font-family: var(--font-mono);
     font-size: 0.625rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-muted);
+    color: #8b949e;
     cursor: pointer;
     transition: color 0.2s ease;
   }
   .code-block__copy:hover,
   .code-block__copy.is-copied {
-    color: var(--color-accent);
+    color: #759fff;
   }
   .code-block > pre {
     margin: 0 !important;
