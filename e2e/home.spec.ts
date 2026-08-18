@@ -121,7 +121,10 @@ test.describe('hero landscape', () => {
 test.describe('the galaxy left the front door', () => {
   test('the homepage runs no WebGL canvas', async ({ page }) => {
     await page.goto(`${BASE}/`)
-    await expect(page.locator('canvas')).toHaveCount(0)
+    // The Living Canvas is a 2D canvas and belongs here. The galaxy is the one
+    // that left, so name it rather than counting canvases.
+    await expect(page.locator('canvas#galaxy')).toHaveCount(0)
+    await expect(page.locator('canvas:not([data-draw-canvas])')).toHaveCount(0)
   })
 
   test('the galaxy still runs on its lab route', async ({ page }) => {
