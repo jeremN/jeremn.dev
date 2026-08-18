@@ -30,6 +30,12 @@
   --color-butter: light-dark(#f8dea0, #b08d3b);
   --color-lavender: light-dark(#ded6f5, #6a54ab);
 
+  /* Illustration stroke width. Light strokes on a dark ground optically bloom
+     and read heavier at the same width, so dark draws them thinner. This is
+     the only place where dark needs different geometry rather than a
+     different colour. */
+  --doodle-stroke: 1.6;
+
   /* Type — the serif creates personality, the sans carries usability, the
      monospace is an accent and never the default voice. */
   --font-display: "Newsreader Variable", Georgia, serif;
@@ -50,6 +56,30 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+}
+
+/* The dark stroke correction follows the same three states as the palette:
+   the OS preference governs when the visitor has made no choice, and
+   data-theme pins it in either direction. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --doodle-stroke: 1.45;
+  }
+}
+:root[data-theme="dark"] {
+  --doodle-stroke: 1.45;
+}
+
+/* Doodle stroke weights. The .ds class takes the theme's base width; .ds--thin
+   is a deliberately lighter stroke within the same asset. The numeric
+   stroke-width attribute in each .svg stays as the no-CSS fallback and carries
+   the same proportion. A CSS variable inside an SVG presentation attribute is
+   not reliably substituted, so the token is applied here instead. */
+[data-doodle] .ds {
+  stroke-width: var(--doodle-stroke);
+}
+[data-doodle] .ds--thin {
+  stroke-width: calc(var(--doodle-stroke) * 0.7);
 }
 
 /* The galaxy hero is opaque-dark in any theme, so its band pins the dark
@@ -249,4 +279,77 @@ p {
   font-size: 3.1rem;
   line-height: 0.78;
   color: var(--color-ink);
+}
+
+/* The availability dot pulses once on first load. prefers-reduced-motion
+   removes the animation but keeps the dot, because the dot carries the meaning
+   and the pulse is only emphasis. */
+@keyframes availability-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+}
+
+.availability-dot.is-first-load {
+  animation: availability-pulse 1.8s ease-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .availability-dot.is-first-load {
+    animation: none;
+  }
+}
+
+/* Writing index filter tabs. The active tab is underlined rather than filled,
+   matching the comps' restraint. aria-pressed carries the state for assistive
+   technology; the class only paints it. */
+.filter-tab {
+  border-bottom: 1.5px solid transparent;
+  padding-bottom: 0.25rem;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+.filter-tab:hover {
+  color: var(--color-ink);
+}
+.filter-tab[aria-pressed="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-ink);
+}
+
+/* Article section ordinals. A CSS counter numbers the h2s so the Markdown never
+   carries "01 " in the heading text, which would leak into the table of
+   contents, the document outline and any RSS summary. */
+article.prose {
+  counter-reset: article-section;
+}
+article.prose h2 {
+  counter-increment: article-section;
+}
+article.prose h2::before {
+  content: counter(article-section, decimal-leading-zero);
+  position: absolute;
+  top: 0.35em;
+  left: -3.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--color-accent);
+}
+
+/* The gutter only exists once the column has room for it. Below that the
+   ordinal would overlap the text, so it is dropped rather than crowded. */
+@media (max-width: 63rem) {
+  article.prose h2::before {
+    display: none;
+  }
 }
