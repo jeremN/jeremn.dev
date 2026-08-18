@@ -42,8 +42,8 @@ const mark = markForTags(tags)
     data-date
     class:list={[
       'block rounded-sm px-2 py-1.5 text-center font-mono text-[11px] leading-[1.5] tracking-wide text-muted',
-      accentDate === 'butter' && 'bg-[var(--color-butter)] text-ink',
-      accentDate === 'lavender' && 'bg-[var(--color-lavender)] text-ink',
+      accentDate === 'butter' && 'bg-[var(--color-chip-butter)] !text-[var(--color-chip-ink)]',
+      accentDate === 'lavender' && 'bg-[var(--color-chip-lavender)] !text-[var(--color-chip-ink)]',
     ]}
   >
     <span class="block">{day}</span>
