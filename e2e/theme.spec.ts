@@ -200,9 +200,9 @@ const PAIRS: Array<[string, string]> = [
 ]
 
 /**
- * The eyebrow chip is the one pair whose foreground changes with the theme.
+ * Butter is a surface, not a component. Text placed on it needs its own pair.
  * Butter is a pale pastel in light and a mid amber in dark, so no single
- * foreground serves both: the chip takes the theme's DARKEST token. That is
+ * foreground serves both: the pair takes the theme's DARKEST token. That is
  * `ink` (#071b46) on light and `ground` (#14120e) on dark.
  *
  * Asserting ink-on-butter in dark measures 2.65:1 and fails. That is the test
