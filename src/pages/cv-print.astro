@@ -1,8 +1,10 @@
 ---
 import { profile, experiences, stack, education, certs, links } from '../lib/cv'
-import '@fontsource-variable/fraunces'
-import '@fontsource-variable/hanken-grotesk'
-import '@fontsource-variable/jetbrains-mono'
+// The PDF uses the same three faces as the site, so a printed CV and the web
+// page read as one document. This was the last consumer of the v1 faces.
+import '@fontsource-variable/newsreader'
+import '@fontsource-variable/geist'
+import '@fontsource-variable/geist-mono'
 ---
 <!doctype html>
 <html lang="en">
@@ -12,15 +14,17 @@ import '@fontsource-variable/jetbrains-mono'
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{profile.name} · CV</title>
     <style is:global>
+      /* The design system v2 light palette, written as literals. The sheet is
+         always white paper, so there is nothing for light-dark() to resolve. */
       :root {
-        --ink: #1a1613;
-        --muted: #5b5548;
-        --faint: #857e6e;
-        --line: #d8d2c4;
-        --accent: #97640f;
-        --serif: 'Fraunces Variable', Georgia, serif;
-        --sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
-        --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+        --ink: #071b46;
+        --muted: #5a6480;
+        --faint: #8b93a8;
+        --line: #d9dce3;
+        --accent: #145bff;
+        --serif: 'Newsreader Variable', Georgia, serif;
+        --sans: 'Geist Variable', system-ui, sans-serif;
+        --mono: 'Geist Mono Variable', ui-monospace, monospace;
       }
       @page { size: A4; margin: 14mm 15mm; }
       * { box-sizing: border-box; }
