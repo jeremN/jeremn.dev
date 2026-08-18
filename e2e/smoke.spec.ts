@@ -20,7 +20,7 @@ test('blog post keeps Shiki highlighting through rehype-sanitize', async ({ page
 
 test('blog lists the published post', async ({ page }) => {
   await page.goto(`${BASE}/blog`)
-  await expect(page.getByRole('heading', { name: 'Writing' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Notes from the workbench/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /Ten months of Svelte 5/ })).toBeVisible()
 })
 

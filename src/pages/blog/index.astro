@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
-import Eyebrow from '../../components/site/Eyebrow.astro'
 import PostRow from '../../components/site/PostRow.astro'
 import Underline from '../../components/site/Underline.astro'
 
@@ -13,20 +12,29 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft || import.m
   title="Writing · jeremn.dev"
   description="Essays and notes by Jérémie Néhlil on web development, performance, and the tooling around it."
 >
-  <main class="relative z-10 mx-auto max-w-3xl px-6 pb-24 pt-2">
-    <Eyebrow class="block text-accent">Writing</Eyebrow>
-    <h1 class="mt-3 font-display text-5xl font-semibold tracking-tight text-ink sm:text-7xl">Writing</h1>
-    <Underline class="mt-1 w-40 text-accent" />
+  <main class="relative z-10 mx-auto max-w-[1440px] px-6 pb-24 pt-16 sm:pt-24">
+    <span class="font-mono text-[11px] uppercase tracking-wider text-accent">02 / Notes from the workbench</span>
+
+    <h1 class="mt-6 max-w-[14ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
+      Notes from the <span class="relative inline-block italic">
+        workbench.
+        <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
+      </span>
+    </h1>
+
+    <p class="mt-8 max-w-[42ch] font-sans text-base leading-relaxed text-muted">
+      Thoughts on software, AI, tools and things I learn along the way.
+    </p>
 
     {posts.length === 0 ? (
-      <div class="mt-12 border-t border-line pt-14">
+      <div class="mt-16 border-t border-line pt-14">
         <p class="max-w-[26ch] font-display text-3xl leading-tight text-ink sm:text-4xl">
           Nothing published yet.
         </p>
         <p class="mt-5 font-mono text-xs text-muted">The first post is in progress.</p>
       </div>
     ) : (
-      <ul class="mt-12">
+      <ul class="mt-16 border-t border-line">
         {posts.map((p) => (
           <li>
             <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} />
