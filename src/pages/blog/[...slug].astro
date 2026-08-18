@@ -1,7 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
-import Eyebrow from '../../components/site/Eyebrow.astro'
 import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
 import Underline from '../../components/site/Underline.astro'
@@ -39,7 +38,7 @@ const showToc = toc.length >= 2
     {showToc && (
       <aside class="hidden lg:block">
         <nav class="sticky top-24" aria-label="On this page">
-          <Eyebrow class="mb-3 block">On this page</Eyebrow>
+          <span class="mb-3 block font-mono text-[11px] uppercase tracking-wider text-muted">On this page</span>
           <ul class="border-l border-line">
             {toc.map((h) => (
               <li>
