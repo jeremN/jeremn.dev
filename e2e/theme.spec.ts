@@ -92,16 +92,26 @@ const token = (page: import('@playwright/test').Page, scope: string, name: strin
     [scope, name],
   )
 
-const LEGACY_GROUND = { dark: 'rgb(11, 10, 18)', light: 'rgb(236, 227, 209)' }
+// All six `.legacy` colour tokens, as the `rgb(r, g, b)` the probe returns.
+const LEGACY_TOKENS: Record<string, { light: string; dark: string }> = {
+  '--color-ground': { light: 'rgb(236, 227, 209)', dark: 'rgb(11, 10, 18)' },
+  '--color-surface': { light: 'rgb(247, 241, 226)', dark: 'rgb(21, 19, 31)' },
+  '--color-ink': { light: 'rgb(33, 28, 21)', dark: 'rgb(243, 236, 221)' },
+  '--color-muted': { light: 'rgb(107, 98, 83)', dark: 'rgb(154, 147, 168)' },
+  '--color-accent': { light: 'rgb(151, 100, 15)', dark: 'rgb(232, 182, 90)' },
+  '--color-line': { light: 'rgb(216, 204, 178)', dark: 'rgb(42, 37, 54)' },
+}
 
 test.describe('the legacy scope pins the old palette', () => {
   for (const path of ['/cv', '/freelance']) {
     for (const scheme of ['dark', 'light'] as const) {
-      test(`${path} keeps the legacy ground in ${scheme}`, async ({ browser }) => {
+      test(`${path} keeps the legacy palette in ${scheme}`, async ({ browser }) => {
         const ctx = await browser.newContext({ colorScheme: scheme })
         const page = await ctx.newPage()
         await page.goto(`${BASE}${path}`)
-        expect(await token(page, '.legacy', '--color-ground')).toBe(LEGACY_GROUND[scheme])
+        for (const [name, values] of Object.entries(LEGACY_TOKENS)) {
+          expect(await token(page, '.legacy', name), name).toBe(values[scheme])
+        }
         await ctx.close()
       })
     }
