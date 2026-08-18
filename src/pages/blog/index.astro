@@ -7,12 +7,19 @@ import Underline from '../../components/site/Underline.astro'
 const posts = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).sort(
   (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
 )
+
+// Tags actually in use, alphabetical. Deriving them from the collection means
+// a new tag appears in the filter the moment a post uses it.
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b))
 ---
 <Layout
   title="Writing · jeremn.dev"
   description="Essays and notes by Jérémie Néhlil on web development, performance, and the tooling around it."
 >
-  <main class="relative z-10 mx-auto max-w-[1440px] px-6 pb-24 pt-16 sm:pt-24">
+  {/* The page grid is 1440, but the reading list keeps its own narrower column
+      so the metadata stays beside the title instead of drifting to the screen
+      edge on a wide monitor. The shell above and below still spans 1440. */}
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
     <span class="font-mono text-[11px] uppercase tracking-wider text-accent">02 / Notes from the workbench</span>
 
     <h1 class="mt-6 max-w-[14ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
@@ -26,6 +33,15 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft || import.m
       Thoughts on software, AI, tools and things I learn along the way.
     </p>
 
+    {tags.length > 0 && (
+      <div class="mt-14 flex flex-wrap gap-x-6 gap-y-3 border-b border-line pb-4">
+        <button type="button" data-filter="*" aria-pressed="true" class="filter-tab">All</button>
+        {tags.map((t) => (
+          <button type="button" data-filter={t} aria-pressed="false" class="filter-tab">{t}</button>
+        ))}
+      </div>
+    )}
+
     {posts.length === 0 ? (
       <div class="mt-16 border-t border-line pt-14">
         <p class="max-w-[26ch] font-display text-3xl leading-tight text-ink sm:text-4xl">
@@ -34,9 +50,9 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft || import.m
         <p class="mt-5 font-mono text-xs text-muted">The first post is in progress.</p>
       </div>
     ) : (
-      <ul class="mt-16 border-t border-line">
+      <ul class="mt-0">
         {posts.map((p) => (
-          <li>
+          <li data-tags={p.data.tags.join(' ')}>
             <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} />
           </li>
         ))}
@@ -44,3 +60,19 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft || import.m
     )}
   </main>
 </Layout>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')]
+  const items = [...document.querySelectorAll<HTMLLIElement>('li[data-tags]')]
+
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => {
+      const want = tab.dataset.filter!
+      for (const other of tabs) other.setAttribute('aria-pressed', String(other === tab))
+      for (const item of items) {
+        const tags = (item.dataset.tags ?? '').split(' ').filter(Boolean)
+        item.hidden = want !== '*' && !tags.includes(want)
+      }
+    })
+  }
+</script>

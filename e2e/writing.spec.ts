@@ -31,3 +31,47 @@ test.describe('writing index', () => {
     expect(bg).toBe('rgba(0, 0, 0, 0)')
   })
 })
+
+test.describe('writing index filter', () => {
+  test('lists All plus every tag in use', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const filters = page.locator('[data-filter]')
+    await expect(filters.first()).toHaveText(/all/i)
+    expect(await filters.count()).toBeGreaterThan(1)
+  })
+
+  test('filtering hides the rows that do not carry the tag', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const total = await page.locator('[data-post-row]').count()
+
+    const tagButton = page.locator('[data-filter]').nth(1)
+    const tag = (await tagButton.getAttribute('data-filter'))!
+    await tagButton.click()
+
+    const visible = page.locator('li:not([hidden]) [data-post-row]')
+    const shown = await visible.count()
+    expect(shown).toBeGreaterThan(0)
+    expect(shown).toBeLessThanOrEqual(total)
+
+    for (const row of await visible.all()) {
+      await expect(row.locator('[data-meta]')).toContainText(new RegExp(tag, 'i'))
+    }
+  })
+
+  test('the active filter is marked for assistive technology', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('[data-filter][aria-pressed="true"]')).toHaveText(/all/i)
+    await page.locator('[data-filter]').nth(1).click()
+    await expect(page.locator('[data-filter][aria-pressed="true"]')).not.toHaveText(/all/i)
+  })
+
+  test('every row is listed when JavaScript never runs', async ({ browser }) => {
+    // The list must be complete without script. The filter is an enhancement.
+    const context = await browser.newContext({ javaScriptEnabled: false })
+    const page = await context.newPage()
+    await page.goto(`${BASE}/blog`)
+    expect(await page.locator('[data-post-row]').count()).toBeGreaterThan(0)
+    await expect(page.locator('li[hidden]')).toHaveCount(0)
+    await context.close()
+  })
+})

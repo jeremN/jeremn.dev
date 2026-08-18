@@ -303,3 +303,25 @@ p {
     animation: none;
   }
 }
+
+/* Writing index filter tabs. The active tab is underlined rather than filled,
+   matching the comps' restraint. aria-pressed carries the state for assistive
+   technology; the class only paints it. */
+.filter-tab {
+  border-bottom: 1.5px solid transparent;
+  padding-bottom: 0.25rem;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+.filter-tab:hover {
+  color: var(--color-ink);
+}
+.filter-tab[aria-pressed="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-ink);
+}
