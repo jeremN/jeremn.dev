@@ -83,6 +83,9 @@
   --font-grotesk: "Hanken Grotesk Variable", system-ui, sans-serif;
   --font-sans: "Inter Variable", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  /* Re-points Tailwind preflight's code/pre rule, which otherwise resolves
+     `--default-mono-font-family` at :root and inherits past this scope. */
+  --default-mono-font-family: var(--font-mono);
 }
 
 /* The galaxy hero is opaque-dark in any theme, so its band keeps dark tokens —
