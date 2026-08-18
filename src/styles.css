@@ -353,3 +353,20 @@ article.prose h2::before {
     display: none;
   }
 }
+
+/* About principles: the ordinal is generated so the list cannot renumber itself
+   wrongly when an item is added or reordered. Same technique as the article
+   section ordinals. */
+[data-principles] {
+  counter-reset: principle;
+}
+[data-principle] {
+  counter-increment: principle;
+}
+[data-principle]::before {
+  content: counter(principle, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--color-accent);
+}

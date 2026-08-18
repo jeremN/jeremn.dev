@@ -44,7 +44,29 @@ test.describe('site footer', () => {
     await expect(footer).toContainText('Remote friendly')
   })
 
-  test('keeps the contact CTA until the Contact page exists', async ({ page }) => {
+  test('carries one primary CTA', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    // Step 4 repointed this from /freelance to /contact. Assert the heading,
+    // not just any /contact link, or the nav link would satisfy it.
+    const cta = page.locator('footer a:has(h2)')
+    await expect(cta).toHaveCount(1)
+    await expect(cta).toHaveAttribute('href', /\/contact$/)
+  })
+})
+
+test.describe('navigation after About and Contact ship', () => {
+  test('carries the four primary destinations', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const labels = await page.locator('header nav a').allTextContents()
+    expect(labels.map((l) => l.trim())).toEqual(['Writing', 'About', 'CV', 'Contact'])
+  })
+
+  test('the footer CTA now leads to Contact', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('footer a[href$="/contact"]')).toBeVisible()
+  })
+
+  test('freelance stays reachable from the footer', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     await expect(page.locator('footer a[href$="/freelance"]')).toBeVisible()
   })

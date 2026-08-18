@@ -1,0 +1,85 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Underline from '../components/site/Underline.astro'
+import Doodle from '../components/site/Doodle.astro'
+import { profile, stack } from '../lib/cv'
+
+// The four principles and the "Currently" rows are the design document's own
+// copy. They are the author's words, so they are reproduced rather than
+// rewritten. The tools list is generated from cv.ts instead, because a second
+// hand-typed stack would drift from /cv the first time either changes.
+const principles = [
+  { title: 'Simple systems', body: 'Build only what is necessary. Clarity over complexity.' },
+  { title: 'Maintainable code', body: 'Code is read more than it is written. I write for the future me.' },
+  { title: 'Useful software', body: 'Solve real problems. Ship features that matter.' },
+  { title: 'Continuous learning', body: 'Stay curious. Always keep learning.' },
+]
+
+const currently = [
+  { label: 'Building', body: 'Side projects and experiments.' },
+  { label: 'Learning', body: 'Distributed systems and data engineering.' },
+  { label: 'Experimenting', body: 'AI tooling and developer productivity.' },
+]
+
+const tools = stack.flatMap((group) => group.items)
+---
+<Layout
+  title="About · jeremn.dev"
+  description="Jérémie Néhlil, senior fullstack JavaScript engineer based in France. How I work and what I care about."
+>
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
+    <span class="font-mono text-[11px] uppercase tracking-wider text-accent">03 / About</span>
+
+    <div class="mt-6 flex items-start justify-between gap-10">
+      <h1 class="max-w-[13ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
+        I like software that makes <span class="relative inline-block">
+          sense.
+          <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
+        </span>
+      </h1>
+      <Doodle name="braces" class="hidden h-11 w-16 shrink-0 text-muted sm:block" />
+    </div>
+
+    <div class="mt-8 flex items-end justify-between gap-10">
+      <p class="max-w-[34ch] font-sans text-base leading-relaxed text-muted">
+        {profile.title}, based in France.
+      </p>
+      <Doodle name="plant" class="h-24 w-36 shrink-0 text-ink" />
+    </div>
+
+    <section class="mt-24">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">What I care about</h2>
+      <ul data-principles class="mt-8 border-t border-line">
+        {principles.map((p) => (
+          <li
+            data-principle
+            class="grid grid-cols-[2.5rem_1fr] items-baseline gap-x-5 border-b border-line py-6 sm:grid-cols-[3.5rem_16rem_1fr] sm:gap-x-10"
+          >
+            <span class="font-sans text-base font-medium text-ink sm:text-lg">{p.title}</span>
+            <span class="col-start-2 mt-2 font-sans text-sm leading-relaxed text-muted sm:col-start-3 sm:mt-0">{p.body}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="mt-20">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Tools I work with</h2>
+      <p data-tools class="mt-6 max-w-[60ch] font-mono text-sm leading-loose text-ink">
+        {tools.join(' · ')}<span class="text-muted"> · and more…</span>
+      </p>
+    </section>
+
+    <section class="mt-20">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Currently</h2>
+      <ul class="mt-8 border-t border-line">
+        {currently.map((c) => (
+          <li class="grid grid-cols-[1fr] items-baseline gap-y-2 border-b border-line py-5 sm:grid-cols-[10rem_1.5rem_1fr] sm:gap-y-0">
+            <span class="font-mono text-[11px] uppercase tracking-wider text-muted">{c.label}</span>
+            <span aria-hidden="true" class="hidden text-muted sm:block">→</span>
+            <span class="font-sans text-sm text-ink">{c.body}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </main>
+</Layout>
