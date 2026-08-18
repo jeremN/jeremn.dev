@@ -52,15 +52,18 @@
   color-scheme: dark;
 }
 
-/* The galaxy hero is opaque-dark in any theme, so its band keeps dark tokens —
-   text and accents stay readable over the WebGL background even in light mode. */
+/* The galaxy hero is opaque-dark in any theme, so its band pins the dark
+   tokens. Text and accents stay readable over the WebGL background in the
+   light theme too. The values are the v2 dark palette, written as literals
+   because light-dark() would resolve to the light half here.
+   This block goes when the galaxy leaves the homepage. */
 .hero-dark {
-  --color-ground: #0b0a12;
-  --color-surface: #15131f;
-  --color-ink: #f3ecdd;
-  --color-muted: #9a93a8;
-  --color-accent: #e8b65a;
-  --color-line: #2a2536;
+  --color-ground: #14120e;
+  --color-surface: #1e1b16;
+  --color-ink: #f1ece1;
+  --color-muted: #a69c89;
+  --color-accent: #759fff;
+  --color-line: #2b2721;
 }
 
 body {
