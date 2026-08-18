@@ -92,32 +92,6 @@ const token = (page: import('@playwright/test').Page, scope: string, name: strin
     [scope, name],
   )
 
-// All six `.legacy` colour tokens, as the `rgb(r, g, b)` the probe returns.
-const LEGACY_TOKENS: Record<string, { light: string; dark: string }> = {
-  '--color-ground': { light: 'rgb(236, 227, 209)', dark: 'rgb(11, 10, 18)' },
-  '--color-surface': { light: 'rgb(247, 241, 226)', dark: 'rgb(21, 19, 31)' },
-  '--color-ink': { light: 'rgb(33, 28, 21)', dark: 'rgb(243, 236, 221)' },
-  '--color-muted': { light: 'rgb(107, 98, 83)', dark: 'rgb(154, 147, 168)' },
-  '--color-accent': { light: 'rgb(151, 100, 15)', dark: 'rgb(232, 182, 90)' },
-  '--color-line': { light: 'rgb(216, 204, 178)', dark: 'rgb(42, 37, 54)' },
-}
-
-test.describe('the legacy scope pins the old palette', () => {
-  for (const path of ['/cv', '/freelance']) {
-    for (const scheme of ['dark', 'light'] as const) {
-      test(`${path} keeps the legacy palette in ${scheme}`, async ({ browser }) => {
-        const ctx = await browser.newContext({ colorScheme: scheme })
-        const page = await ctx.newPage()
-        await page.goto(`${BASE}${path}`)
-        for (const [name, values] of Object.entries(LEGACY_TOKENS)) {
-          expect(await token(page, '.legacy', name), name).toBe(values[scheme])
-        }
-        await ctx.close()
-      })
-    }
-  }
-})
-
 /**
  * The first family in a computed `font-family` stack, unquoted.
  *
@@ -134,33 +108,31 @@ const firstFont = (page: import('@playwright/test').Page, selector: string) =>
     return stack.split(',')[0].trim().replace(/^["']|["']$/g, '')
   }, selector)
 
-// Expected first font per page. `/blog` reads the four global tokens.
-// `/cv` and `/freelance` read the same four tokens through the `.legacy` pin.
+// Expected first font per page. Every page reads the same three global
+// tokens now: /cv and /freelance dropped the `.legacy` pin and joined v2.
 const FONT_CASES: Array<{
   path: string
   sans: string
   display: string
   mono: string
-  grotesk: string
 }> = [
-  { path: '/blog', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable', grotesk: 'Geist Variable' },
-  { path: '/cv', sans: 'Inter Variable', display: 'Fraunces Variable', mono: 'JetBrains Mono Variable', grotesk: 'Hanken Grotesk Variable' },
-  { path: '/freelance', sans: 'Inter Variable', display: 'Fraunces Variable', mono: 'JetBrains Mono Variable', grotesk: 'Hanken Grotesk Variable' },
+  { path: '/blog', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable' },
+  { path: '/cv', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable' },
+  { path: '/freelance', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable' },
 ]
 
-test.describe('the legacy scope pins the old fonts', () => {
-  for (const { path, sans, display, mono, grotesk } of FONT_CASES) {
-    test(`${path} resolves all four font tokens`, async ({ page }) => {
+test.describe('every page resolves the v2 font tokens', () => {
+  for (const { path, sans, display, mono } of FONT_CASES) {
+    test(`${path} resolves all three font tokens`, async ({ page }) => {
       await page.goto(`${BASE}${path}`)
 
       // body carries no font-* utility. It inherits --font-sans through
-      // `body { font-family: var(--font-sans) }`. `.legacy` sits on that
-      // same <body>, so its override wins here. This is the path a future
-      // refactor could break without anyone noticing.
+      // `body { font-family: var(--font-sans) }`. This guards that /cv and
+      // /freelance really joined v2, with no v1 face leaking back in.
       expect(await firstFont(page, 'body')).toBe(sans)
       expect(await firstFont(page, 'h1')).toBe(display) // --font-display
       expect(await firstFont(page, '.font-mono')).toBe(mono) // --font-mono
-      expect(await firstFont(page, 'header a')).toBe(grotesk) // --font-grotesk, the wordmark
+      expect(await firstFont(page, 'header a')).toBe('Geist Variable') // the wordmark now uses font-sans
     })
   }
 })
