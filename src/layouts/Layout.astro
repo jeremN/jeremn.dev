@@ -66,15 +66,15 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
       id="site-header"
       class="sticky top-0 z-30 h-[72px] border-b border-transparent bg-ground/80 backdrop-blur-md transition-[height,border-color] duration-300 ease-out"
     >
-      <div class="mx-auto flex h-full max-w-[1440px] items-center justify-between px-6">
-        <a href={withBase('/')} class="font-sans text-lg font-bold tracking-tight text-ink no-underline">
+      <div class="mx-auto flex h-full max-w-[1440px] items-center justify-between px-4 sm:px-6">
+        <a href={withBase('/')} class="whitespace-nowrap font-sans text-base font-bold tracking-tight text-ink no-underline sm:text-lg">
           jeremn<span class="text-accent">.</span>dev
         </a>
-        <div class="flex items-center gap-6 sm:gap-9">
-          <nav class="flex gap-5 sm:gap-8" aria-label="Main">
+        <div class="flex items-center gap-3 sm:gap-9">
+          <nav class="flex gap-3 sm:gap-8" aria-label="Main">
             {nav.map((n) => (
-              <a href={withBase(n.href)} class="group no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
-                <span class:list={['font-sans text-sm text-muted transition-colors group-hover:text-ink', isActive(n.href) && '!text-ink']}>{n.label}</span>
+              <a href={withBase(n.href)} class="group whitespace-nowrap no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
+                <span class:list={['font-sans text-xs text-muted transition-colors group-hover:text-ink sm:text-sm', isActive(n.href) && '!text-ink']}>{n.label}</span>
               </a>
             ))}
           </nav>
