@@ -1,0 +1,72 @@
+<svg viewBox="0 0 1600 500" fill="none" xmlns="http://www.w3.org/2000/svg"
+     stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+
+  <!-- lavender blob, tucked into the corner behind the water -->
+  <path d="M0 500 C10 452 0 412 44 396 C92 378 122 408 116 448 C112 474 126 490 138 500 Z"
+        fill="var(--color-lavender)" stroke="none"/>
+
+  <!-- sun -->
+  <circle id="sun" class="reaction" cx="1245" cy="105" r="46" fill="var(--color-butter)" stroke="currentColor" stroke-width="3"/>
+
+  <!-- clouds -->
+  <path class="ds" d="M812 168c-16 0-20-16-4-22 0-16 22-20 32-8 12-12 32-4 32 12 16 0 18 18 0 18Z"/>
+  <path class="ds" d="M1140 96c-12 0-15-12-3-16 0-12 16-15 24-6 9-9 24-3 24 9 12 0 13 13 0 13Z"/>
+  <path class="ds" d="M1320 205c-11 0-14-11-3-15 0-11 15-14 22-6 8-8 22-3 22 8 11 0 12 13 0 13Z"/>
+
+  <!-- plane + trail -->
+  <path class="ds ds--thin" d="M1436 74c-38 26-96 44-150 30" stroke-dasharray="2 7"/>
+  <path d="M1432 52 L1486 30 L1470 84 L1454 66 Z"/>
+
+  <!-- far skyline -->
+  <path class="ds ds--thin" d="M642 424v-42h16v42M666 424v-58h15v58M689 424v-34h14v34M711 424v-50h16v50M735 424v-28h14v28"/>
+
+  <!-- main ground ridge, rising to the right -->
+  <path d="M0 436 C170 424 300 452 430 440 C610 424 700 430 830 408 C1000 380 1120 356 1300 322 C1420 300 1520 296 1600 302"/>
+
+  <!-- river: leaves the ridge, widens, meets the water -->
+  <path d="M1006 374 C950 400 890 406 838 424 C780 442 700 458 618 466"/>
+  <path class="ds--thin" d="M1014 388 C962 414 900 422 850 440 C796 458 716 472 640 478" opacity=".55"/>
+
+  <!-- water -->
+  <g id="water" class="reaction" stroke="var(--color-accent)">
+    <path d="M60 468c40-14 74 14 116 0s76 14 118 0 76 14 116 0 76 14 116 0 60 12 92 6"/>
+    <path class="ds--thin" d="M120 490c38-13 70 13 110 0s72 13 112 0 72 13 108 0 66 11 96 4" opacity=".5"/>
+  </g>
+
+  <!-- sailboat -->
+  <g transform="translate(300,370)">
+    <path d="M4 92 C34 108 82 108 112 92"/>
+    <path d="M11 92 L105 92"/>
+    <path d="M62 12 L62 90"/>
+    <path d="M57 24 L57 88 L20 88 C36 66 49 44 57 24 Z"/>
+    <path d="M68 34 L68 88 L104 88 C90 68 78 46 68 34 Z"/>
+  </g>
+
+  <!-- small tree, left -->
+  <g transform="translate(214,363)">
+    <path d="M20 74 C19 60 20 48 20 38"/>
+    <path d="M20 54 C14 49 11 43 10 37"/>
+    <path d="M20 40 C7 41 0 32 2 22 C-5 14 0 1 10 0 C12 -12 26 -16 33 -8 C45 -11 54 0 50 10 C57 19 51 33 40 35 C34 40 26 41 20 40 Z"/>
+  </g>
+
+  <!-- main tree cluster — the plant hotspot -->
+  <g id="plant" class="reaction" transform="translate(1044,205)">
+    <path d="M46 152 C44 126 46 100 46 66"/>
+    <path d="M46 100 C34 91 27 79 25 67 M46 122 C60 113 70 101 74 88"/>
+    <path d="M46 68 C16 70 -2 50 4 27 C-11 10 -1 -20 22 -22 C27 -50 60 -60 78 -42 C106 -50 128 -25 118 -2 C133 18 120 52 95 57 C82 68 62 70 46 68 Z"/>
+  </g>
+  <g transform="translate(1168,242)">
+    <path d="M26 96 C25 80 26 66 26 50"/>
+    <path d="M26 70 C18 64 14 56 13 48"/>
+    <path d="M26 52 C6 53 -6 40 -2 24 C-12 12 -4 -8 11 -10 C15 -28 37 -34 48 -22 C66 -28 81 -12 74 4 C84 17 75 40 58 44 C49 51 36 53 26 52 Z"/>
+  </g>
+
+  <!-- house on the ridge -->
+  <g transform="translate(1372,232)">
+    <path d="M8 72 L8 32 L46 4 L84 32 L84 72 Z"/>
+    <path d="M34 72 L34 48 L58 48 L58 72"/>
+  </g>
+
+  <!-- grass tufts -->
+  <path class="ds ds--thin" d="M520 440c1-9 3-13 7-17M528 441c0-8 2-13 6-17M900 398c1-9 3-13 7-17M908 399c0-8 2-13 6-17M1492 298c1-9 3-13 7-17"/>
+</svg>

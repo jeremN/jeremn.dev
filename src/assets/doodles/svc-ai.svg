@@ -1,0 +1,9 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path class="ds" d="M24 6v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="24" cy="5" r="2" stroke="currentColor" stroke-width="2"/>
+  <rect class="ds" x="8" y="13" width="32" height="26" rx="7" stroke="currentColor" stroke-width="2"/>
+  <circle cx="18" cy="24" r="2.4" fill="currentColor"/>
+  <circle cx="30" cy="24" r="2.4" fill="currentColor"/>
+  <path class="ds ds--thin" d="M18 32c3 2.6 9 2.6 12 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  <path class="ds ds--thin" d="M8 24H4M44 24h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

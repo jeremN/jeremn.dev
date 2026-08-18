@@ -1,0 +1,6 @@
+<svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path class="ds ds--thin" d="M20 11 L28 8 M20 21 L28 24 M17 15v2" stroke="currentColor" stroke-width="1.5"/>
+  <rect class="ds" x="8" y="11" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="2"/>
+  <rect class="ds" x="29" y="3" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="2"/>
+  <rect class="ds" x="29" y="19" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="2"/>
+</svg>

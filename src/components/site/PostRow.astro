@@ -1,6 +1,8 @@
 ---
 import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
+import { markForTags } from '../../lib/doodles'
+import Doodle from './Doodle.astro'
 
 interface Props {
   slug: string
@@ -28,12 +30,13 @@ const day = publishedAt.toLocaleDateString('en-US', { day: '2-digit' })
 const month = publishedAt.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
 const year = publishedAt.getFullYear()
 const category = tags.join(' / ').toUpperCase()
+const mark = markForTags(tags)
 ---
 <a
   data-post-row
   data-variant={variant}
   href={withBase(`/blog/${slug}`)}
-  class="group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:grid-cols-[4.5rem_1fr_auto] sm:gap-x-10"
+  class="group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:grid-cols-[4.5rem_1fr_auto_2.75rem] sm:gap-x-10"
 >
   <span
     data-date
@@ -59,4 +62,11 @@ const category = tags.join(' / ').toUpperCase()
     {category && <span class="block">{category}</span>}
     <span class="mt-1 block">{readingTime(body)}</span>
   </span>
+
+  {/* The mark is decorative and repeats the category, so it is aria-hidden and
+      only appears once there is room for a fourth column. */}
+  <Doodle
+    name={mark}
+    class="col-start-4 row-start-1 hidden h-7 w-11 self-start text-muted transition-[color,transform] duration-200 group-hover:-translate-y-0.5 group-hover:text-accent sm:block"
+  />
 </a>

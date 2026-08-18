@@ -1,0 +1,21 @@
+<svg viewBox="0 0 420 150" fill="none" xmlns="http://www.w3.org/2000/svg"
+     stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Simplified for small screens: sun, one cloud, ridge, one tree, house, water.
+       The plane, skyline, sailboat and river are dropped, not scaled down. -->
+  <circle id="sun" class="reaction" cx="330" cy="30" r="16" fill="var(--color-butter)" stroke="currentColor" stroke-width="2.4"/>
+  <path class="ds" d="M78 44c-9 0-11-9-2-12 0-9 12-11 18-4 7-7 18-2 18 7 9 0 10 9 0 9Z"/>
+  <path d="M0 112 C60 106 110 116 170 108 C240 98 300 86 360 78 C390 74 406 74 420 76"/>
+  <g transform="translate(232,50)">
+    <path d="M18 44 C17 34 18 26 18 18"/>
+    <path d="M18 30 C12 26 9 21 8 16"/>
+    <path d="M18 20 C4 21 -3 12 0 3 C-6 -4 0 -16 9 -17 C12 -28 28 -32 34 -24 C48 -28 58 -17 53 -7 C60 2 54 17 42 19 C35 22 26 21 18 20 Z"/>
+  </g>
+  <g transform="translate(352,46)">
+    <path d="M4 30 L4 14 L20 2 L36 14 L36 30 Z"/>
+    <path d="M15 30 L15 20 L25 20 L25 30"/>
+  </g>
+  <g id="water" class="reaction" stroke="var(--color-accent)">
+    <path d="M20 130c16-6 30 6 46 0s30 6 46 0 30 6 46 0"/>
+    <path class="ds--thin" d="M44 143c15-6 28 6 44 0s28 6 44 0" opacity=".5"/>
+  </g>
+</svg>
