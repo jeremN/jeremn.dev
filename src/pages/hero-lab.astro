@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import Eyebrow from '../components/site/Eyebrow.astro'
 import { VARIANTS } from '../components/hero-lab/types'
+import { withBase } from '../lib/base'
 ---
 <Layout title="Black-hole physics lab · jeremn.dev" noindex>
   <main class="relative z-10 mx-auto max-w-6xl px-6 pb-10 pt-2">
@@ -12,6 +13,9 @@ import { VARIANTS } from '../components/hero-lab/types'
     <p class="mt-4 max-w-[60ch] font-display text-lg text-muted">
       The same galaxy and the same cursor in every tile. Only the warp law changes.
     </p>
+    <a href={withBase('/hero-lab/galaxy')} class="mt-4 inline-block font-mono text-[11px] uppercase tracking-wider text-accent no-underline">
+      The retired v1 galaxy hero →
+    </a>
 
     <div class="relative mt-8 h-[78vh] min-h-[600px] w-full overflow-hidden rounded-lg border border-line">
       <canvas id="lab" class="absolute inset-0 block h-full w-full"></canvas>

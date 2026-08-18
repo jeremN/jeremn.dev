@@ -3,10 +3,12 @@ import { BASE } from '../site.config.mjs'
 
 const ORIGIN = 'http://localhost:4321'
 
-test('home renders hero text + canvas', async ({ page }) => {
+test('home renders the v2 hero', async ({ page }) => {
   await page.goto(`${BASE}/`)
-  await expect(page.getByRole('heading', { name: /Néhlil/ })).toBeVisible()
-  await expect(page.locator('canvas#galaxy')).toBeAttached()
+  await expect(page.getByRole('heading', { name: /I build web apps for the real world/ })).toBeVisible()
+  // The galaxy left the homepage in step 5. Assert it is gone, so a stray
+  // re-import cannot put a WebGL loop back on the front door unnoticed.
+  await expect(page.locator('canvas#galaxy')).toHaveCount(0)
 })
 
 // Guards the markdown pipeline: `rehype-sanitize` runs AFTER Shiki, and the default
@@ -26,8 +28,9 @@ test('blog lists the published post', async ({ page }) => {
 
 // Guards the base prefix: with base misconfigured, links drop to '/cv' and the
 // active-state check (which compares a base-stripped route) stops matching.
-// Asserted via attributes rather than a click — the home page runs a continuous
-// WebGL loop, so Playwright's "stable bounding box" precondition never settles.
+// Asserted via attributes rather than a click, which is how this was written
+// while the home page still ran a WebGL loop. It stays attribute-based: the
+// check is about the href the base produces, not about navigation.
 test('nav links carry the configured base and mark the active page', async ({ page }) => {
   await page.goto(`${BASE}/`)
   await expect(page.getByRole('link', { name: 'CV' })).toHaveAttribute('href', `${BASE}/cv`)

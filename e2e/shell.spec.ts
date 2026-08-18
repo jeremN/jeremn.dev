@@ -71,3 +71,38 @@ test.describe('navigation after About and Contact ship', () => {
     await expect(page.locator('footer a[href$="/freelance"]')).toBeVisible()
   })
 })
+
+test.describe('narrow viewports', () => {
+  // Four destinations plus the wordmark and the theme toggle compete for one
+  // row. body carries [overflow-wrap:anywhere], so an overrun does not push the
+  // page wide: it breaks "jeremn.dev" and "Contact" mid-word instead, which no
+  // overflow guard can see. Assert the row directly.
+  test('the header stays on one line down to 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 })
+    await page.goto(`${BASE}/`)
+
+    const tops = await page.locator('header nav a').evaluateAll((els) =>
+      els.map((el) => (el as HTMLElement).getBoundingClientRect().top),
+    )
+    expect(new Set(tops.map((t) => Math.round(t))).size).toBe(1)
+
+    const wordmarkLines = await page
+      .locator('header a[href$="/"]')
+      .first()
+      .evaluate((el) => (el as HTMLElement).getClientRects().length)
+    expect(wordmarkLines).toBe(1)
+  })
+
+  test('no page scrolls horizontally from 320px to 1440px', async ({ page }) => {
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 800 })
+      for (const path of ['/', '/blog', '/about', '/contact']) {
+        await page.goto(`${BASE}${path}`)
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        )
+        expect(overflow, `${path} at ${width}px`).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+})
