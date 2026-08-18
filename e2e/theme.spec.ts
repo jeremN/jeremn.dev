@@ -67,38 +67,11 @@ test.describe('theme resolves in three states', () => {
 })
 
 /**
- * Resolve a token to the `rgb(r, g, b)` the browser actually paints, inside a
- * given scope.
- *
- * A custom property MUST NOT be read with getPropertyValue here. Its computed
- * value is the substituted token stream, so `--color-ground` comes back as the
- * literal string "light-dark(#ece3d1, #0b0a12)" in BOTH themes. light-dark()
- * only resolves when the token is used in a colour context, so we probe it.
- */
-const token = (page: import('@playwright/test').Page, scope: string, name: string) =>
-  page.evaluate(
-    ([sel, n]) => {
-      const host = document.querySelector(sel)
-      if (!host) throw new Error(`no element matches ${sel}`)
-      const probe = document.createElement('span')
-      probe.style.position = 'absolute'
-      probe.style.opacity = '0'
-      probe.style.color = `var(${n})`
-      host.appendChild(probe)
-      const value = getComputedStyle(probe).color
-      probe.remove()
-      return value
-    },
-    [scope, name],
-  )
-
-/**
  * The first family in a computed `font-family` stack, unquoted.
  *
  * getComputedStyle returns the full fallback stack, for example
- * `"Fraunces Variable", Georgia, serif`. Fonts carry no light-dark(). The
- * value resolves directly from the DOM. No probe span is needed here, unlike
- * the colour tokens above.
+ * `"Newsreader Variable", Georgia, serif`. Fonts carry no light-dark(), so the
+ * value resolves directly from the DOM and needs no probe span.
  */
 const firstFont = (page: import('@playwright/test').Page, selector: string) =>
   page.evaluate((sel) => {
@@ -192,8 +165,10 @@ test.describe('v2 tokens clear WCAG AA in both themes', () => {
       const page = await ctx.newPage()
       await page.goto(`${BASE}/blog`)
 
-      // Probed, not read off the custom property: see the note on `token` above.
-      // getPropertyValue would return "light-dark(...)" unresolved in both themes.
+      // Probed with a span, not read off the custom property. A custom
+      // property computes to its substituted token stream, so getPropertyValue
+      // returns the literal "light-dark(...)" string in BOTH themes.
+      // light-dark() only resolves when the token is used in a colour context.
       const tokens = await page.evaluate((names: string[]) => {
         const probe = document.createElement('span')
         probe.style.position = 'absolute'
