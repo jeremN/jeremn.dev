@@ -1,18 +1,11 @@
 /* Self-hosted fonts (no external Google Fonts <link> — avoids render-blocking
    third-party request + the Semgrep external-resource/SRI finding).
-   The v1 faces below are still needed: /cv and /freelance render them through
-   the `.legacy` scope, and /cv-print imports three of them directly. They go
-   when those pages migrate. A font file is only downloaded when rendered text
-   matches it, so v2 pages never fetch them. */
+   A font file is only downloaded when rendered text matches it, so a page
+   never fetches a face it does not use. */
 @import "@fontsource-variable/newsreader";
 @import "@fontsource-variable/newsreader/standard-italic.css";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
-@import "@fontsource-variable/fraunces";
-@import "@fontsource-variable/fraunces/standard-italic.css";
-@import "@fontsource-variable/hanken-grotesk";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
@@ -23,7 +16,7 @@
   /* Palette — design system v2, "Editorial Flow". Light is canonical.
      `accent` is the code name for the system's Electric. It must keep this
      name: nine markup files use the `text-accent` utility, and removing the
-     token would delete the utility. Inside `.legacy` the same token is gold.
+     token would delete the utility.
      Electric is lifted on dark because #145BFF only reaches 3.5:1 there. */
   --color-ground: light-dark(#faf8f3, #14120e);
   --color-surface: light-dark(#ffffff, #1e1b16);
@@ -38,12 +31,8 @@
   --color-lavender: light-dark(#ded6f5, #6a54ab);
 
   /* Type — the serif creates personality, the sans carries usability, the
-     monospace is an accent and never the default voice. `grotesk` is a
-     temporary alias pointing at the same face as `sans`; three call sites
-     still use the utility (Layout.astro:62, index.astro:20,
-     hero-lab.astro:24). Delete the token once those are rewritten. */
+     monospace is an accent and never the default voice. */
   --font-display: "Newsreader Variable", Georgia, serif;
-  --font-grotesk: "Geist Variable", system-ui, sans-serif;
   --font-sans: "Geist Variable", system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
@@ -61,31 +50,6 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-}
-
-/* ── Legacy scope ─────────────────────────────────────────────────────────
-   /cv and /freelance are not redesigned in v2 yet. This class pins the v1
-   palette onto them so the global tokens can move to v2 without changing how
-   they look. `accent` is gold here and Electric globally, which is the whole
-   reason the scope exists. Delete this block and its two call sites when
-   those pages migrate. */
-.legacy {
-  --color-ground: light-dark(#ece3d1, #0b0a12);
-  --color-surface: light-dark(#f7f1e2, #15131f);
-  --color-ink: light-dark(#211c15, #f3ecdd);
-  --color-muted: light-dark(#6b6253, #9a93a8);
-  --color-accent: light-dark(#97640f, #e8b65a);
-  --color-line: light-dark(#d8ccb2, #2a2536);
-
-  /* Type is scoped for the same reason the palette is: these pages are not
-     redesigned yet. Removed together with everything else in this block. */
-  --font-display: "Fraunces Variable", Georgia, serif;
-  --font-grotesk: "Hanken Grotesk Variable", system-ui, sans-serif;
-  --font-sans: "Inter Variable", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
-  /* Re-points Tailwind preflight's code/pre rule, which otherwise resolves
-     `--default-mono-font-family` at :root and inherits past this scope. */
-  --default-mono-font-family: var(--font-mono);
 }
 
 /* The galaxy hero is opaque-dark in any theme, so its band keeps dark tokens —
