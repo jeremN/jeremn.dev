@@ -280,3 +280,26 @@ p {
   line-height: 0.78;
   color: var(--color-ink);
 }
+
+/* The availability dot pulses once on first load. prefers-reduced-motion
+   removes the animation but keeps the dot, because the dot carries the meaning
+   and the pulse is only emphasis. */
+@keyframes availability-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+}
+
+.availability-dot.is-first-load {
+  animation: availability-pulse 1.8s ease-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .availability-dot.is-first-load {
+    animation: none;
+  }
+}

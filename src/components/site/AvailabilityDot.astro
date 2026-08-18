@@ -1,0 +1,26 @@
+---
+// Availability indicator from the comps. The pulse runs on the visitor's first
+// load of the session only, so a reader moving between pages is not chased by
+// a blinking dot. sessionStorage, not localStorage: "first load" means first
+// load of this visit.
+---
+<span data-availability class="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted">
+  <span data-pulse class="availability-dot h-1.5 w-1.5 rounded-full bg-accent"></span>
+  Available
+</span>
+
+<script>
+  const dot = document.querySelector('[data-pulse]')
+  if (dot) {
+    let seen = false
+    try {
+      seen = sessionStorage.getItem('availability-seen') === '1'
+      sessionStorage.setItem('availability-seen', '1')
+    } catch {
+      // Private mode or a full quota. Degrade to "never pulse" rather than
+      // pulsing on every navigation, which is the more annoying failure.
+      seen = true
+    }
+    if (!seen) dot.classList.add('is-first-load')
+  }
+</script>
