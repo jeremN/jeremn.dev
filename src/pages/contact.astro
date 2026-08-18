@@ -10,7 +10,10 @@ const routes = [
   { label: 'Email', value: profile.email, href: `mailto:${profile.email}`, external: false },
   ...links.map((l) => ({
     label: l.label,
-    value: l.href.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''),
+    // Decode for display only. The LinkedIn slug carries accented characters
+    // percent-encoded, and "j%C3%A9r%C3%A9mie" is not a thing to show a reader.
+    // The href keeps the encoded form, which is the one that resolves.
+    value: decodeURIComponent(l.href.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')),
     href: l.href,
     external: true,
   })),
@@ -31,7 +34,7 @@ const routes = [
           <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
         </span>
       </h1>
-      <Doodle name="plane" class="hidden h-14 w-28 shrink-0 self-center text-ink sm:block" />
+      <Doodle name="plane" class="hidden h-20 w-40 shrink-0 self-center text-ink sm:block" />
     </div>
 
     <p class="mt-8 max-w-[38ch] font-sans text-base leading-relaxed text-muted">
