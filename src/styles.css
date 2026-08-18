@@ -90,6 +90,60 @@
   stroke-width: calc(var(--doodle-stroke) * 0.7);
 }
 
+/* ── Living Canvas ────────────────────────────────────────────────────────
+   Hotspot reactions use the individual transform properties, never the
+   `transform` shorthand. #plant and #water carry transform attributes that
+   seat them in the landscape, and a CSS `transform` rule would replace those
+   and drop the shapes at the origin.
+
+   Only `translate` composes cleanly with an attribute transform. Measured on
+   #plant: `scale: 1.04` moved the cluster 34px right and `rotate: -2deg` moved
+   it 34px up, both lifting the trees off the ridge. `translate: 0 -3px` moved
+   it by exactly 3px. The sun keeps `scale` because it is a bare <circle> with
+   no attribute transform, where the origin resolves as written. */
+.reaction {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    scale 240ms ease-out,
+    translate 240ms ease-out;
+}
+#sun.is-reacting {
+  scale: 1.06;
+}
+#plant.is-reacting {
+  translate: 0 -3px;
+}
+#water.is-reacting {
+  translate: 0 2px;
+}
+
+/* The hint only concerns a visitor already in draw mode. */
+[data-draw-mode="on"] [data-draw-hint] {
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Section 7.4: the ambient motion goes, drawing stays. It is user-initiated,
+     so it is not the kind of movement this preference asks to stop. */
+  .reaction {
+    transition: none;
+  }
+  #sun.is-reacting,
+  #plant.is-reacting,
+  #water.is-reacting {
+    scale: 1;
+    translate: 0;
+  }
+  [data-landscape] {
+    translate: none !important;
+  }
+}
+
+[data-landscape] {
+  transition: translate 320ms ease-out;
+}
+
 /* The galaxy hero is opaque-dark in any theme, so its band pins the dark
    tokens. Text and accents stay readable over the WebGL background in the
    light theme too. The values are the v2 dark palette, written as literals
