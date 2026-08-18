@@ -1,58 +1,69 @@
 /* Self-hosted fonts (no external Google Fonts <link> — avoids render-blocking
-   third-party request + the Semgrep external-resource/SRI finding). */
-@import "@fontsource-variable/fraunces";
-@import "@fontsource-variable/fraunces/standard-italic.css";
-@import "@fontsource-variable/hanken-grotesk";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
+   third-party request + the Semgrep external-resource/SRI finding).
+   A font file is only downloaded when rendered text matches it, so a page
+   never fetches a face it does not use. */
+@import "@fontsource-variable/newsreader";
+@import "@fontsource-variable/newsreader/standard-italic.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@theme {
-  /* Palette — warm dark editorial base. (Flip to a light base here if desired.)
-     Token names deliberately avoid Tailwind built-ins: `ground` not `base`,
-     so the `text-base` font-size utility is never shadowed. */
-  --color-ground: #0b0a12; /* near-black warm ground (echoes the galaxy bg) */
-  --color-surface: #15131f; /* raised panels / cards */
-  --color-ink: #f3ecdd; /* warm cream text */
-  --color-muted: #9a93a8; /* secondary text */
-  --color-accent: #e8b65a; /* gold (echoes the galaxy core/halo) */
-  --color-line: #2a2536; /* hairline borders */
+/* `static` forces every declared variable into the built CSS. Tailwind v4
+   drops an unused @theme variable, and butter and lavender feed SVG
+   illustrations that arrive in a later step, not any class in this repo yet. */
+@theme static {
+  /* Palette — design system v2, "Editorial Flow". Light is canonical.
+     `accent` is the code name for the system's Electric. It must keep this
+     name: nine markup files use the `text-accent` utility, and removing the
+     token would delete the utility.
+     Electric is lifted on dark because #145BFF only reaches 3.5:1 there. */
+  --color-ground: light-dark(#faf8f3, #14120e);
+  --color-surface: light-dark(#ffffff, #1e1b16);
+  --color-ink: light-dark(#071b46, #f1ece1);
+  --color-muted: light-dark(#5a6480, #a69c89);
+  --color-accent: light-dark(#145bff, #759fff);
+  --color-line: light-dark(#d9dce3, #2b2721);
 
-  /* Type — hybrid: grotesque hero, serif content, mono meta. */
-  --font-display: "Fraunces Variable", Georgia, serif;
-  --font-grotesk: "Hanken Grotesk Variable", system-ui, sans-serif;
-  --font-sans: "Inter Variable", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  /* Illustration accents only. Never a button, never a text colour: lavender
+     measures 3.09:1 on the dark ground and would fail AA. */
+  --color-butter: light-dark(#f8dea0, #b08d3b);
+  --color-lavender: light-dark(#ded6f5, #6a54ab);
+
+  /* Type — the serif creates personality, the sans carries usability, the
+     monospace is an accent and never the default voice. */
+  --font-display: "Newsreader Variable", Georgia, serif;
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
 
+/* ── Theme resolution, three states ───────────────────────────────────────
+   `light dark` lets the OS preference govern when the visitor has made no
+   choice. The data-theme attribute pins either theme and wins in both
+   directions. Unlayered on purpose so it beats the @theme defaults
+   regardless of cascade layers. */
 :root {
+  color-scheme: light dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
   color-scheme: dark;
 }
 
-/* ── Light theme ──────────────────────────────────────────────────────────
-   Every Tailwind utility compiles to var(--color-*), so re-pointing the six
-   tokens here flips the whole site. Unlayered + attribute selector so it wins
-   over the @theme defaults regardless of cascade layers. */
-html[data-theme="light"] {
-  color-scheme: light;
-  --color-ground: #ece3d1; /* warm paper */
-  --color-surface: #f7f1e2; /* raised panels */
-  --color-ink: #211c15; /* near-black, warm */
-  --color-muted: #6b6253; /* secondary text */
-  --color-accent: #97640f; /* gold, darkened for contrast on cream */
-  --color-line: #d8ccb2; /* hairline borders */
-}
-
-/* The galaxy hero is opaque-dark in any theme, so its band keeps dark tokens —
-   text and accents stay readable over the WebGL background even in light mode. */
+/* The galaxy hero is opaque-dark in any theme, so its band pins the dark
+   tokens. Text and accents stay readable over the WebGL background in the
+   light theme too. The values are the v2 dark palette, written as literals
+   because light-dark() would resolve to the light half here.
+   This block goes when the galaxy leaves the homepage. */
 .hero-dark {
-  --color-ground: #0b0a12;
-  --color-surface: #15131f;
-  --color-ink: #f3ecdd;
-  --color-muted: #9a93a8;
-  --color-accent: #e8b65a;
-  --color-line: #2a2536;
+  --color-ground: #14120e;
+  --color-surface: #1e1b16;
+  --color-ink: #f1ece1;
+  --color-muted: #a69c89;
+  --color-accent: #759fff;
+  --color-line: #2b2721;
 }
 
 body {
@@ -103,14 +114,19 @@ p {
   .code-block {
     margin: 1.5rem 0;
   }
+  /* The colours below are literal, not tokens. Shiki always renders the <pre>
+     in `github-dark` (astro.config.mjs), so the header matches it in both
+     themes instead of following the page palette. Revert to tokens once
+     Shiki gets a light theme. Measured contrast: #8b949e on #24292e is
+     4.77:1, and #759fff on #24292e is 5.70:1. Both clear WCAG AA. */
   .code-block__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     padding: 0.45rem 0.8rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-line);
+    background: #24292e;
+    border: 1px solid #30363d;
     border-bottom: 0;
     border-radius: 0.5rem 0.5rem 0 0;
   }
@@ -119,20 +135,20 @@ p {
     font-size: 0.625rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-muted);
+    color: #8b949e;
   }
   .code-block__copy {
     font-family: var(--font-mono);
     font-size: 0.625rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-muted);
+    color: #8b949e;
     cursor: pointer;
     transition: color 0.2s ease;
   }
   .code-block__copy:hover,
   .code-block__copy.is-copied {
-    color: var(--color-accent);
+    color: #759fff;
   }
   .code-block > pre {
     margin: 0 !important;

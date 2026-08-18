@@ -22,20 +22,21 @@ const canonical = Astro.site ? new URL(withBase(route), Astro.site).href : withB
 const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href : withBase('/og-cover.jpg')
 ---
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
-      // Apply the saved theme before paint to avoid a flash. Default: dark.
+      // Apply a SAVED theme before paint to avoid a flash. With no saved choice we
+      // stamp nothing, so `color-scheme: light dark` lets the OS decide.
       try {
         const t = localStorage.getItem('theme')
-        document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : 'dark'
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
       } catch (e) {}
     </script>
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0a12" />
+    <meta name="theme-color" id="theme-color" content="#faf8f3" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={withBase('/favicon.ico')} sizes="any" />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
@@ -54,10 +55,10 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
   </head>
-  <body class="antialiased [overflow-wrap:anywhere]">
+  <body class:list={['antialiased', '[overflow-wrap:anywhere]']}>
     <header class="relative z-10 bg-ground">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:px-6">
-        <a href={withBase('/')} class="font-grotesk text-lg font-extrabold tracking-tight text-ink no-underline">
+        <a href={withBase('/')} class="font-sans text-lg font-extrabold tracking-tight text-ink no-underline">
           jeremn<span class="text-accent">.</span>dev
         </a>
         <div class="flex items-center gap-4 sm:gap-7">
@@ -102,9 +103,34 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     </footer>
 
     <script>
+      // Reads the resolved --color-ground off document.body's computed style
+      // rather than duplicating the palette's hex values here. A custom
+      // property itself computes to the unresolved `light-dark(...)` token
+      // stream, but the property a rule actually assigns (body's
+      // background-color) resolves to `rgb(r, g, b)`, which stays correct
+      // even after Task 3 swaps the palette.
+      const syncMeta = () => {
+        const ground = getComputedStyle(document.body).backgroundColor
+        document.getElementById('theme-color')?.setAttribute('content', ground)
+      }
+
+      const effective = (): 'light' | 'dark' =>
+        (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) ??
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+
+      syncMeta()
+
+      // With no stored choice, the OS preference decides the theme (see the
+      // inline script in <head>). Sync the meta on every OS change too, so
+      // browser chrome does not go stale while the page stays open.
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (!document.documentElement.dataset.theme) syncMeta()
+      })
+
       document.getElementById('theme-toggle')?.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+        const next = effective() === 'dark' ? 'light' : 'dark'
         document.documentElement.dataset.theme = next
+        syncMeta()
         try {
           localStorage.setItem('theme', next)
         } catch (e) {}
