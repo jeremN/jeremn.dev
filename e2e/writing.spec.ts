@@ -75,3 +75,24 @@ test.describe('writing index filter', () => {
     await context.close()
   })
 })
+
+test.describe('no v1 typeface survives on the migrated pages', () => {
+  // The four v1 faces stay installed, because /cv, /freelance and /cv-print
+  // still render them. This guards that they never leak onto a v2 page.
+  const LEGACY = ['Fraunces', 'Hanken', 'Inter', 'JetBrains']
+
+  for (const path of ['/blog', '/blog/stryker-on-a-svelte-monorepo']) {
+    test(`no legacy face is painted on ${path}`, async ({ page }) => {
+      await page.goto(`${BASE}${path}`)
+      const families = await page.evaluate(() =>
+        [...document.querySelectorAll('main *, header *, footer *')]
+          .map((el) => getComputedStyle(el).fontFamily)
+          .filter((f, i, a) => a.indexOf(f) === i),
+      )
+      const joined = families.join(' ')
+      for (const face of LEGACY) expect(joined).not.toContain(face)
+      // And the v2 faces are actually in use, so an empty result cannot pass.
+      expect(joined).toMatch(/Newsreader|Geist/)
+    })
+  }
+})
