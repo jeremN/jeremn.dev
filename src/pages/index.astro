@@ -1,60 +1,169 @@
 ---
 import { getCollection } from 'astro:content'
 import Layout from '../layouts/Layout.astro'
-import Eyebrow from '../components/site/Eyebrow.astro'
+import Underline from '../components/site/Underline.astro'
+import Doodle from '../components/site/Doodle.astro'
+import HeroLandscape from '../components/site/HeroLandscape.astro'
 import PostRow from '../components/site/PostRow.astro'
-import Hero from '../components/hero/Hero.astro'
+import { profile } from '../lib/cv'
 import { withBase } from '../lib/base'
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3)
+
+// The comp colours the teaser's date blocks and leaves the full index plain.
+// Three posts, so the cycle never repeats a colour on screen.
+const ACCENTS = ['butter', 'lavender', 'none'] as const
+
+// Copy comes from /freelance, which is the author's own wording. Two entries
+// split its "Fullstack features" row, because the icon set gives the interface
+// and the service layer separate marks.
+const services = [
+  {
+    icon: 'svc-frontend',
+    title: 'Frontend web apps',
+    blurb: 'SvelteKit, Next.js, React and TypeScript. Accessible UIs that stay maintainable past launch.',
+  },
+  {
+    icon: 'svc-fullstack',
+    title: 'Fullstack features',
+    blurb: 'End-to-end delivery, from the interface down to the data it reads.',
+  },
+  {
+    icon: 'svc-backend',
+    title: 'APIs and backends',
+    blurb: 'Node and Fastify services, GraphQL and REST.',
+  },
+  {
+    icon: 'svc-performance',
+    title: 'Performance rebuilds',
+    blurb: 'Refactoring high-traffic sites for speed and Core Web Vitals.',
+  },
+  {
+    icon: 'svc-automation',
+    title: 'Tooling and DX',
+    blurb: 'CI/CD, testing, design systems and internal tools.',
+  },
+  {
+    icon: 'svc-ai',
+    title: 'LLM tooling and agents',
+    blurb: 'Agent harnesses, MCP servers, retrieval and evals.',
+  },
+] as const
 ---
-<Layout>
-  <Hero />
+<Layout hideFooterCta>
+  <main class="relative z-10">
+    <section data-hero class="mx-auto max-w-[1440px] px-6 pt-16 sm:pt-24">
+      <span class="font-mono text-[11px] uppercase tracking-wider text-accent">01 / Freelance software engineer</span>
 
-  <section class="hero-dark relative z-10 flex min-h-[92vh] flex-col justify-center px-6">
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-r from-ground/85 via-ground/35 to-transparent"></div>
-    <div class="relative mx-auto w-full max-w-5xl">
-      <Eyebrow class="mb-6 block text-accent">Freelance software engineer</Eyebrow>
-      <h1 class="font-display text-6xl font-extrabold leading-[0.92] tracking-tight text-ink drop-shadow-[0_2px_40px_rgba(6,5,16,0.9)] sm:text-8xl">
-        Jérémie <span class="text-accent">Néhlil</span>
+      <h1 class="mt-6 max-w-[16ch] font-display text-5xl font-medium leading-[1.03] tracking-tight text-ink sm:text-7xl lg:text-8xl">
+        I build web apps for the <span class="relative inline-block">
+          <em class="italic">real world.</em>
+          <Underline class="absolute -bottom-2 left-0 w-full text-accent" />
+        </span>
       </h1>
-      <p class="mt-6 max-w-[24ch] font-display text-xl text-ink sm:text-2xl">
-        I build web apps. <em class="italic text-ink/80">And the tooling around them.</em>
-      </p>
-      <span class="mt-8 inline-flex items-center gap-2.5 font-mono text-sm text-[#7ee0c8]">
-        <span class="h-2 w-2 rounded-full bg-[#7ee0c8] shadow-[0_0_10px_#7ee0c8]"></span>
-        available for freelance work
-      </span>
-    </div>
-    <div class="pointer-events-none absolute inset-x-0 bottom-8">
-      <div class="mx-auto max-w-5xl px-6"><Eyebrow>scroll ↓</Eyebrow></div>
-    </div>
-  </section>
 
-  <section class="relative z-10 bg-ground px-6 py-24">
-    <div class="mx-auto max-w-3xl">
-      <div class="flex items-baseline justify-between">
-        <Eyebrow class="block">Selected writing</Eyebrow>
-        <a href={withBase('/blog')} class="font-mono text-xs text-muted no-underline transition-colors hover:text-accent">All writing →</a>
-      </div>
-      {posts.length === 0 ? (
-        <div class="mt-8 border-t border-line pt-12">
-          <p class="max-w-[26ch] font-display text-2xl leading-tight text-ink">
-            Nothing published yet.
-          </p>
-          <p class="mt-4 font-mono text-xs text-muted">The first post is in progress.</p>
+      <div class="mt-10 flex max-w-[1000px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+        <p class="max-w-[42ch] font-sans text-base leading-relaxed text-muted sm:text-lg">
+          {profile.title}. I build and rebuild web apps, and the tooling around them.
+        </p>
+
+        <div class="flex flex-col gap-5 sm:items-end">
+          {/* The header carries the shared availability component. This line is
+              the hero's own, so the pulse script keeps exactly one target. */}
+          <span class="inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-wider text-muted">
+            <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+            Available for freelance work
+          </span>
+          <a
+            data-hero-cta
+            href={withBase('/contact')}
+            class="inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
+          >
+            Let's talk
+            <span aria-hidden="true">→</span>
+          </a>
         </div>
+      </div>
+
+      <HeroLandscape class="mt-14 sm:mt-20" />
+    </section>
+
+    <section data-services class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">What I do</h2>
+      <ul class="mt-10 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        {services.map((s) => (
+          <li data-service>
+            <Doodle name={s.icon} class="h-10 w-10 text-ink" />
+            <h3 class="mt-5 font-sans text-base font-medium text-ink">{s.title}</h3>
+            <p class="mt-2 max-w-[34ch] font-sans text-sm leading-relaxed text-muted">{s.blurb}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section data-writing class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
+      <div class="flex items-baseline justify-between gap-6">
+        <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Selected writing</h2>
+        <a href={withBase('/blog')} class="font-mono text-[11px] uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
+          All notes →
+        </a>
+      </div>
+
+      {posts.length === 0 ? (
+        <p class="mt-10 border-t border-line pt-10 max-w-[26ch] font-display text-2xl leading-tight text-ink">
+          Nothing published yet.
+        </p>
       ) : (
-        <ul class="mt-8">
-          {posts.map((p) => (
+        <ul class="mt-10 border-t border-line">
+          {posts.map((p, i) => (
             <li>
-              <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} />
+              <PostRow
+                slug={p.id}
+                title={p.data.title}
+                tags={p.data.tags}
+                publishedAt={p.data.publishedAt}
+                body={p.body}
+                variant="teaser"
+                accentDate={ACCENTS[i % ACCENTS.length]}
+              />
             </li>
           ))}
         </ul>
       )}
-    </div>
-  </section>
+    </section>
+
+    <section data-about class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">About</h2>
+      <div class="mt-10 flex items-end justify-between gap-10">
+        <p class="max-w-[38ch] font-display text-2xl leading-snug text-ink sm:text-3xl">
+          I like software that makes sense. Simple systems, maintainable code, and features that
+          solve a real problem.
+        </p>
+        <Doodle name="plant" class="hidden h-24 w-36 shrink-0 text-ink sm:block" />
+      </div>
+      <a
+        href={withBase('/about')}
+        class="mt-8 inline-block font-mono text-[11px] uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70"
+      >
+        More about how I work →
+      </a>
+    </section>
+
+    <section data-contact class="mx-auto max-w-[1000px] px-6 pb-24 pt-24 sm:pt-32">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</h2>
+      <div class="mt-6 flex items-center justify-between gap-10">
+        <a href={withBase('/contact')} class="block no-underline">
+          <span class="block font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
+            Work with me
+          </span>
+        </a>
+        <Doodle name="plane" class="hidden h-20 w-40 shrink-0 text-ink lg:block" />
+      </div>
+      <p class="mt-8 font-mono text-[11px] uppercase tracking-wider text-muted">
+        {profile.location} · Remote friendly
+      </p>
+    </section>
+  </main>
 </Layout>

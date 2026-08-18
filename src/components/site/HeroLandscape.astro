@@ -1,0 +1,22 @@
+---
+// The hero's one large illustration. Two compositions, not one scaled down:
+// section 6 of the design document forbids a large illustration on mobile, so
+// the small screen gets a simplified band with the plane, skyline, sailboat and
+// river removed.
+//
+// Both markups ship in the HTML. That is the known cost recorded in the spec
+// (roughly 2 to 3 KB gzipped) and it buys a landscape that is correct at both
+// sizes without a client-side fetch.
+//
+// The `water`, `sun` and `plant` ids are the Living Canvas hotspots. Step 6
+// reads them by name, so they must not be renamed.
+import Desktop from '../../assets/doodles/hero-landscape-desktop.svg'
+import Mobile from '../../assets/doodles/hero-landscape-mobile.svg'
+
+interface Props { class?: string }
+const { class: cls = '' } = Astro.props
+---
+<div data-landscape aria-hidden="true" class:list={['pointer-events-none text-ink', cls]}>
+  <Mobile data-landscape-variant="mobile" class="block h-auto w-full md:hidden" />
+  <Desktop data-landscape-variant="desktop" class="hidden h-auto w-full md:block" />
+</div>
