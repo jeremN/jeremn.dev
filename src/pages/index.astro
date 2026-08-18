@@ -4,6 +4,7 @@ import Layout from '../layouts/Layout.astro'
 import Underline from '../components/site/Underline.astro'
 import Doodle from '../components/site/Doodle.astro'
 import HeroLandscape from '../components/site/HeroLandscape.astro'
+import LivingCanvas from '../components/site/LivingCanvas.astro'
 import PostRow from '../components/site/PostRow.astro'
 import { profile } from '../lib/cv'
 import { withBase } from '../lib/base'
@@ -87,7 +88,9 @@ const services = [
         </div>
       </div>
 
-      <HeroLandscape class="mt-14 sm:mt-20" />
+      <LivingCanvas class="mt-14 sm:mt-20">
+        <HeroLandscape />
+      </LivingCanvas>
     </section>
 
     <section data-services class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
