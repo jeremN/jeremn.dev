@@ -1,7 +1,6 @@
 ---
 import '../styles.css'
 import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
-import AvailabilityDot from '../components/site/AvailabilityDot.astro'
 interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean }
 const {
   title = 'Jérémie Néhlil',
@@ -78,7 +77,6 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
               </a>
             ))}
           </nav>
-          <span class="hidden sm:inline"><AvailabilityDot /></span>
           <button
             id="theme-toggle"
             type="button"
