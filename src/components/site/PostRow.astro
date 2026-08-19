@@ -12,7 +12,6 @@ interface Props {
   publishedAt: Date
   body?: string
   variant?: 'index' | 'teaser'
-  accentDate?: 'butter' | 'lavender' | 'none'
 }
 const {
   slug,
@@ -22,7 +21,6 @@ const {
   publishedAt,
   body,
   variant = 'index',
-  accentDate = 'none',
 } = Astro.props
 
 // The comps stack the date over three lines: day, month, year.
@@ -38,13 +36,11 @@ const mark = markForTags(tags)
   href={withBase(`/blog/${slug}`)}
   class="group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:grid-cols-[4.5rem_1fr_auto_2.75rem] sm:gap-x-10"
 >
+  {/* One colour, one weight, no coloured chip. The homepage teaser and the
+      full index render the date identically. */}
   <span
     data-date
-    class:list={[
-      'block rounded-sm px-2 py-1.5 text-center font-mono text-[11px] leading-[1.5] tracking-wide text-muted',
-      accentDate === 'butter' && 'bg-[var(--color-chip-butter)] !text-[var(--color-chip-ink)]',
-      accentDate === 'lavender' && 'bg-[var(--color-chip-lavender)] !text-[var(--color-chip-ink)]',
-    ]}
+    class="block py-1.5 text-center font-mono text-[11px] font-normal leading-[1.5] tracking-wide text-muted"
   >
     <span class="block">{day}</span>
     <span class="block">{month}</span>
