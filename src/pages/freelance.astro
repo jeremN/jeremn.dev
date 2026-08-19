@@ -9,14 +9,9 @@ import { services, howIWork } from '../lib/services'
 // pages cannot disagree about where to reach me.
 const routes = [
   { label: 'Email', value: profile.email, href: `mailto:${profile.email}`, external: false },
-  ...links.map((l) => ({
-    label: l.label,
-    // Decode for display only. The href keeps the encoded form, which is the
-    // one that resolves.
-    value: decodeURIComponent(l.href.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')),
-    href: l.href,
-    external: true,
-  })),
+  // Only the platform name is shown. A profile URL carries an encoded slug
+  // and reads as noise beside a one-word label.
+  ...links.map((l) => ({ label: l.label, value: l.href, href: l.href, external: true })),
 ]
 ---
 <Layout
@@ -96,10 +91,12 @@ const routes = [
               href={r.href}
               target={r.external ? '_blank' : undefined}
               rel={r.external ? 'noopener noreferrer' : undefined}
-              class="group grid grid-cols-[1fr] items-baseline gap-y-1 border-b border-line py-5 no-underline sm:grid-cols-[10rem_1fr] sm:gap-y-0"
+              class="group grid grid-cols-[1fr_auto] items-baseline gap-x-6 border-b border-line py-5 no-underline"
             >
-              <span class="font-mono text-[11px] uppercase tracking-wider text-muted">{r.label}</span>
-              <span class="font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.value}</span>
+                <span class="font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
+                <span class="font-mono text-[11px] text-muted">
+                  {r.external ? <span aria-hidden="true">↗</span> : r.value}
+                </span>
             </a>
           </li>
         ))}
