@@ -18,11 +18,19 @@ test('cv shows the agency employers and their nested client missions', async ({ 
   await expect(page.getByRole('heading', { name: 'Groupe PSA / Citroën' })).toBeVisible()
 })
 
-test('cv exposes a contact email', async ({ page }) => {
+// Removed on purpose. The address lives on /contact and /freelance; the web CV
+// is the wrong place to publish it. Asserted as an absence so it cannot creep
+// back in unnoticed.
+test('cv publishes no email address', async ({ page }) => {
   await page.goto(`${BASE}/cv`)
-  await expect(
-    page.getByRole('link', { name: 'jeremie.nehlil.freelance@proton.me' }),
-  ).toHaveAttribute('href', 'mailto:jeremie.nehlil.freelance@proton.me')
+  await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0)
+  await expect(page.locator('main')).not.toContainText('@proton.me')
+})
+
+// The PDF still carries it: a CV handed to a recruiter needs a way to answer.
+test('the PDF source keeps the contact line', async ({ page }) => {
+  await page.goto(`${BASE}/cv-print`)
+  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(1)
 })
 
 test('cv-print renders every experience for the PDF source', async ({ page }) => {
