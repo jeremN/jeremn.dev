@@ -48,7 +48,7 @@ const mark = markForTags(tags)
   </span>
 
   <span class="block">
-    <span class="block max-w-[22ch] font-display text-xl font-medium leading-snug text-ink transition-[color,transform] duration-200 group-hover:translate-x-0.5 group-hover:text-accent sm:text-2xl">
+    <span data-title class="block max-w-[22ch] font-display text-xl font-medium leading-snug text-ink transition-colors duration-200 group-hover:text-accent sm:text-2xl">
       {title}
     </span>
     {variant === 'index' && summary && <span class="mt-2 block text-sm text-muted">{summary}</span>}
@@ -63,6 +63,6 @@ const mark = markForTags(tags)
       only appears once there is room for a fourth column. */}
   <Doodle
     name={mark}
-    class="col-start-4 row-start-1 hidden h-7 w-11 self-start text-muted transition-[color,transform] duration-200 group-hover:-translate-y-0.5 group-hover:text-accent sm:block"
+    class="col-start-4 row-start-1 hidden h-7 w-11 self-start text-muted transition-colors duration-200 group-hover:text-accent sm:block"
   />
 </a>

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { Locator } from '@playwright/test'
 import { BASE } from '../site.config.mjs'
 
 test.describe('writing index', () => {
@@ -97,4 +98,61 @@ test.describe('no v1 typeface survives', () => {
       expect(joined).toMatch(/Newsreader|Geist/)
     })
   }
+})
+
+test.describe('hover is colour only', () => {
+  /** Offset of a child inside its own row, which no amount of page scrolling
+   *  changes. An absolute boundingBox() reads a scroll as movement, and
+   *  hover() scrolls. A transform still shows up here. */
+  const offsetIn = (row: Locator, child: Locator) =>
+    Promise.all([row.boundingBox(), child.boundingBox()]).then(([r, c]) => {
+      if (!r || !c) throw new Error('no box')
+      return { dx: +(c.x - r.x).toFixed(2), dy: +(c.y - r.y).toFixed(2), w: c.width, h: c.height }
+    })
+
+  // A post row used to nudge its title right and lift its mark. Hover now
+  // changes colour and nothing else. Measure the geometry: a transform is
+  // invisible to any assertion on classes or computed colour.
+  test('hovering a post row moves neither the title nor the mark', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const row = page.locator('[data-post-row]').first()
+    const title = row.locator('[data-title]')
+    const mark = row.locator('[data-doodle]')
+
+    await row.scrollIntoViewIfNeeded()
+    const before = {
+      title: await offsetIn(row, title),
+      mark: await offsetIn(row, mark),
+      colour: await title.evaluate((el) => getComputedStyle(el).color),
+    }
+
+    await row.hover()
+    await page.waitForTimeout(350)
+
+    expect(await offsetIn(row, title)).toEqual(before.title)
+    expect(await offsetIn(row, mark)).toEqual(before.mark)
+    // And the hover does something, so a dead selector cannot pass this.
+    expect(await title.evaluate((el) => getComputedStyle(el).color)).not.toBe(before.colour)
+  })
+
+  test('the keep-reading arrow does not slide', async ({ page }) => {
+    // The newest post is the one guaranteed to have an older one. Pointing at
+    // a fixed slug skipped this silently the moment it was the oldest.
+    await page.goto(`${BASE}/blog`)
+    const newest = await page.locator('[data-post-row]').first().getAttribute('href')
+    await page.goto(newest!)
+    const link = page.locator('[data-keep-reading] a')
+    await expect(link).toHaveCount(1)
+    const arrow = link.locator('span[aria-hidden="true"]')
+
+    await link.scrollIntoViewIfNeeded()
+    const before = await offsetIn(link, arrow)
+    const beforeColour = await arrow.evaluate((el) => getComputedStyle(el).color)
+
+    await link.hover()
+    await page.waitForTimeout(350)
+
+    expect(await offsetIn(link, arrow)).toEqual(before)
+    expect(await arrow.evaluate((el) => getComputedStyle(el).color)).not.toBe(beforeColour)
+  })
 })
