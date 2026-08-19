@@ -35,6 +35,14 @@ test.describe('contact page', () => {
     }
   })
 
+  // The mailto link is the whole point; printing the address beside it added
+  // nothing and put a harvestable string on the page.
+  test('links to the email without printing the address', async ({ page }) => {
+    await page.goto(`${BASE}/contact`)
+    await expect(page.locator(`[data-routes] a[href="mailto:${EMAIL}"]`)).toBeVisible()
+    await expect(page.locator('main')).not.toContainText('@proton.me')
+  })
+
   test('hides the footer CTA, because the page is the CTA', async ({ page }) => {
     await page.goto(`${BASE}/contact`)
     await expect(page.locator('footer a[href$="/contact"]')).toHaveCount(0)

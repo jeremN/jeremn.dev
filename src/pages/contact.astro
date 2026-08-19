@@ -7,10 +7,11 @@ import { profile, links } from '../lib/cv'
 // Routes come from cv.ts so /cv, /cv-print and this page cannot disagree.
 // Email leads, because it is the one the CTA also uses.
 const routes = [
-  { label: 'Email', value: profile.email, href: `mailto:${profile.email}`, external: false },
-  // Only the platform name is shown. A profile URL carries an encoded slug
-  // and reads as noise beside a one-word label.
-  ...links.map((l) => ({ label: l.label, value: l.href, href: l.href, external: true })),
+  { label: 'Email', href: `mailto:${profile.email}`, external: false },
+  // Only the name is shown. A profile URL carries an encoded slug, and the
+  // email address does not need printing next to a link that already sends
+  // mail to it.
+  ...links.map((l) => ({ label: l.label, href: l.href, external: true })),
 ]
 ---
 <Layout
@@ -53,10 +54,8 @@ const routes = [
             rel={r.external ? 'noopener noreferrer' : undefined}
             class="group grid grid-cols-[1fr_auto] items-baseline gap-x-6 border-b border-line py-5 no-underline"
           >
-              <span class="font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
-              <span class="font-mono text-[11px] text-muted">
-                {r.external ? <span aria-hidden="true">↗</span> : r.value}
-              </span>
+            <span class="font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
+            {r.external && <span aria-hidden="true" class="font-mono text-[11px] text-muted">↗</span>}
           </a>
         </li>
       ))}
