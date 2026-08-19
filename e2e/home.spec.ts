@@ -31,60 +31,72 @@ test.describe('homepage sections', () => {
     }
   })
 
-  // The dark theme's butter is a mid gold. Under the dark ink token it measured
-  // 2.4:1, so the chips carry their own tokens. Assert the ratio, not the hex:
-  // a future palette nudge must not be able to reintroduce this quietly.
-  test('the coloured date chips clear AA in both themes', async ({ page }) => {
-    await page.goto(`${BASE}/`)
-    const chips = page.locator('[data-writing] [data-post-row] [data-date]')
-    test.skip((await chips.count()) === 0, 'no published posts')
-
-    for (const theme of ['light', 'dark']) {
-      await page.evaluate((t) => { document.documentElement.dataset.theme = t }, theme)
-      const count = await chips.count()
-      for (let i = 0; i < count; i++) {
-        const ratio = await chips.nth(i).evaluate((el) => {
-          const parse = (v: string) => (v.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number)
-          const lum = (rgb: number[]) => {
-            const [r, g, b] = rgb.map((c) => {
-              const s = c / 255
-              return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
-            })
-            return 0.2126 * r + 0.7152 * g + 0.0722 * b
-          }
-          const cs = getComputedStyle(el)
-          let bg = cs.backgroundColor
-          // A transparent chip inherits the section ground; walk up for it.
-          let node: HTMLElement | null = el as HTMLElement
-          while (bg === 'rgba(0, 0, 0, 0)' && node?.parentElement) {
-            node = node.parentElement
-            bg = getComputedStyle(node).backgroundColor
-          }
-          const a = lum(parse(cs.color))
-          const b = lum(parse(bg))
-          return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
-        })
-        expect(ratio, `chip ${i} in ${theme}`).toBeGreaterThanOrEqual(4.5)
-      }
-    }
-  })
-
-  // Section 8.1 resolves this: coloured blocks on the homepage teaser, plain
-  // metadata on the full index. A regression on either side is a design defect,
-  // so both sides are asserted.
-  test('the first teaser date block is coloured and the index equivalent is not', async ({ page }) => {
+  // The date is one colour and one weight on both the teaser and the full
+  // index. The coloured chips are gone, so this guards the convergence: a chip
+  // coming back on one side and not the other is the regression to catch.
+  test('renders the date the same way as the full index', async ({ page }) => {
     await page.goto(`${BASE}/`)
     const teaser = page.locator('[data-writing] [data-post-row] [data-date]').first()
     test.skip((await teaser.count()) === 0, 'no published posts')
-    const teaserBg = await teaser.evaluate((el) => getComputedStyle(el).backgroundColor)
-    expect(teaserBg).not.toBe('rgba(0, 0, 0, 0)')
+    const onHome = await teaser.evaluate((el) => {
+      const cs = getComputedStyle(el)
+      return { bg: cs.backgroundColor, color: cs.color, weight: cs.fontWeight }
+    })
 
     await page.goto(`${BASE}/blog`)
-    const indexBg = await page
+    const onIndex = await page
       .locator('[data-post-row] [data-date]')
       .first()
-      .evaluate((el) => getComputedStyle(el).backgroundColor)
-    expect(indexBg).toBe('rgba(0, 0, 0, 0)')
+      .evaluate((el) => {
+        const cs = getComputedStyle(el)
+        return { bg: cs.backgroundColor, color: cs.color, weight: cs.fontWeight }
+      })
+
+    expect(onHome).toEqual(onIndex)
+    expect(onHome.bg).toBe('rgba(0, 0, 0, 0)')
+    expect(onHome.weight).toBe('400')
+  })
+
+  test('every teaser date is the same colour', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    const colours = await page
+      .locator('[data-writing] [data-post-row] [data-date]')
+      .evaluateAll((els) => [...new Set(els.map((el) => getComputedStyle(el).color))])
+    test.skip(colours.length === 0, 'no published posts')
+    expect(colours).toHaveLength(1)
+  })
+
+  test('the teaser date clears AA', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    const date = page.locator('[data-writing] [data-post-row] [data-date]').first()
+    test.skip((await date.count()) === 0, 'no published posts')
+
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((t) => {
+        document.documentElement.dataset.theme = t
+      }, theme)
+      const ratio = await date.evaluate((el) => {
+        const parse = (v: string) => (v.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number)
+        const lum = (rgb: number[]) => {
+          const [r, g, b] = rgb.map((c) => {
+            const s = c / 255
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+          })
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+        const cs = getComputedStyle(el)
+        let node: HTMLElement | null = el as HTMLElement
+        let bg = cs.backgroundColor
+        while (bg === 'rgba(0, 0, 0, 0)' && node?.parentElement) {
+          node = node.parentElement
+          bg = getComputedStyle(node).backgroundColor
+        }
+        const a = lum(parse(cs.color))
+        const b = lum(parse(bg))
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+      })
+      expect(ratio, `teaser date in ${theme}`).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })
 

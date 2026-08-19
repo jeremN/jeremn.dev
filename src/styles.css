@@ -30,14 +30,6 @@
   --color-butter: light-dark(#f8dea0, #b08d3b);
   --color-lavender: light-dark(#ded6f5, #6a54ab);
 
-  /* The teaser's date chips read as pieces of coloured paper, so they keep the
-     light tints in both themes and pin their own dark foreground. The tokens
-     above cannot serve here: they carry no text, and the dark butter measures
-     2.4:1 under the dark theme's cream ink. */
-  --color-chip-butter: #f8dea0;
-  --color-chip-lavender: #ded6f5;
-  --color-chip-ink: #071b46;
-
   /* Illustration stroke width. Light strokes on a dark ground optically bloom
      and read heavier at the same width, so dark draws them thinner. This is
      the only place where dark needs different geometry rather than a
