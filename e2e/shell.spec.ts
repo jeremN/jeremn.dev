@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test'
 import { BASE } from '../site.config.mjs'
 
 test.describe('site header', () => {
-  test('shows the availability dot with an accessible label', async ({ page }) => {
+  // The indicator was removed from the header. The hero and /freelance still
+  // state availability in their own copy, which is where it belongs.
+  test('carries no availability indicator', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
-    const dot = page.locator('[data-availability]')
-    await expect(dot).toBeVisible()
-    await expect(dot).toHaveText(/available/i)
+    await expect(page.locator('header')).not.toContainText(/available/i)
   })
 
   test('shrinks from 72px to 56px once the page is scrolled', async ({ page }) => {
@@ -27,12 +27,6 @@ test.describe('site header', () => {
     await expect(page.locator('header a[aria-current="page"]')).toHaveText(/writing/i)
   })
 
-  test('the dot does not pulse after the first load', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
-    await expect(page.locator('[data-availability] [data-pulse]')).toHaveClass(/is-first-load/)
-    await page.goto(`${BASE}/blog`)
-    await expect(page.locator('[data-availability] [data-pulse]')).not.toHaveClass(/is-first-load/)
-  })
 })
 
 test.describe('site footer', () => {

@@ -33,8 +33,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         </p>
 
         <div class="flex flex-col items-start gap-5">
-          {/* The header carries the shared availability component. This line is
-              the hero's own, so the pulse script keeps exactly one target. */}
           <span class="inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-wider text-muted">
             <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
             Available for freelance work

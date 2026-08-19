@@ -8,10 +8,11 @@ import { services, howIWork } from '../lib/services'
 // Contact routes come from cv.ts, the same way /contact builds them. The two
 // pages cannot disagree about where to reach me.
 const routes = [
-  { label: 'Email', value: profile.email, href: `mailto:${profile.email}`, external: false },
-  // Only the platform name is shown. A profile URL carries an encoded slug
-  // and reads as noise beside a one-word label.
-  ...links.map((l) => ({ label: l.label, value: l.href, href: l.href, external: true })),
+  { label: 'Email', href: `mailto:${profile.email}`, external: false },
+  // Only the name is shown. A profile URL carries an encoded slug, and the
+  // email address does not need printing next to a link that already sends
+  // mail to it.
+  ...links.map((l) => ({ label: l.label, href: l.href, external: true })),
 ]
 ---
 <Layout
@@ -36,8 +37,6 @@ const routes = [
       <p class="max-w-[42ch] font-sans text-base leading-relaxed text-muted sm:text-lg">
         {profile.title}. I build and rebuild web apps, and the tooling around them.
       </p>
-      {/* The header carries the shared availability component, so this line is
-          the page's own and the pulse script keeps exactly one target. */}
       <span class="inline-flex shrink-0 items-center gap-2.5 font-mono text-[11px] uppercase tracking-wider text-muted">
         <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
         Available for freelance work
@@ -94,9 +93,7 @@ const routes = [
               class="group grid grid-cols-[1fr_auto] items-baseline gap-x-6 border-b border-line py-5 no-underline"
             >
                 <span class="font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
-                <span class="font-mono text-[11px] text-muted">
-                  {r.external ? <span aria-hidden="true">↗</span> : r.value}
-                </span>
+                {r.external && <span aria-hidden="true" class="font-mono text-[11px] text-muted">↗</span>}
             </a>
           </li>
         ))}

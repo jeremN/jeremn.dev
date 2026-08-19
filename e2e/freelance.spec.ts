@@ -54,6 +54,12 @@ test.describe('freelance page', () => {
     }
   })
 
+  test('links to the email without printing the address', async ({ page }) => {
+    await page.goto(`${BASE}/freelance`)
+    await expect(page.locator(`[data-routes] a[href="mailto:${EMAIL}"]`)).toBeVisible()
+    await expect(page.locator('main')).not.toContainText('@proton.me')
+  })
+
   test('hides the footer CTA, because the page is the CTA', async ({ page }) => {
     await page.goto(`${BASE}/freelance`)
     await expect(page.locator('footer a:has(h2)')).toHaveCount(0)
