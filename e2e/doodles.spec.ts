@@ -81,6 +81,33 @@ test.describe('writing row marks', () => {
     ]).toContain(name)
   })
 
+  // `markForTags` (src/lib/doodles.ts) walks a post's tags in order and
+  // returns the mark for the first tag that has a BY_TAG entry. Verified
+  // against the real frontmatter in src/content/blog: with today's tags,
+  // "renovate" and "agents" always precede any other mapped tag on the posts
+  // that carry them, so xiaohei-writing-code and xiaohei-writing-server
+  // (mapped from tooling/engineering/ci) never win a real post today. That is
+  // the fallback logic working as designed, not a gap. This list only covers
+  // the four marks that do surface.
+  const TAG_TO_MARK: Array<[slug: string, mark: string]> = [
+    // tags: [Agents, Svelte, Refactoring] -> "agents" is the first BY_TAG hit.
+    ['best-model-still-needs-rules', 'xiaohei-writing-cubes'],
+    // tags: [Testing, Svelte, CI] -> "testing" is the first BY_TAG hit.
+    ['stryker-on-a-svelte-monorepo', 'xiaohei-writing-grid'],
+    // tags: [Svelte, Migration] -> "svelte" is the first BY_TAG hit.
+    ['ten-months-of-svelte-5', 'xiaohei-writing-braces'],
+    // tags: [Renovate, Agents, CI] -> "renovate" is the first BY_TAG hit.
+    ['two-years-of-renovate-part-four', 'xiaohei-writing-lock'],
+  ]
+
+  for (const [slug, mark] of TAG_TO_MARK) {
+    test(`${slug} resolves to ${mark}`, async ({ page }) => {
+      await page.goto(`${BASE}/blog`)
+      const row = page.locator(`[data-post-row][href$="/blog/${slug}"]`)
+      await expect(row.locator('[data-doodle]')).toHaveAttribute('data-doodle', mark)
+    })
+  }
+
   test('a mark inherits the row colour rather than baking one in', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const stroke = await page
