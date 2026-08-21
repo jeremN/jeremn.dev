@@ -311,9 +311,6 @@
   <g transform="translate(659.438 288.75) scale(1 1)">
     <path d="M0 3.375l3.375-3.375" fill="none" stroke="var(--color-surface)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
-  <g transform="translate(241.313 333.75) scale(1.5 1.5)">
-    <path d="" fill="none" stroke="var(--color-surface)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  </g>
   <g transform="translate(234.563 317.625) scale(1 1)">
     <path d="M0 12.375c31.5 14.25 140.625 60 168 71.25 37.125 15.75 50.25 26.25 72 18.75l158.25-74.625c5.625-2.625 10.875-9.75-2.25-14.625l-41.25-13.125" fill="none" stroke="var(--color-surface)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>

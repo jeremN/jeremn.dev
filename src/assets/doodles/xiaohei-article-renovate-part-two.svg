@@ -32,9 +32,6 @@
   <g transform="translate(377.602 322.048) scale(1.00001 1)">
     <path d="M1.08432 0.54218l-1.08432 139.33731m12.46988-138.79517l-7.04819-1.08432-4.33737 0.54218" fill="none" stroke="currentColor" stroke-width="2.171" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
-  <g transform="translate(584.711 271.084) scale(2.171 2.171)">
-    <path d="" fill="none" stroke="currentColor" stroke-width="2.171" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  </g>
   <g transform="translate(560.18002 328.89399) scale(1 1.00001)">
     <path d="M48.92804 7.79294l-11.3855 9.21686c-10.84338-1.08432-18.97595 5.42172-18.43378 17.34939l-14.63855 10.84339c-12.46991-21.68674 1.62653-53.13251 36.32532-43.37348l8.13251 5.96384z" fill="none" stroke="currentColor" stroke-width="2.171" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
@@ -115,9 +112,6 @@
   </g>
   <g transform="translate(508.807 282.47) scale(0.99999 0.99995)">
     <path d="M0 7.59036c24.39755-0.54218 46.08432-2.71085 65.60239-7.59036" fill="none" stroke="var(--color-xiaohei-navy)" stroke-width="3.039" stroke-linecap="butt" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(490.374 233.133) scale(4.546 4.546)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-navy)" stroke-width="4.546" stroke-linecap="butt" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(605.855 47.711) scale(1.00002 1)">
     <path d="M0 0c5.42169 11.92771 21.68677 28.19277 27.65057 35.78313" fill="none" stroke="currentColor" stroke-width="1.52" stroke-linecap="butt" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>

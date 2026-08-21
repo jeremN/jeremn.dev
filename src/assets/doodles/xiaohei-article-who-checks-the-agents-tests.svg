@@ -23,12 +23,6 @@
   <g transform="translate(256.476 320.036) scale(8.0001 7.99995)">
     <path d="M4.55957 0c-0.66321 1.49223-1.98962 2.90155-3.39899 3.23316m-0.99481 0.1658l-0.16577 0.16581" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.368" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
-  <g transform="translate(219.998 263.663) scale(3.368 3.368)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.368" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(193.47 247.746) scale(4.255 4.255)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.255" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
   <g transform="translate(190.818 235.808) scale(7.99997 8.00006)">
     <path d="M3.64764 0c-1.65802 0.66321-2.90155 1.90674-3.64764 3.81347" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.015" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
@@ -40,9 +34,6 @@
   </g>
   <g transform="translate(216.682 363.808) scale(8.00004 7.958)">
     <path d="M0 0c1.24353 0.49741 1.98962 0.74612 3.81348 0.99482" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.316" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(217.346 237.134) scale(5.451 5.451)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="5.451" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(447.42199 228.51301) scale(8 7.99998)">
     <path d="M1.74091 19.06736l2.73577 0.99482 1.90674-1.07772 2.32123 0.99482 0.24872 1.82383 0.41449 0.58031 3.15027 0.0829 0.41449-0.2487 0.3316-1.98964 2.15546-0.82902 1.82379 1.16063 2.40417-2.23834-1.24353-1.98964 1.07776-2.73575 2.07251-0.24871 0.24872-0.2487 0.08289-3.31607-0.33161-0.49741-1.82385-0.2487-0.91187-2.65285 0.99482-1.82383-2.32123-2.32125-1.82385 0.99482-2.40418-0.99482-0.24866-1.98964-0.49743-0.2487-2.98444 0-0.41455 0.33161-0.3316 1.90673-2.56995 0.91192-1.74091-0.91192-2.56994 2.32125 1.24347 2.56994-1.24347 3.48187-1.74097 0.0829-0.16577 2.65285 1.82379 0.33161 1.07776 2.81865-1.16064 1.98964 0 0.58031z" fill="none" stroke="currentColor" stroke-width="2.88" stroke-linecap="butt" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
@@ -89,12 +80,6 @@
   <g transform="translate(866.476 320.036) scale(8.0001 7.99995)">
     <path d="M4.55957 0c-0.66321 1.49223-1.98962 2.90155-3.39899 3.23316m-0.99481 0.1658l-0.16577 0.16581" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.368" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
-  <g transform="translate(829.998 263.663) scale(3.368 3.368)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.368" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(803.47 247.746) scale(4.255 4.255)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.255" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
   <g transform="translate(800.818 235.808) scale(7.99997 8.00006)">
     <path d="M3.64764 0c-1.65802 0.66321-2.90155 1.90674-3.64764 3.81347" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.015" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
@@ -106,8 +91,5 @@
   </g>
   <g transform="translate(826.682 363.808) scale(8.00004 7.958)">
     <path d="M0 0c1.24353 0.49741 1.98962 0.74612 3.81348 0.99482" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.316" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(827.346 237.134) scale(5.451 5.451)">
-    <path d="" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="5.451" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
 </svg>
