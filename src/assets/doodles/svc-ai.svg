@@ -1,9 +1,43 @@
-<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path class="ds" d="M24 6v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  <circle cx="24" cy="5" r="2" stroke="currentColor" stroke-width="2"/>
-  <rect class="ds" x="8" y="13" width="32" height="26" rx="7" stroke="currentColor" stroke-width="2"/>
-  <circle cx="18" cy="24" r="2.4" fill="currentColor"/>
-  <circle cx="30" cy="24" r="2.4" fill="currentColor"/>
-  <path class="ds ds--thin" d="M18 32c3 2.6 9 2.6 12 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-  <path class="ds ds--thin" d="M8 24H4M44 24h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33.52 28.54">
+  <g transform="translate(2 5.15) scale(1 1)">
+    <path d="M2.74335 11.19307c-1.16064-0.49741-2.73578-2.07254-2.73578-4.97409-0.16577-2.56995 2.40417-6.30052 7.12958-6.21762 3.73053 0.1658 6.71503 3.73057 6.30047 6.88083l-0.33154 1.74093c1.0777-0.41451 2.56989-2.32124 4.14502-1.40933 1.16064 1.90673-2.65283 4.55959-3.06732 4.80829l0 0 0 0c0.16583 2.48705-0.3316 3.48187-0.41449 4.31088-0.58032 3.73057-0.99487 5.1399-2.40418 5.057-1.49225 0-1.49225-1.98963-1.82385-2.23834l-2.07251 0.1658-0.3316 0c-3.15027 3.39897-5.63733 2.15545-4.47669-0.82902 0.74609-3.15026 0.82904-3.56477 0.91193-4.72538l-0.49744 1.07772c0.41455 2.23834-2.8186 3.31606-3.06738 0.82901-0.08289-1.65803 1.40936-3.56477 2.73578-4.47668z" fill="currentColor"/>
+  </g>
+  <ellipse cx="9.6345" cy="10.9545" rx="0.3315" ry="0.3315" fill="#FFFFFF"/>
+  <g transform="translate(10.712 10.623) scale(0.9997 0.9995)">
+    <path d="M0 0.2487l0 0.33161 1.32642-0.2487 0-0.33161-1.32642 0.2487z" fill="#FFFFFF"/>
+  </g>
+  <g transform="translate(12.619 9.545) scale(0.9994 0.9998)">
+    <path d="M0.58032 0.41451l0 0.2487-0.58032 0.08291 0.16577-0.74612 0.41455 0.1658 0 0.24871z" fill="#FFFFFF"/>
+  </g>
+  <g transform="translate(8.85 10.954) scale(1.0009 0.9995)">
+    <path d="M0.45282 0c0 0.41451 0.16577 0.58031-0.24878 0.58031-0.41449 0-0.08289 0 0 0" fill="#FFFFFF"/>
+  </g>
+  <ellipse cx="9.6345" cy="11.0375" rx="0.4145" ry="0.4145" fill="#ffffff"/>
+  <g transform="translate(9.22 10.954) scale(0.9988 1.0012)">
+    <path d="M0 0c0 0.33161 0.41449 0.1658 0 0.41451" fill="#FFFFFF"/>
+  </g>
+  <ellipse cx="9.4685" cy="11.0375" rx="0.3315" ry="0.3315" fill="#FFFFFF"/>
+  <g transform="translate(15.514 2.563) scale(1 1)">
+    <path d="M1.83075 2.42263c-1.24353 1.07772-1.90674 2.98446-1.82379 4.89119m4.7254-7.12953c3.81348-0.91192 9.03626 1.65803 10.86011 5.5544 0.74609 3.48186-0.08295 7.46114-4.55963 9.20208-1.98962 0.74611-5.05701 0.91192-7.70984-0.58031" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(26.049 4.903) scale(1.0001 1)">
+    <path d="M1.49219 1.24352c-0.3316-0.33161-0.66321-0.91192-1.49219-1.24352m2.56995 5.96891c0.33154-1.07772-0.3316-3.48186-0.7461-3.97927" fill="none" stroke="#508AB3" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(24.059 12.53) scale(1.0001 1.0001)">
+    <path d="M4.55957 0c-0.66321 1.49223-1.98962 2.90155-3.39899 3.23316m-0.99481 0.1658l-0.16577 0.16581" fill="none" stroke="#5185AF" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <ellipse cx="24.5565" cy="15.9285" rx="0.2485" ry="0.2485" fill="#5185af"/>
+  <ellipse cx="24.3905" cy="16.0115" rx="0.3315" ry="0.3315" fill="#5185af"/>
+  <g transform="translate(15.852 2.001) scale(1.0001 1.0001)">
+    <path d="M3.64764 0c-1.65802 0.66321-2.90155 1.90674-3.64764 3.81347" fill="none" stroke="#508AB3" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(28.122 2.664) scale(1.0002 1.0001)">
+    <path d="M0 0c1.16064 0.58031 2.32129 1.74093 2.9845 2.81865" fill="none" stroke="#508AB3" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(27.956 14.436) scale(1.0001 1.0001)">
+    <path d="M3.56476 0c-0.49744 1.57513-1.74097 3.06736-3.56476 3.73057" fill="none" stroke="#5185AF" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(19.085 18.001) scale(1.0001 1)">
+    <path d="M0 0c1.24353 0.49741 1.98962 0.74612 3.81348 0.99482" fill="none" stroke="#5089AE" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
 </svg>
