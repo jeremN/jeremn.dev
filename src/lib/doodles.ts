@@ -1,8 +1,11 @@
 // Which hand-drawn mark sits at the end of a Writing row.
 //
-// The comps pair each row with a mark that matches its subject: a lock on a
-// security note, a cube stack on an agents note, braces on a Svelte one. The
-// pairing is editorial, so it lives here as data rather than in the template.
+// Each mark shows the Xiaohei mascot next to one small prop: code (a monitor
+// with `</>`), braces (a gear), cubes (a stack of trays), grid (a barrel),
+// lock (`</>` held with no monitor), server (a broken ring). Most props do
+// not literally depict their tag. The pairing is editorial variety, an
+// accepted decision (spec decision 2), so the mapping lives here as data
+// rather than in the template.
 
 export const ROW_MARKS = [
   'xiaohei-writing-code',

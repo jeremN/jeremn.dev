@@ -295,7 +295,9 @@ p {
   cursor: pointer;
 }
 .filter-tab::after {
-  content: '/';
+  /* The alt text after the second slash is empty on purpose: the slash is
+     decorative, so a screen reader must not announce it. */
+  content: '/' / '';
   margin-left: 0.75em;
 }
 .filter-tab:hover {

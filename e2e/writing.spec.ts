@@ -34,32 +34,33 @@ test.describe('writing index', () => {
 })
 
 test.describe('writing index vignettes', () => {
-  // Task 2/3 added a header vignette (desktop artwork plus a cropped mobile
-  // crop of the same asset) and a footer vignette below the row list. Both
-  // are decorative Doodle components, so assert presence and the
-  // accessibility contract rather than pixel content.
+  // Task 2/3 added a header vignette (desktop only) and a footer vignette.
+  // The footer vignette renders twice: once as the cropped mobile hero, once
+  // below the row list. Both are decorative Doodle components, so assert
+  // presence and the accessibility contract rather than pixel content.
 
-  test('the header vignette renders once for desktop and once cropped for mobile', async ({ page }) => {
+  test('the header vignette renders once, for desktop only', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const header = page.locator('[data-doodle="xiaohei-writing-header"]')
-    await expect(header).toHaveCount(2)
-    for (const mark of await header.all()) {
-      await expect(mark).toHaveAttribute('aria-hidden', 'true')
-    }
+    await expect(header).toHaveCount(1)
+    await expect(header).toHaveAttribute('aria-hidden', 'true')
   })
 
-  test('the footer vignette sits after the row list', async ({ page }) => {
+  test('the footer vignette renders as the cropped mobile hero and after the row list', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const footer = page.locator('[data-doodle="xiaohei-writing-footer"]')
-    await expect(footer).toHaveCount(1)
-    await expect(footer).toHaveAttribute('aria-hidden', 'true')
+    await expect(footer).toHaveCount(2)
+    for (const mark of await footer.all()) {
+      await expect(mark).toHaveAttribute('aria-hidden', 'true')
+    }
 
     const order = await page.evaluate(() => {
       const list = document.querySelector('ul')
-      const mark = document.querySelector('[data-doodle="xiaohei-writing-footer"]')
-      if (!list || !mark) return 'missing'
-      // DOCUMENT_POSITION_FOLLOWING means `mark` comes after `list`.
-      return (list.compareDocumentPosition(mark) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+      const marks = document.querySelectorAll('[data-doodle="xiaohei-writing-footer"]')
+      const rowListFooter = marks[marks.length - 1]
+      if (!list || !rowListFooter) return 'missing'
+      // DOCUMENT_POSITION_FOLLOWING means `rowListFooter` comes after `list`.
+      return (list.compareDocumentPosition(rowListFooter) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
         ? 'after'
         : 'before'
     })
@@ -73,11 +74,11 @@ test.describe('writing index vignettes', () => {
     await page.goto(`${BASE}/blog`)
     await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
     await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
-    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]')).toBeAttached()
+    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]').first()).toBeAttached()
 
     await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'))
     await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
-    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]')).toBeAttached()
+    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]').first()).toBeAttached()
 
     expect(errors).toEqual([])
   })

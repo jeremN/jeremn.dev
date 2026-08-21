@@ -42,13 +42,17 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
       <Doodle name="xiaohei-writing-header" class="hidden shrink-0 text-ink lg:block lg:h-[25rem] lg:w-[19.875rem]" />
 
       {/* The validated mobile design shows a cropped "viewport" window onto
-          the same illustration, not the full artwork shrunk down: the
-          desktop version above stays hidden below lg, and this cropped
-          version takes over below lg. Same treatment as the home hero. */}
+          the workbench illustration (the same scene as the footer mark
+          below), not the telescope scene used above, and not that artwork
+          shrunk down either: the desktop header stays hidden below lg, and
+          this cropped footer illustration takes over below lg. The crop
+          percentages are sized off xiaohei-writing-footer's own 992x339
+          viewBox, not reused from the home hero's crop (a different source
+          image at a different aspect ratio). */}
       <div class="relative aspect-[7/5] overflow-hidden lg:hidden">
         <Doodle
-          name="xiaohei-writing-header"
-          class="absolute left-[-23.71%] top-[-18.4%] h-[135.6%] w-[149.71%] text-ink"
+          name="xiaohei-writing-footer"
+          class="absolute left-[-90.57%] top-[-18.4%] h-[135.6%] w-[283.43%] text-ink"
         />
       </div>
     </div>
