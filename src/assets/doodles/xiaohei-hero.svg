@@ -78,16 +78,16 @@
     <path d="M57.35559 5.66487c-5.09836 3.39893-18.97728 6.23135-30.87352 7.08109-2.26593 0-9.06377 3.11568-9.06377 3.11567 0 0-14.4454-1.13298-16.71136 7.93081-2.83243 15.29513 3.11568 16.14487 13.02919 16.42811 6.5146 0.28323 12.17947 6.23135 17.84433 6.23135l6.23135-10.19676 22.09297-4.24866-1.13296 11.0465 4.24863 0c0 0 1.69946-5.9481 9.91351-5.66486 14.4454 0.84972 40.78705-1.69946 54.94922-9.34703l7.64755 10.48 12.17948 16.4281-49.0011 6.5146-15.86164-1.41621-9.06375 1.98269-10.48001-3.11567-6.51459 9.34703 9.34702 7.64756 17.27786 33.42273 88.65512 27.19135c12.46271-10.48001 20.11026-17.27783 19.5438-50.9838l-17.5611-84.68974-111.88107-0.84973-4.81516 5.66487z" fill="currentColor"/>
   </g>
   <g transform="translate(307.674 181.516) scale(0.78 0.78)">
-    <path d="M0 0c10.19675 3.68216 27.75784 8.21404 54.94919 8.21404" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 0c10.19675 3.68216 27.75784 8.21404 54.94919 8.21404" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(311.872 198.528) scale(0.78 0.78)">
-    <path d="M0 16.71135c1.41623-1.98271 5.09836-5.9481 10.76324-5.38162 11.61298 1.13297 41.35352-1.9827 57.49839-11.32973" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 16.71135c1.41623-1.98271 5.09836-5.9481 10.76324-5.38162 11.61298 1.13297 41.35352-1.9827 57.49839-11.32973" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(320.93 219.737) scale(0.78 0.78)">
-    <path d="M0 6.79785c6.79785 0.28323 38.52109 4.81512 71.94379-6.79785" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 6.79785c6.79785 0.28323 38.52109 4.81512 71.94379-6.79785" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(299.933 212.087) scale(0.78 0.78)">
-    <path d="M25.21976 17.17203c-5.09839 0.5665-11.89624-3.39891-9.91352-3.39891l-13.8789-3.39893c-2.83244-0.84972-1.69946-11.89621 5.66485-10.19675 4.53189 0.56648 8.78052 1.13297 8.78052 1.13297" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M25.21976 17.17203c-5.09839 0.5665-11.89624-3.39891-9.91352-3.39891l-13.8789-3.39893c-2.83244-0.84972-1.69946-11.89621 5.66485-10.19675 4.53189 0.56648 8.78052 1.13297 8.78052 1.13297" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(285.802 207.418) scale(0.78 0.78)">
     <path d="M0 39.58673l9.34705-37.38811c0.84972-1.9827 15.29512-4.53189 14.44539 1.98272-6.5146-3.68217-7.64755 8.21405-10.19675 15.57836l-6.79784 21.80974-6.79785-1.98271z" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
@@ -96,7 +96,7 @@
     <path d="M0 23.50917l6.79784-1.69945c0.28323-2.54919 4.24866-17.27785 5.66485-18.41081l-9.06376-3.39891" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(309 238.295) scale(0.78 0.78)">
-    <path d="M0 0l20.95999 40.78703" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 0l20.95999 40.78703" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(314.081 235.644) scale(0.78 0.78)">
     <path d="M0 0l23.50919 44.18596 1.13296 3.96539" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
@@ -120,16 +120,16 @@
     <path d="M0 0c8.78056 0 22.09297 3.39886 30.87352 15.57837" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(307.129 145.876) scale(0.78 0.78)">
-    <path d="M4.66452 0.09016c-3.96542 0.84973-6.23138 5.09839-3.39896 8.49729 4.24866 4.81515 11.89624 0.84975 8.49732-6.23133-0.5665-0.5665-2.83243-2.83246-5.09836-2.26596z" fill="#FFFFFF"/>
+    <path d="M4.66452 0.09016c-3.96542 0.84973-6.23138 5.09839-3.39896 8.49729 4.24866 4.81515 11.89624 0.84975 8.49732-6.23133-0.5665-0.5665-2.83243-2.83246-5.09836-2.26596z" fill="var(--color-surface)"/>
   </g>
   <g transform="translate(350.858 149.04) scale(0.78 0.78)">
-    <path d="M4.1167 0c-5.66486 2.26595-5.66486 10.19675 1.13296 11.04649 6.51459 0.56647 10.19678-7.08109 3.39893-10.48001-1.13297-0.56648-1.69946-0.56648-4.53189-0.56648z" fill="#FFFFFF"/>
+    <path d="M4.1167 0c-5.66486 2.26595-5.66486 10.19675 1.13296 11.04649 6.51459 0.56647 10.19678-7.08109 3.39893-10.48001-1.13297-0.56648-1.69946-0.56648-4.53189-0.56648z" fill="var(--color-surface)"/>
   </g>
   <g transform="translate(323.36 159.298) scale(0.78 0.9047)">
-    <path d="M0 0.44447c5.09839-1.13297 12.17947 0 15.57837 2.26595" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 0.44447c5.09839-1.13297 12.17947 0 15.57837 2.26595" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(350.539 255.565) scale(0.78 0.78)">
-    <path d="M13.02374 0.51923c-2.83246 0.84973-5.09839 5.66486-3.96542 8.49731-6.51459-1.133-9.06378 4.81512-7.36432 8.49728-2.83243 1.9827-2.83243 12.74594 5.66486 11.32975 1.133 6.23132 11.32974 5.66486 18.12759 4.24865l2.83243-1.41626 0-3.96539c6.79782-1.133 6.79782-11.32971 1.13296-12.46271 2.54916-3.39893-0.5665-9.06378-5.66485-7.64755 1.13293-3.68216-4.81516-9.34705-10.76325-7.08108z" fill="#FFFFFF"/>
+    <path d="M13.02374 0.51923c-2.83246 0.84973-5.09839 5.66486-3.96542 8.49731-6.51459-1.133-9.06378 4.81512-7.36432 8.49728-2.83243 1.9827-2.83243 12.74594 5.66486 11.32975 1.133 6.23132 11.32974 5.66486 18.12759 4.24865l2.83243-1.41626 0-3.96539c6.79782-1.133 6.79782-11.32971 1.13296-12.46271 2.54916-3.39893-0.5665-9.06378-5.66485-7.64755 1.13293-3.68216-4.81516-9.34705-10.76325-7.08108z" fill="var(--color-surface)"/>
   </g>
   <g transform="translate(362.906 266.574) scale(2.402 0.78)">
     <path d="M0 0l0 30.87354" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
@@ -210,7 +210,7 @@
     <path d="M0 0l0 5.66492" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(288.674 286.9) scale(0.78 0.78)">
-    <path d="M0 3.11566l7.9308 1.4162-3.39891-4.53186-4.53189 3.11566z" fill="#000000"/>
+    <path d="M0 3.11566l7.9308 1.4162-3.39891-4.53186-4.53189 3.11566z" fill="currentColor"/>
   </g>
   <g transform="translate(283.534 203.83) scale(0.78 0.78)">
     <path d="M0.35901 0c2.54919 3.39893-2.26593 8.78055 0.5665 11.32973 6.23135 3.68216 9.06378-10.76324 4.53189-11.32973" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
@@ -222,7 +222,7 @@
     <path d="M0 14.16217c3.39893 8.4973 16.42812 10.48 20.96001-1.69946-0.56648 0.56648 5.09837 7.08109 6.79783 0.56648l-1.69946-5.9481-6.79784-7.08109-9.91351 0c-5.9481 1.98271-8.78053 3.96542-9.34703 14.16217z" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(278.069 191.237) scale(0.78 0.78)">
-    <path d="M0 0c3.96541 1.13298 9.0638 5.38162 7.93082 10.76324" fill="none" stroke="#FFFFFF" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 0c3.96541 1.13298 9.0638 5.38162 7.93082 10.76324" fill="none" stroke="var(--color-surface)" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(264.335 202.063) scale(0.78 0.78)">
     <path d="M0.0473 0c-0.5665 9.06378 3.96541 9.91351 13.02918 10.19675 5.66487 0 13.31242 5.09839 16.9946 3.39892" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
@@ -240,17 +240,17 @@
     <path d="M2.83243 0l-2.83243 2.83246 0 2.54919 7.64755 0.28321" fill="none" stroke="#C73F3E" stroke-width="2.452" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(202.07 197.865) scale(0.78 0.78)">
-    <path d="M0.28323 0l-0.28323 23.5092 24.07568-0.28326-0.28324-16.99459-5.66488-6.23135-17.84433 0z" fill="none" stroke="#2A44AA" stroke-width="1.995" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0.28323 0l-0.28323 23.5092 24.07568-0.28326-0.28324-16.99459-5.66488-6.23135-17.84433 0z" fill="none" stroke="var(--color-xiaohei-navy)" stroke-width="1.995" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(215.546 198.528) scale(0.7799 0.78)">
-    <path d="M0 0l0 6.79784 6.5146-0.5665" fill="none" stroke="#2A44AA" stroke-width="1.995" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 0l0 6.79784 6.5146-0.5665" fill="none" stroke="var(--color-xiaohei-navy)" stroke-width="1.995" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
-  <rect x="205.825" y="201.4" width="2.651" height="1.988" fill="#2A44AA"/>
+  <rect x="205.825" y="201.4" width="2.651" height="1.988" fill="var(--color-xiaohei-navy)"/>
   <g transform="translate(205.163 206.923) scale(0.78 0.7802)">
-    <path d="M0.84975 0l6.79783 0 0 1.9827-7.64758 0 0-1.9827 0.84975 0z" fill="#2A44AA"/>
+    <path d="M0.84975 0l6.79783 0 0 1.9827-7.64758 0 0-1.9827 0.84975 0z" fill="var(--color-xiaohei-navy)"/>
   </g>
   <g transform="translate(205.163 210.016) scale(0.78 0.7798)">
-    <path d="M0 0l10.76326 0 0.56648 2.26596-11.32974 0 0-2.26596z" fill="#2A44AA"/>
+    <path d="M0 0l10.76326 0 0.56648 2.26596-11.32974 0 0-2.26596z" fill="var(--color-xiaohei-navy)"/>
   </g>
   <g transform="translate(163.407 222.168) scale(0.78 0.78)">
     <path d="M0 15.86162c9.06378 0 22.3762 5.38162 33.70594 23.79242l35.4054-14.44538c-7.9308-13.5957-13.31242-20.96002-31.72323-25.20866-11.04649 2.83243-29.17406 10.48001-37.38811 15.86162z" fill="none" stroke="currentColor" stroke-width="2.402" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>

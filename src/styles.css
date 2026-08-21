@@ -30,6 +30,11 @@
   --color-butter: light-dark(#f8dea0, #b08d3b);
   --color-lavender: light-dark(#ded6f5, #6a54ab);
 
+  /* Xiaohei illustration accents only. Two distinct light-mode navies both
+     lighten to the same dark-mode value in the source design. */
+  --color-xiaohei-navy: light-dark(#2a44aa, #8eacff);
+  --color-xiaohei-code-navy: light-dark(#0f308a, #8eacff);
+
   /* Illustration stroke width. Light strokes on a dark ground optically bloom
      and read heavier at the same width, so dark draws them thinner. This is
      the only place where dark needs different geometry rather than a

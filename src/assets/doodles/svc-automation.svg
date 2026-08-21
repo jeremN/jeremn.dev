@@ -9,15 +9,15 @@
     <path d="M2.84171 11.23019l0 0c-1.24353-0.74611-3.06738-3.06736-2.8187-5.3886 0.49741-4.80829 5.05698-6.46632 8.20725-5.63731 2.65289 0.66321 5.30572 2.98446 5.13989 6.46632-0.24866 1.82383-0.58026 1.57513-0.58026 1.82384l1.49218-0.74611c1.16065-0.74611 2.32123-0.33161 2.15546 1.07771-0.16577 1.49223-2.73578 3.23316-3.15027 3.39897 0.3316 2.23834-0.24872 3.89637-0.74609 7.70984-0.24872 1.90673-3.15027 2.15544-3.48187-0.49741l-2.40418 0.16581c-2.98444 3.73057-5.55438 1.82383-4.55957-0.82902 0.58032-2.48705 0.24872-5.3057 0.74616-7.54404z" fill="currentColor"/>
   </g>
   <g transform="translate(9.567 11.533) scale(1 1)">
-    <path d="M0 0l0.16583 0.66321 0.41449 0.0829 0.16577-0.58031-0.74609-0.1658z" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 0l0.16583 0.66321 0.41449 0.0829 0.16577-0.58031-0.74609-0.1658z" fill="none" stroke="var(--color-surface)" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
   <g transform="translate(11.971 11.533) scale(1.0001 0.9997)">
-    <path d="M0 0.33161l0 0.3316 0.91193-0.41451-0.08295-0.2487-0.82898 0.33161z" fill="#FFFFFF"/>
+    <path d="M0 0.33161l0 0.3316 0.91193-0.41451-0.08295-0.2487-0.82898 0.33161z" fill="var(--color-surface)"/>
   </g>
   <g transform="translate(12.634 10.538) scale(1 1.0003)">
-    <path d="M0 0.66321l0.16577 0.49741 0.66321-0.49741-0.16577-0.66321-0.58032 0.1658-0.08289 0.49741z" fill="#FFFFFF"/>
+    <path d="M0 0.66321l0.16577 0.49741 0.66321-0.49741-0.16577-0.66321-0.58032 0.1658-0.08289 0.49741z" fill="var(--color-surface)"/>
   </g>
   <g transform="translate(12.137 13.854) scale(1.0001 1.0002)">
-    <path d="M0 2.07254c1.32642-0.41451 3.64771-1.65803 3.81348-2.07254" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 2.07254c1.32642-0.41451 3.64771-1.65803 3.81348-2.07254" fill="none" stroke="var(--color-surface)" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </g>
 </svg>
