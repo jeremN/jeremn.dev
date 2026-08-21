@@ -59,12 +59,23 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
         </div>
 
         <Doodle name="xiaohei-hero" class="hidden shrink-0 text-ink lg:block lg:h-[28rem] lg:w-[26rem]" />
+
+        {/* The validated mobile design shows a cropped "viewport" window onto
+            the same illustration, not the full artwork shrunk down: the
+            desktop version above stays hidden below lg, and this cropped
+            version takes over below lg. */}
+        <div class="relative aspect-[35/36] overflow-hidden lg:hidden">
+          <Doodle
+            name="xiaohei-hero"
+            class="absolute left-[-23.71%] top-[-25.56%] h-[155.56%] w-[149.71%] text-ink"
+          />
+        </div>
       </div>
     </section>
 
     <section data-services class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
       <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">What I do</h2>
-      <ul class="mt-10 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <ul class="mt-10 grid grid-cols-2 gap-x-10 gap-y-12 lg:grid-cols-3">
         {services.map((s) => (
           <li data-service>
             <Doodle name={s.icon} class="h-10 w-10 text-ink" />
@@ -108,12 +119,12 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
 
     <section data-about class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
       <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">About</h2>
-      <div class="mt-10 flex items-end justify-between gap-10">
+      <div class="mt-10 flex flex-col items-start gap-8 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
         <p class="max-w-[38ch] font-display text-2xl leading-snug text-ink sm:text-3xl">
           I like software that makes sense. Simple systems, maintainable code, and features that
           solve a real problem.
         </p>
-        <Doodle name="xiaohei-about" class="hidden h-32 w-32 shrink-0 text-ink sm:block" />
+        <Doodle name="xiaohei-about" class="h-32 w-32 shrink-0 text-ink" />
       </div>
       <a
         href={withBase('/about')}
@@ -125,13 +136,13 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
 
     <section data-contact class="mx-auto max-w-[1000px] px-6 pb-24 pt-24 sm:pt-32">
       <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</h2>
-      <div class="mt-6 flex items-center justify-between gap-10">
+      <div class="mt-6 flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
         <a href={withBase('/contact')} class="block no-underline">
           <span class="block font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
             Work with me
           </span>
         </a>
-        <Doodle name="xiaohei-contact" class="hidden h-24 w-36 shrink-0 text-ink lg:block" />
+        <Doodle name="xiaohei-contact" class="h-24 w-36 shrink-0 text-ink" />
       </div>
       <p class="mt-8 font-mono text-[11px] uppercase tracking-wider text-muted">
         {profile.location} · Remote friendly
