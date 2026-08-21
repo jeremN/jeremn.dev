@@ -3,6 +3,7 @@ import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
 import { markForTags } from '../../lib/doodles'
 import Doodle from './Doodle.astro'
+import type { DoodleName } from './Doodle.astro'
 
 interface Props {
   slug: string
@@ -12,6 +13,12 @@ interface Props {
   publishedAt: Date
   body?: string
   variant?: 'index' | 'teaser'
+  /** Overrides the tag-derived mark. The homepage teaser rows use this to show
+   * the three Xiaohei article marks in the validated design's fixed
+   * code/lock/cubes sequence, which is positional rather than tag-derived
+   * (see index.astro). Every other caller leaves this unset and keeps the
+   * tag-derived mark, so `/blog` is unaffected. */
+  mark?: DoodleName
 }
 const {
   slug,
@@ -21,6 +28,7 @@ const {
   publishedAt,
   body,
   variant = 'index',
+  mark: markOverride,
 } = Astro.props
 
 // The comps stack the date over three lines: day, month, year.
@@ -28,7 +36,7 @@ const day = publishedAt.toLocaleDateString('en-US', { day: '2-digit' })
 const month = publishedAt.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
 const year = publishedAt.getFullYear()
 const category = tags.join(' / ').toUpperCase()
-const mark = markForTags(tags)
+const mark = markOverride ?? markForTags(tags)
 ---
 <a
   data-post-row

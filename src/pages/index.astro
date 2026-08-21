@@ -12,38 +12,53 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3)
 
+// The validated design pairs each homepage teaser row with one of the three
+// Xiaohei article marks in a fixed code/lock/cubes sequence, not by tag: the
+// mock's own per-row assignment does not match what `markForTags` computes
+// for either the posts shown here today or the posts the mock was drawn
+// against, so this stays a fixed sequence rather than a tag mapping. See the
+// task report for the full comparison.
+const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark-cubes'] as const
 ---
 <Layout hideFooterCta>
   <main class="relative z-10">
     <section data-hero class="mx-auto max-w-[1440px] px-6 pt-16 sm:pt-24">
-      <span class="font-mono text-[11px] uppercase tracking-wider text-accent">01 / Freelance software engineer</span>
-
-      <h1 class="mt-6 max-w-[16ch] font-display text-5xl font-medium leading-[1.03] tracking-tight text-ink sm:text-7xl lg:text-8xl">
-        I build web apps for the <span class="relative inline-block">
-          <em class="italic">real world.</em>
-          <Underline class="absolute -bottom-2 left-0 w-full text-accent" />
-        </span>
-      </h1>
-
-      <div class="mt-10 flex max-w-[1000px] flex-col gap-8">
-        <p class="max-w-[42ch] font-sans text-base leading-relaxed text-muted sm:text-lg">
-          {profile.title}. I build and rebuild web apps, and the tooling around them.
-        </p>
-
-        <div class="flex flex-col items-start gap-5">
-          <span class="inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-wider text-muted">
-            <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
-            Available for freelance work
+      <div class="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+        <div class="max-w-[720px]">
+          <span class="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-accent">
+            01 / Freelance software engineer
           </span>
-          <a
-            data-hero-cta
-            href={withBase('/contact')}
-            class="inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
-          >
-            Let's talk
-            <span aria-hidden="true">→</span>
-          </a>
+
+          <h1 class="mt-6 max-w-[16ch] font-display text-5xl font-medium leading-[1.03] tracking-tight text-ink sm:text-7xl lg:text-8xl">
+            I build web apps for the <span class="relative inline-block">
+              <em class="italic">real world.</em>
+              <Underline class="absolute -bottom-2 left-0 w-full text-accent" />
+            </span>
+          </h1>
+
+          <div class="mt-10 flex flex-col gap-8">
+            <p class="max-w-[42ch] font-sans text-base leading-relaxed text-muted sm:text-lg">
+              {profile.title}. I build and rebuild web apps, and the tooling around them.
+            </p>
+
+            <div class="flex flex-col items-start gap-5">
+              <span class="inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-wider text-muted">
+                <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+                Available for freelance work
+              </span>
+              <a
+                data-hero-cta
+                href={withBase('/contact')}
+                class="inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
+              >
+                Let's talk
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
         </div>
+
+        <Doodle name="xiaohei-hero" class="hidden shrink-0 text-ink lg:block lg:h-[28rem] lg:w-[26rem]" />
       </div>
     </section>
 
@@ -74,7 +89,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         </p>
       ) : (
         <ul class="mt-10 border-t border-line">
-          {posts.map((p) => (
+          {posts.map((p, i) => (
             <li>
               <PostRow
                 slug={p.id}
@@ -83,6 +98,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
                 publishedAt={p.data.publishedAt}
                 body={p.body}
                 variant="teaser"
+                mark={HOME_NOTE_MARKS[i]}
               />
             </li>
           ))}
@@ -97,7 +113,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
           I like software that makes sense. Simple systems, maintainable code, and features that
           solve a real problem.
         </p>
-        <Doodle name="plant" class="hidden h-24 w-36 shrink-0 text-ink sm:block" />
+        <Doodle name="xiaohei-about" class="hidden h-32 w-32 shrink-0 text-ink sm:block" />
       </div>
       <a
         href={withBase('/about')}
@@ -115,7 +131,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
             Work with me
           </span>
         </a>
-        <Doodle name="plane" class="hidden h-20 w-40 shrink-0 text-ink lg:block" />
+        <Doodle name="xiaohei-contact" class="hidden h-24 w-36 shrink-0 text-ink lg:block" />
       </div>
       <p class="mt-8 font-mono text-[11px] uppercase tracking-wider text-muted">
         {profile.location} · Remote friendly
