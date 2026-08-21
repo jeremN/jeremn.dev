@@ -28,12 +28,6 @@
   </g>
   <ellipse cx="29.9795" cy="20.0405" rx="0.2865" ry="0.2865" fill="#E15241"/>
   <ellipse cx="29.789" cy="20.136" rx="0.382" ry="0.382" fill="#E15241"/>
-  <g transform="translate(24.155 8.01) scale(1 1)">
-    <path d="" fill="none" stroke="#5185AF" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(20.336 5.719) scale(1 1)">
-    <path d="" fill="none" stroke="#5185AF" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
   <g transform="translate(19.954 4) scale(1.1517 1.15171)">
     <path d="M3.64764 0c-1.65802 0.66321-2.90155 1.90674-3.64764 3.81347" fill="none" stroke="#508AB3" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
@@ -45,8 +39,5 @@
   </g>
   <g transform="translate(23.678 22.428) scale(1.1517 1.146)">
     <path d="M0 0c1.24353 0.49741 1.98962 0.74612 3.81348 0.99482" fill="none" stroke="#5089AE" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
-  </g>
-  <g transform="translate(23.773 4.191) scale(1 1)">
-    <path d="" fill="none" stroke="#5085AF" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
   </g>
 </svg>
