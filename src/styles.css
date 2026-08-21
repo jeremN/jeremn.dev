@@ -10,8 +10,9 @@
 @plugin "@tailwindcss/typography";
 
 /* `static` forces every declared variable into the built CSS. Tailwind v4
-   drops an unused @theme variable, and butter and lavender feed SVG
-   illustrations that arrive in a later step, not any class in this repo yet. */
+   drops an unused @theme variable, and butter, lavender, and the
+   --color-xiaohei-* tokens below feed SVG illustrations, not any class in
+   this repo. */
 @theme static {
   /* Palette — design system v2, "Editorial Flow". Light is canonical.
      `accent` is the code name for the system's Electric. It must keep this

@@ -1,8 +1,11 @@
 ---
-// One entry point for every hand-drawn mark. Strokes are currentColor, so a
-// doodle takes its colour from the parent's text-* utility and is correct in
-// any context by construction. The two fills that exist (butter sun, lavender
-// blob) resolve per theme through their tokens.
+// One entry point for every hand-drawn mark. Two illustration languages
+// coexist here. The original abstract line-doodle set (mark-*, svc-*) keeps
+// currentColor strokes plus two named fills (butter sun, lavender blob), so
+// it is correct in any context by construction. The newer Xiaohei character
+// set (xiaohei-*) is multi-tone: it still uses currentColor for ink outlines,
+// but mixes in literal hex accents and several dedicated --color-xiaohei-*
+// tokens for colours that must invert per theme.
 //
 // Astro's SVG components are static imports, so the whole set is named here
 // rather than resolved from a path at runtime.
