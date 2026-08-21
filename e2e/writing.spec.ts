@@ -33,6 +33,56 @@ test.describe('writing index', () => {
   })
 })
 
+test.describe('writing index vignettes', () => {
+  // Task 2/3 added a header vignette (desktop artwork plus a cropped mobile
+  // crop of the same asset) and a footer vignette below the row list. Both
+  // are decorative Doodle components, so assert presence and the
+  // accessibility contract rather than pixel content.
+
+  test('the header vignette renders once for desktop and once cropped for mobile', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const header = page.locator('[data-doodle="xiaohei-writing-header"]')
+    await expect(header).toHaveCount(2)
+    for (const mark of await header.all()) {
+      await expect(mark).toHaveAttribute('aria-hidden', 'true')
+    }
+  })
+
+  test('the footer vignette sits after the row list', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    const footer = page.locator('[data-doodle="xiaohei-writing-footer"]')
+    await expect(footer).toHaveCount(1)
+    await expect(footer).toHaveAttribute('aria-hidden', 'true')
+
+    const order = await page.evaluate(() => {
+      const list = document.querySelector('ul')
+      const mark = document.querySelector('[data-doodle="xiaohei-writing-footer"]')
+      if (!list || !mark) return 'missing'
+      // DOCUMENT_POSITION_FOLLOWING means `mark` comes after `list`.
+      return (list.compareDocumentPosition(mark) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+        ? 'after'
+        : 'before'
+    })
+    expect(order).toBe('after')
+  })
+
+  test('the vignettes are present in both light and dark theme without erroring', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => errors.push(err.message))
+
+    await page.goto(`${BASE}/blog`)
+    await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
+    await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
+    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]')).toBeAttached()
+
+    await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'))
+    await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
+    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]')).toBeAttached()
+
+    expect(errors).toEqual([])
+  })
+})
+
 test.describe('writing index filter', () => {
   test('lists All plus every tag in use', async ({ page }) => {
     await page.goto(`${BASE}/blog`)

@@ -68,10 +68,17 @@ test.describe('writing row marks', () => {
 
   test('the mark matches the row subject', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
-    // A Svelte-tagged post takes braces unless a more specific tag precedes it.
+    // A Svelte-tagged post takes the braces mark unless a more specific tag precedes it.
     const row = page.locator('[data-post-row]', { has: page.locator('[data-meta]') }).first()
     const name = await row.locator('[data-doodle]').getAttribute('data-doodle')
-    expect(['code', 'braces', 'nodes', 'dotgrid', 'padlock']).toContain(name)
+    expect([
+      'xiaohei-writing-code',
+      'xiaohei-writing-braces',
+      'xiaohei-writing-cubes',
+      'xiaohei-writing-grid',
+      'xiaohei-writing-lock',
+      'xiaohei-writing-server',
+    ]).toContain(name)
   })
 
   test('a mark inherits the row colour rather than baking one in', async ({ page }) => {
