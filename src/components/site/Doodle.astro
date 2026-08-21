@@ -93,10 +93,11 @@ export type DoodleName = keyof typeof DOODLES
 interface Props {
   name: DoodleName
   class?: string
+  style?: string
 }
-const { name, class: cls = '' } = Astro.props
+const { name, class: cls = '', style } = Astro.props
 const Mark = DOODLES[name]
 ---
-<span data-doodle={name} aria-hidden="true" class:list={['pointer-events-none block', cls]}>
+<span data-doodle={name} aria-hidden="true" class:list={['pointer-events-none block', cls]} style={style}>
   <Mark class="h-full w-full" />
 </span>

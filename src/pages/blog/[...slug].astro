@@ -5,7 +5,7 @@ import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
 import Underline from '../../components/site/Underline.astro'
 import Doodle from '../../components/site/Doodle.astro'
-import { illustrationForSlug } from '../../lib/article-illustrations'
+import { illustrationForSlug, mobileCropOffsetForSlug } from '../../lib/article-illustrations'
 
 export async function getStaticPaths() {
   const posts = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).sort(
@@ -30,6 +30,10 @@ const showToc = toc.length >= 2
 // Curated, not exhaustive: only some posts have a drawn illustration yet, and
 // there is no reasonable fallback for the ones that don't (see the lib for why).
 const illustration = illustrationForSlug(post.id)
+// Most posts' mobile crop uses the shared -64.61% default (see the Doodle
+// below); a few need their own horizontal window so their subject doesn't
+// land outside it (see the lib for why, and task-2-report.md for the math).
+const mobileCropOffset = mobileCropOffsetForSlug(post.id)
 ---
 <Layout title={`${post.data.title} · jeremn.dev`} description={post.data.summary}>
   <main
@@ -100,13 +104,16 @@ const illustration = illustrationForSlug(post.id)
 
         {/* Same cropped-viewport idiom as Home's hero and Writing's header: an
             overflow-hidden box at the mobile slot's own aspect ratio, with the
-            (landscape, 984x540) illustration scaled up to fill it height-first
-            and centered horizontally, so the visible slice has no letterboxing. */}
+            (landscape, 984x540) illustration scaled up to fill it height-first,
+            so the visible slice has no letterboxing. The horizontal offset
+            defaults to dead-center (-64.61%) but is overridden per slug where
+            that center-crop misses the subject — see mobileCropOffsetForSlug. */}
         {illustration && (
           <div class="relative aspect-[318/400] overflow-hidden lg:hidden">
             <Doodle
               name={illustration}
-              class="absolute left-[-64.61%] top-0 h-full w-[229.21%] text-ink"
+              class="absolute top-0 h-full w-[229.21%] text-ink"
+              style={`left: ${mobileCropOffset}`}
             />
           </div>
         )}

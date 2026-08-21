@@ -26,3 +26,24 @@ const BY_SLUG: Record<string, DoodleName> = {
 export function illustrationForSlug(slug: string): DoodleName | undefined {
   return BY_SLUG[slug]
 }
+
+// The mobile crop (see [...slug].astro) center-crops every 984x540
+// illustration to the same horizontal window by default. That default reads
+// fine when a post's subject sits near the source's own horizontal center,
+// but three posts draw their subject far enough off-center that the default
+// window either cuts it out entirely or lets an unrelated, disconnected
+// fragment from the far edge poke into frame. Each override below is the
+// `left` percentage (see the default's -64.61% in the template) that slides
+// the crop window until that post's subject sits inside it. Derived from
+// each SVG's own path geometry, not eyeballed: see task-2-report.md's
+// "Fix round 1" section for the coordinates behind each value.
+const MOBILE_CROP_OFFSET: Partial<Record<string, string>> = {
+  'stryker-on-a-svelte-monorepo': '-61.89%',
+  'best-model-still-needs-rules': '-123.62%',
+  'two-years-of-renovate-part-two': '0%',
+}
+
+/** Mobile-crop `left` offset for a post slug, or the shared default. */
+export function mobileCropOffsetForSlug(slug: string): string {
+  return MOBILE_CROP_OFFSET[slug] ?? '-64.61%'
+}
