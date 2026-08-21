@@ -70,3 +70,73 @@ test.describe('article template', () => {
     await expect(page.locator('[data-keep-reading]')).toBeVisible()
   })
 })
+
+test.describe('article illustration', () => {
+  // Curated per src/lib/article-illustrations.ts: each slug maps to its own
+  // drawn mark, so this also guards against two posts silently sharing one.
+  const POST_TO_MARK: Array<[slug: string, mark: string]> = [
+    ['best-model-still-needs-rules', 'xiaohei-article-best-model-still-needs-rules'],
+    ['ten-months-of-svelte-5', 'xiaohei-article-ten-months-of-svelte-5'],
+    ['who-checks-the-agents-tests', 'xiaohei-article-who-checks-the-agents-tests'],
+  ]
+
+  for (const [slug, mark] of POST_TO_MARK) {
+    test(`${slug} renders its own illustration, once for desktop and once for mobile`, async ({ page }) => {
+      await page.goto(`${BASE}/blog/${slug}`)
+      const marks = page.locator(`[data-doodle="${mark}"]`)
+      await expect(marks).toHaveCount(2)
+      for (const instance of await marks.all()) {
+        await expect(instance).toHaveAttribute('aria-hidden', 'true')
+      }
+    })
+  }
+
+  test('the desktop illustration sits beside the title column, not above or below it', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto(`${BASE}/blog/best-model-still-needs-rules`)
+    const title = page.locator('h1')
+    const desktopMark = page.locator('[data-doodle="xiaohei-article-best-model-still-needs-rules"]').first()
+    await expect(desktopMark).toBeVisible()
+
+    const [titleBox, markBox] = await Promise.all([title.boundingBox(), desktopMark.boundingBox()])
+    if (!titleBox || !markBox) throw new Error('no box')
+
+    // Side-by-side, not stacked: the mark starts to the right of the title's
+    // own box, and the two boxes share some vertical range rather than one
+    // sitting entirely above or below the other.
+    expect(markBox.x).toBeGreaterThan(titleBox.x + titleBox.width)
+    const overlap = Math.min(titleBox.y + titleBox.height, markBox.y + markBox.height) - Math.max(titleBox.y, markBox.y)
+    expect(overlap).toBeGreaterThan(0)
+  })
+
+  test('the desktop mark and the mobile cropped viewport swap on resize', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 })
+    await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
+    const marks = page.locator('[data-doodle="xiaohei-article-ten-months-of-svelte-5"]')
+    await expect(marks).toHaveCount(2)
+    // Source order: the desktop instance (hidden below lg) comes first, then
+    // the mobile cropped-viewport instance (hidden at lg and up).
+    await expect(marks.nth(0)).toBeHidden()
+    await expect(marks.nth(1)).toBeVisible()
+
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await expect(marks.nth(0)).toBeVisible()
+    await expect(marks.nth(1)).toBeHidden()
+  })
+
+  test('the illustration is present in both light and dark theme without erroring', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => errors.push(err.message))
+
+    await page.goto(`${BASE}/blog/who-checks-the-agents-tests`)
+    const marks = page.locator('[data-doodle="xiaohei-article-who-checks-the-agents-tests"]')
+
+    await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
+    await expect(marks).toHaveCount(2)
+
+    await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'))
+    await expect(marks).toHaveCount(2)
+
+    expect(errors).toEqual([])
+  })
+})
