@@ -9,9 +9,16 @@ test.describe('homepage sections', () => {
     }
   })
 
-  test('lists six services', async ({ page }) => {
+  test('lists six services, each with an icon', async ({ page }) => {
     await page.goto(`${BASE}/`)
     await expect(page.locator('[data-service]')).toHaveCount(6)
+    await expect(page.locator('[data-service] [data-doodle]')).toHaveCount(6)
+  })
+
+  test('renders the about and contact mascots', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    await expect(page.locator('[data-about] [data-doodle="xiaohei-about"]')).toHaveCount(1)
+    await expect(page.locator('[data-contact] [data-doodle="xiaohei-contact"]')).toHaveCount(1)
   })
 
   test('teases at most three posts and links to the full index', async ({ page }) => {
@@ -100,43 +107,61 @@ test.describe('homepage sections', () => {
   })
 })
 
-test.describe('hero landscape', () => {
-  test('shows the simplified band on mobile and the full one on desktop', async ({ page }) => {
+test.describe('hero mascot', () => {
+  test('shows the cropped mobile viewport and the full illustration on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 })
     await page.goto(`${BASE}/`)
-    await expect(page.locator('[data-landscape-variant="mobile"]')).toBeVisible()
-    await expect(page.locator('[data-landscape-variant="desktop"]')).toBeHidden()
+    // The same xiaohei-hero doodle renders twice: the full illustration
+    // (hidden below lg) and a cropped "viewport" onto it (hidden at lg and
+    // up). Order matches the source, desktop instance first.
+    const hero = page.locator('[data-hero] [data-doodle="xiaohei-hero"]')
+    await expect(hero).toHaveCount(2)
+    await expect(hero.nth(0)).toBeHidden()
+    await expect(hero.nth(1)).toBeVisible()
 
     await page.setViewportSize({ width: 1280, height: 900 })
-    await expect(page.locator('[data-landscape-variant="desktop"]')).toBeVisible()
-    await expect(page.locator('[data-landscape-variant="mobile"]')).toBeHidden()
+    await expect(hero.nth(0)).toBeVisible()
+    await expect(hero.nth(1)).toBeHidden()
   })
 
-  // Step 6 addresses these three regions by name. Renaming one would break the
-  // Living Canvas silently, because a missing hotspot simply never reacts.
-  test('keeps the three named hotspots in both compositions', async ({ page }) => {
+  test('shows the developer tag pill above the headline', async ({ page }) => {
     await page.goto(`${BASE}/`)
+    await expect(page.locator('[data-hero]').getByText('01 / Freelance software engineer')).toBeVisible()
+  })
+
+  test('doodles are decorative, so assistive technology skips them', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    const doodles = page.locator('[data-doodle]')
+    expect(await doodles.count()).toBeGreaterThan(0)
+    const allHidden = await doodles.evaluateAll((els) => els.every((el) => el.getAttribute('aria-hidden') === 'true'))
+    expect(allHidden).toBe(true)
+  })
+})
+
+// Step 1 retired the Living Canvas (the hero drawing surface and its
+// water/sun/plant hotspots). This guards the removal itself, not only the
+// replacement above, so a stray re-import cannot bring the markup back
+// without any assertion here catching it.
+test.describe('the retired Living Canvas stays gone', () => {
+  test('none of its markup is on the page', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    await expect(page.locator('[data-landscape]')).toHaveCount(0)
+    await expect(page.locator('[data-landscape-variant]')).toHaveCount(0)
+    await expect(page.locator('[data-draw-mode]')).toHaveCount(0)
+    await expect(page.locator('[data-draw-hint]')).toHaveCount(0)
     for (const id of ['water', 'sun', 'plant']) {
-      await expect(page.locator(`[data-landscape-variant="desktop"] #${id}`)).toHaveCount(1)
+      await expect(page.locator(`#${id}`)).toHaveCount(0)
     }
-    for (const id of ['water', 'sun']) {
-      await expect(page.locator(`[data-landscape-variant="mobile"] #${id}`)).toHaveCount(1)
-    }
-  })
-
-  test('is decorative, so assistive technology skips it', async ({ page }) => {
-    await page.goto(`${BASE}/`)
-    await expect(page.locator('[data-landscape]')).toHaveAttribute('aria-hidden', 'true')
   })
 })
 
 test.describe('the galaxy left the front door', () => {
   test('the homepage runs no WebGL canvas', async ({ page }) => {
     await page.goto(`${BASE}/`)
-    // The Living Canvas is a 2D canvas and belongs here. The galaxy is the one
-    // that left, so name it rather than counting canvases.
-    await expect(page.locator('canvas#galaxy')).toHaveCount(0)
-    await expect(page.locator('canvas:not([data-draw-canvas])')).toHaveCount(0)
+    // The galaxy left in step 5; the Living Canvas's own 2D <canvas> was
+    // retired in step 1. Both are gone now, so this is a plain count, not a
+    // name-by-name exclusion.
+    await expect(page.locator('canvas')).toHaveCount(0)
   })
 
   test('the galaxy still runs on its lab route', async ({ page }) => {
