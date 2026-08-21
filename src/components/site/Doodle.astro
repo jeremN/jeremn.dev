@@ -6,9 +6,9 @@
 // newer Xiaohei character set (the other svc-* icons, plus xiaohei-*) is
 // multi-tone: it still uses currentColor for ink outlines, but mixes in
 // literal hex accents for colours that do not need to invert, the
-// var(--color-surface) token for paper and highlight fills, and two
-// dedicated tokens (--color-xiaohei-navy, --color-xiaohei-code-navy) for
-// accents that do.
+// var(--color-surface) token for paper and highlight fills, and three
+// dedicated tokens (--color-xiaohei-navy, --color-xiaohei-code-navy,
+// --color-xiaohei-sky) for accents that do.
 //
 // Astro's SVG components are static imports, so the whole set is named here
 // rather than resolved from a path at runtime.
@@ -40,6 +40,14 @@ import XiaoheiWritingCubes from '../../assets/doodles/xiaohei-writing-cubes.svg'
 import XiaoheiWritingGrid from '../../assets/doodles/xiaohei-writing-grid.svg'
 import XiaoheiWritingBraces from '../../assets/doodles/xiaohei-writing-braces.svg'
 import XiaoheiWritingServer from '../../assets/doodles/xiaohei-writing-server.svg'
+import XiaoheiArticleTenMonthsOfSvelte5 from '../../assets/doodles/xiaohei-article-ten-months-of-svelte-5.svg'
+import XiaoheiArticleRenovatePartOne from '../../assets/doodles/xiaohei-article-renovate-part-one.svg'
+import XiaoheiArticleRenovatePartTwo from '../../assets/doodles/xiaohei-article-renovate-part-two.svg'
+import XiaoheiArticleRenovatePartThree from '../../assets/doodles/xiaohei-article-renovate-part-three.svg'
+import XiaoheiArticleRenovatePartFour from '../../assets/doodles/xiaohei-article-renovate-part-four.svg'
+import XiaoheiArticleBestModelStillNeedsRules from '../../assets/doodles/xiaohei-article-best-model-still-needs-rules.svg'
+import XiaoheiArticleWhoChecksTheAgentsTests from '../../assets/doodles/xiaohei-article-who-checks-the-agents-tests.svg'
+import XiaoheiArticleStrykerOnASvelteMonorepo from '../../assets/doodles/xiaohei-article-stryker-on-a-svelte-monorepo.svg'
 
 const DOODLES = {
   braces: Braces,
@@ -70,6 +78,14 @@ const DOODLES = {
   'xiaohei-writing-grid': XiaoheiWritingGrid,
   'xiaohei-writing-braces': XiaoheiWritingBraces,
   'xiaohei-writing-server': XiaoheiWritingServer,
+  'xiaohei-article-ten-months-of-svelte-5': XiaoheiArticleTenMonthsOfSvelte5,
+  'xiaohei-article-renovate-part-one': XiaoheiArticleRenovatePartOne,
+  'xiaohei-article-renovate-part-two': XiaoheiArticleRenovatePartTwo,
+  'xiaohei-article-renovate-part-three': XiaoheiArticleRenovatePartThree,
+  'xiaohei-article-renovate-part-four': XiaoheiArticleRenovatePartFour,
+  'xiaohei-article-best-model-still-needs-rules': XiaoheiArticleBestModelStillNeedsRules,
+  'xiaohei-article-who-checks-the-agents-tests': XiaoheiArticleWhoChecksTheAgentsTests,
+  'xiaohei-article-stryker-on-a-svelte-monorepo': XiaoheiArticleStrykerOnASvelteMonorepo,
 } as const
 
 export type DoodleName = keyof typeof DOODLES
