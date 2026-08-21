@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42 42">
+  <g transform="translate(4.00001 4) scale(1.14449 1.14449)">
+    <path d="M11.62564 9.33474c1.32642-0.91192 1.74094-1.65803 1.74094-3.06735 0.08289-2.15544-2.56995-6.79793-7.79276-6.21762-3.64767 0.49741-5.8031 3.15026-5.55441 6.63212 0.24872 2.48705 2.15546 4.06218 2.90155 4.39379-0.41449 1.74093-0.16577 4.14508-1.16061 8.37305-0.1658 2.48705 2.90155 2.40414 4.14508 0.08291l2.90155-0.33161c0.41452 2.65285 3.31607 2.98446 3.64767-0.24871 0.24872-2.07254 1.49225-4.14508 0.58032-5.886 1.98962-0.41451 4.31085-1.98964 4.3938-3.39897-0.24872-2.07254-3.81348-0.33161-5.80313-0.33161z" fill="currentColor"/>
+  </g>
+  <g transform="translate(11.897 10.224) scale(1 1)">
+    <path d="M0 0.1658l0.24869 0.41451 0.41452 0 0.08288-0.58031-0.74609 0.1658z" fill="none" stroke="var(--color-surface)" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(14.174 9.94) scale(1.14454 1.1446)">
+    <path d="M0 0.41451l0 0.3316 1.4093-0.49741-0.16577-0.2487-1.24353 0.41451z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(16.262 8.611) scale(1.14474 1.14473)">
+    <path d="M0 0.49741l0.08292 0.33161 0.74609 0 0-0.58032-0.3316-0.2487-0.49741 0.49741z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(19.95001 5.153) scale(1.1445 1.14453)">
+    <path d="M8.21786 4.67993c-4.31085 0.33161-8.45593-0.82902-8.20721-2.40414 0-1.74093 15.33679-4.14508 15.75128 0.0829 0.3316 2.73575-8.45596 3.89637-7.54406 3.64767-4.72534 0.2487-8.20721-1.16062-8.20722-1.90674" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(19.867 8.137) scale(1.14448 1.14447)">
+    <path d="M15.8342 0l0 10.2798c-1.82385 2.73575-11.2746 3.31606-15.8342 1.32642l0-1.49223m3.06735-2.40415c2.65283 0.58031 10.94299 0.41451 12.51813-1.74093" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(31.822 8.137) scale(1.1444 1.14467)">
+    <path d="M0 1.57513c1.82385-0.1658 3.64767-0.82902 3.89636-1.57513" fill="none" stroke="#E69C56" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(22.809 5.765) scale(1.14453 1)">
+    <path d="M0 0.49741c0.74612-0.2487 1.98965-0.41451 2.81863-0.49741" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(20.342 20.282) scale(1.14448 1.14422)">
+    <path d="M0 0c1.82382 1.07772 5.96887 1.16062 7.54404 1.16062" fill="none" stroke="#5089AE" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(32.297 19.143) scale(1.14449 1.14433)">
+    <path d="M0 1.24352c0.82901-0.1658 3.56476-0.82902 4.14508-1.24352" fill="none" stroke="#508AB3" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(33.245 13.64) scale(1.14448 1)">
+    <path d="M0 0.66321c0.74609 0 2.48706-0.49741 2.73575-0.66321" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(32.297 21.989) scale(1.14453 1.14421)">
+    <path d="M0 1.74094c1.98962-0.16581 4.14508-0.66321 4.97409-1.74094" fill="none" stroke="#5185AF" stroke-width="1" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+</svg>
