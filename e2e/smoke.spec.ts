@@ -6,9 +6,10 @@ const ORIGIN = 'http://localhost:4321'
 test('home renders the v2 hero', async ({ page }) => {
   await page.goto(`${BASE}/`)
   await expect(page.getByRole('heading', { name: /I build web apps for the real world/ })).toBeVisible()
-  // The galaxy left the homepage in step 5. Assert it is gone, so a stray
-  // re-import cannot put a WebGL loop back on the front door unnoticed.
-  await expect(page.locator('canvas#galaxy')).toHaveCount(0)
+  // The galaxy left the homepage in step 5, and the Living Canvas (the
+  // earlier hero drawing surface) was retired in step 1. Assert no canvas at
+  // all, so a stray re-import cannot put either one back unnoticed.
+  await expect(page.locator('canvas')).toHaveCount(0)
 })
 
 // Guards the markdown pipeline: `rehype-sanitize` runs AFTER Shiki, and the default
