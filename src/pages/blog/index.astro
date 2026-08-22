@@ -28,9 +28,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
         <h1 class="mt-8 max-w-[14ch] font-display text-5xl font-medium leading-[0.98] tracking-tight text-ink sm:mt-12 sm:text-7xl lg:text-8xl">
           Notes from the <span class="relative inline-block italic">
             workbench.
-            {/* The validated mobile design leaves the italic word bare: the
-                hand-drawn underline is a desktop-only flourish. */}
-            <Underline class="absolute -bottom-1 left-0 hidden w-full text-accent lg:block" />
+            <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
           </span>
         </h1>
 
@@ -41,20 +39,10 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
 
       <Doodle name="xiaohei-writing-header" class="hidden shrink-0 text-ink lg:block lg:h-[25rem] lg:w-[19.875rem]" />
 
-      {/* The validated mobile design shows a cropped "viewport" window onto
-          the workbench illustration (the same scene as the footer mark
-          below), not the telescope scene used above, and not that artwork
-          shrunk down either: the desktop header stays hidden below lg, and
-          this cropped footer illustration takes over below lg. The crop
-          percentages are sized off xiaohei-writing-footer's own 992x339
-          viewBox, not reused from the home hero's crop (a different source
-          image at a different aspect ratio). */}
-      <div class="relative aspect-[7/5] overflow-hidden lg:hidden">
-        <Doodle
-          name="xiaohei-writing-footer"
-          class="absolute left-[-90.57%] top-[-18.4%] h-[135.6%] w-[283.43%] text-ink"
-        />
-      </div>
+      <Doodle
+        name="xiaohei-writing-header"
+        class="mx-auto aspect-[318/400] w-full max-w-[280px] text-ink lg:hidden"
+      />
     </div>
 
     {tags.length > 0 && (
