@@ -35,8 +35,9 @@ export function illustrationForSlug(slug: string): DoodleName | undefined {
 // fragment from the far edge poke into frame. Each override below is the
 // `left` percentage (see the default's -64.61% in the template) that slides
 // the crop window until that post's subject sits inside it. Derived from
-// each SVG's own path geometry, not eyeballed: see task-2-report.md's
-// "Fix round 1" section for the coordinates behind each value.
+// each SVG's own path geometry, not eyeballed: the visible window is
+// 429.3 source px wide (984 / 2.2921), so `left` ranges from 0% (flush
+// left) to -129.21% (flush right) before it runs past the artwork.
 const MOBILE_CROP_OFFSET: Partial<Record<string, string>> = {
   'stryker-on-a-svelte-monorepo': '-61.89%',
   'best-model-still-needs-rules': '-123.62%',

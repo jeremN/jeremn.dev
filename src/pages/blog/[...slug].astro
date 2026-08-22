@@ -32,7 +32,7 @@ const showToc = toc.length >= 2
 const illustration = illustrationForSlug(post.id)
 // Most posts' mobile crop uses the shared -64.61% default (see the Doodle
 // below); a few need their own horizontal window so their subject doesn't
-// land outside it (see the lib for why, and task-2-report.md for the math).
+// land outside it — see the lib for why and for the math behind each value.
 const mobileCropOffset = mobileCropOffsetForSlug(post.id)
 ---
 <Layout title={`${post.data.title} · jeremn.dev`} description={post.data.summary}>
