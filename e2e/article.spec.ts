@@ -109,19 +109,29 @@ test.describe('article illustration', () => {
     expect(overlap).toBeGreaterThan(0)
   })
 
-  test('the desktop mark and the mobile cropped viewport swap on resize', async ({ page }) => {
+  test('the desktop mark and the full-bleed mobile mark swap on resize', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 })
     await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
     const marks = page.locator('[data-doodle="xiaohei-article-ten-months-of-svelte-5"]')
     await expect(marks).toHaveCount(2)
     // Source order: the desktop instance (hidden below lg) comes first, then
-    // the mobile cropped-viewport instance (hidden at lg and up).
+    // the full-bleed mobile instance (hidden at lg and up).
     await expect(marks.nth(0)).toBeHidden()
     await expect(marks.nth(1)).toBeVisible()
 
     await page.setViewportSize({ width: 1280, height: 900 })
     await expect(marks.nth(0)).toBeVisible()
     await expect(marks.nth(1)).toBeHidden()
+  })
+
+  test('the mobile illustration reaches both edges of the viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 })
+    await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
+    const mark = page.locator('[data-doodle="xiaohei-article-ten-months-of-svelte-5"]').nth(1)
+    const box = await mark.boundingBox()
+    if (!box) throw new Error('no box')
+    expect(box.x).toBeLessThanOrEqual(1)
+    expect(box.x + box.width).toBeGreaterThanOrEqual(389)
   })
 
   test('the illustration is present in both light and dark theme without erroring', async ({ page }) => {

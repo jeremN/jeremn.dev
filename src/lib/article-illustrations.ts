@@ -27,24 +27,27 @@ export function illustrationForSlug(slug: string): DoodleName | undefined {
   return BY_SLUG[slug]
 }
 
-// The mobile crop (see [...slug].astro) center-crops every 984x540
-// illustration to the same horizontal window by default. That default reads
-// fine when a post's subject sits near the source's own horizontal center,
-// but three posts draw their subject far enough off-center that the default
-// window either cuts it out entirely or lets an unrelated, disconnected
-// fragment from the far edge poke into frame. Each override below is the
-// `left` percentage (see the default's -64.61% in the template) that slides
-// the crop window until that post's subject sits inside it. Derived from
-// each SVG's own path geometry, not eyeballed: the visible window is
-// 429.3 source px wide (984 / 2.2921), so `left` ranges from 0% (flush
-// left) to -129.21% (flush right) before it runs past the artwork.
-const MOBILE_CROP_OFFSET: Partial<Record<string, string>> = {
-  'stryker-on-a-svelte-monorepo': '-61.89%',
-  'best-model-still-needs-rules': '-123.62%',
-  'two-years-of-renovate-part-two': '0%',
+// Each illustration's own tight ink bounding box (each SVG's viewBox is
+// cropped to it, plus a small margin), as a `width / height` pair for the
+// CSS `aspect-ratio` property. Every source canvas started at a shared
+// 984x540, but the actual drawing occupies a different region and scale in
+// each one, so unlike Writing's row marks there is no single shared ratio:
+// showing the full illustration at its own ratio (rather than force-fitting
+// a shared crop window, which used to slice most of the width off and, for
+// the sparser compositions, still leave dead vertical space around the
+// subject) is what removes both problems at once.
+const ASPECT_BY_SLUG: Record<string, string> = {
+  'ten-months-of-svelte-5': '919.91 / 260.05',
+  'two-years-of-renovate-part-one': '553.83 / 477.66',
+  'two-years-of-renovate-part-two': '918.47 / 540.75',
+  'two-years-of-renovate-part-three': '903.42 / 368.02',
+  'two-years-of-renovate-part-four': '490.76 / 381.41',
+  'best-model-still-needs-rules': '927.70 / 455.35',
+  'who-checks-the-agents-tests': '870.16 / 228.36',
+  'stryker-on-a-svelte-monorepo': '801.51 / 411.07',
 }
 
-/** Mobile-crop `left` offset for a post slug, or the shared default. */
-export function mobileCropOffsetForSlug(slug: string): string {
-  return MOBILE_CROP_OFFSET[slug] ?? '-64.61%'
+/** CSS `aspect-ratio` value for a post's illustration, or `undefined` if it has none. */
+export function articleAspectForSlug(slug: string): string | undefined {
+  return ASPECT_BY_SLUG[slug]
 }

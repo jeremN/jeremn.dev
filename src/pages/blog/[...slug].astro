@@ -5,7 +5,7 @@ import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
 import Underline from '../../components/site/Underline.astro'
 import Doodle from '../../components/site/Doodle.astro'
-import { illustrationForSlug, mobileCropOffsetForSlug } from '../../lib/article-illustrations'
+import { illustrationForSlug, articleAspectForSlug } from '../../lib/article-illustrations'
 
 export async function getStaticPaths() {
   const posts = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).sort(
@@ -30,10 +30,9 @@ const showToc = toc.length >= 2
 // Curated, not exhaustive: only some posts have a drawn illustration yet, and
 // there is no reasonable fallback for the ones that don't (see the lib for why).
 const illustration = illustrationForSlug(post.id)
-// Most posts' mobile crop uses the shared -64.61% default (see the Doodle
-// below); a few need their own horizontal window so their subject doesn't
-// land outside it — see the lib for why and for the math behind each value.
-const mobileCropOffset = mobileCropOffsetForSlug(post.id)
+// Each illustration keeps its own tight aspect ratio rather than a shared
+// one — see the lib for why.
+const illustrationAspect = articleAspectForSlug(post.id)
 ---
 <Layout title={`${post.data.title} · jeremn.dev`} description={post.data.summary} hideFooterCta>
   <main
@@ -96,26 +95,21 @@ const mobileCropOffset = mobileCropOffsetForSlug(post.id)
         {/* Smaller than Home's hero doodle on purpose: the article column
             tops out at 68ch (this page's typographic measure), far narrower
             than Home's 1440px section, so a hero-sized mark here would crush
-            the title column into single-word-per-line wrapping. Sized to
-            preserve the source's 984x540 (~1.82:1) aspect ratio. */}
+            the title column into single-word-per-line wrapping. Fixed box,
+            same for every post: each illustration's own aspect ratio now
+            varies a lot (see the lib), so letting width follow height here
+            the way mobile does would blow this box out to 500px+ for the
+            widest ones and crush the title column into vertical text. The
+            default xMidYMid-meet letterboxes instead — never crops. */}
         {illustration && (
           <Doodle name={illustration} class="hidden shrink-0 text-ink lg:block lg:h-[9.5rem] lg:w-[17.3rem]" />
         )}
 
-        {/* Same cropped-viewport idiom as Home's hero and Writing's header: an
-            overflow-hidden box at the mobile slot's own aspect ratio, with the
-            (landscape, 984x540) illustration scaled up to fill it height-first,
-            so the visible slice has no letterboxing. The horizontal offset
-            defaults to dead-center (-64.61%) but is overridden per slug where
-            that center-crop misses the subject — see mobileCropOffsetForSlug. */}
+        {/* Full-bleed on mobile: -mx-6 cancels the main's own px-6 so the
+            illustration reaches both edges instead of sitting inset with the
+            rest of the column. */}
         {illustration && (
-          <div class="relative aspect-[318/400] overflow-hidden lg:hidden">
-            <Doodle
-              name={illustration}
-              class="absolute top-0 h-full w-[229.21%] text-ink"
-              style={`left: ${mobileCropOffset}`}
-            />
-          </div>
+          <Doodle name={illustration} class="-mx-6 text-ink lg:hidden" style={`aspect-ratio: ${illustrationAspect}`} />
         )}
       </div>
 
