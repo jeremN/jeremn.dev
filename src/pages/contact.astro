@@ -45,7 +45,7 @@ const routes = [
         </p>
       </div>
 
-      <Doodle name="xiaohei-contact-signal" class="hidden shrink-0 text-ink lg:block lg:aspect-[380/340] lg:h-72" />
+      <Doodle name="xiaohei-contact-signal" class="hidden shrink-0 text-ink lg:block lg:h-[22rem] lg:w-[24.6rem]" />
 
       {/* Mobile shows a small symmetric "full-bleed" crop of the same
           illustration rather than the desktop's uncropped size: the comp's
@@ -79,15 +79,15 @@ const routes = [
 
     <section class="mt-16">
       <ul class="border-t border-line">
-        <li class="flex items-center gap-4 border-b border-line py-5">
+        <li class="grid grid-cols-[1.25rem_1fr] items-start gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[1.25rem_10rem_1fr] sm:items-center sm:gap-y-0">
           <Doodle name="icon-map-pin" class="h-5 w-5 shrink-0 text-muted" />
-          <span class="font-mono text-[11px] uppercase tracking-wider text-muted">Based In</span>
-          <span class="ml-auto font-sans text-sm text-ink">{profile.location}</span>
+          <span class="col-start-2 font-mono text-[11px] uppercase tracking-wider text-muted">Based In</span>
+          <span class="col-start-2 font-sans text-sm text-ink sm:col-start-3">{profile.location}</span>
         </li>
-        <li class="flex items-center gap-4 border-b border-line py-5">
+        <li class="grid grid-cols-[1.25rem_1fr] items-start gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[1.25rem_10rem_1fr] sm:items-center sm:gap-y-0">
           <Doodle name="icon-radar" class="h-5 w-5 shrink-0 text-muted" />
-          <span class="font-mono text-[11px] uppercase tracking-wider text-muted">Working</span>
-          <span class="ml-auto font-sans text-sm text-ink">Remote friendly</span>
+          <span class="col-start-2 font-mono text-[11px] uppercase tracking-wider text-muted">Working</span>
+          <span class="col-start-2 font-sans text-sm text-ink sm:col-start-3">Remote friendly</span>
         </li>
       </ul>
     </section>
