@@ -30,7 +30,7 @@ test.describe('site header', () => {
 })
 
 test.describe('site footer', () => {
-  test('carries the three meta columns', async ({ page }) => {
+  test('carries the two meta columns', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const footer = page.locator('footer')
     await expect(footer).toContainText(`© ${new Date().getFullYear()} jeremn.dev`)
@@ -38,8 +38,16 @@ test.describe('site footer', () => {
     await expect(footer).toContainText('Remote friendly')
   })
 
-  test('carries one primary CTA', async ({ page }) => {
+  test('no longer carries a Freelance link', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
+    await expect(page.locator('footer a[href$="/freelance"]')).toHaveCount(0)
+  })
+
+  // Every real page now sets hideFooterCta (Home, Writing, About, CV, Contact,
+  // Freelance): the lab route is the one place left that still renders it, so
+  // it is what exercises this still-live code path.
+  test('carries one primary CTA where it still renders', async ({ page }) => {
+    await page.goto(`${BASE}/hero-lab`)
     // Step 4 repointed this from /freelance to /contact. Assert the heading,
     // not just any /contact link, or the nav link would satisfy it.
     const cta = page.locator('footer a:has(h2)')
@@ -55,14 +63,9 @@ test.describe('navigation after About and Contact ship', () => {
     expect(labels.map((l) => l.trim())).toEqual(['Writing', 'About', 'CV', 'Contact'])
   })
 
-  test('the footer CTA now leads to Contact', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
+  test('the footer CTA, where it still renders, leads to Contact', async ({ page }) => {
+    await page.goto(`${BASE}/hero-lab`)
     await expect(page.locator('footer a[href$="/contact"]')).toBeVisible()
-  })
-
-  test('freelance stays reachable from the footer', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
-    await expect(page.locator('footer a[href$="/freelance"]')).toBeVisible()
   })
 })
 
