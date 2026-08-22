@@ -35,7 +35,7 @@ const illustration = illustrationForSlug(post.id)
 // land outside it — see the lib for why and for the math behind each value.
 const mobileCropOffset = mobileCropOffsetForSlug(post.id)
 ---
-<Layout title={`${post.data.title} · jeremn.dev`} description={post.data.summary}>
+<Layout title={`${post.data.title} · jeremn.dev`} description={post.data.summary} hideFooterCta>
   <main
     class:list={[
       'relative z-10 mx-auto px-6 pb-24 pt-2',
