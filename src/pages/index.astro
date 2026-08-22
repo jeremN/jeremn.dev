@@ -68,8 +68,8 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
     </section>
 
     <section data-services class="mx-auto max-w-[1000px] px-6 pt-8 sm:pt-32">
-      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">What I do</h2>
-      <ul class="mt-10 grid grid-cols-2 gap-x-10 gap-y-12 lg:grid-cols-3">
+      <h2 class="border-t border-line pt-8 font-mono text-[11px] uppercase tracking-wider text-accent">What I do</h2>
+      <ul class="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-6 lg:gap-x-8">
         {services.map((s) => (
           <li data-service>
             <Doodle name={s.icon} class="h-10 w-10 text-ink" />
@@ -81,7 +81,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
     </section>
 
     <section data-writing class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
-      <div class="flex items-baseline justify-between gap-6">
+      <div class="flex items-baseline justify-between gap-6 border-t border-line pt-8">
         <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Selected writing</h2>
         <a href={withBase('/blog')} class="font-mono text-[11px] uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
           All notes →
@@ -89,11 +89,11 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
       </div>
 
       {posts.length === 0 ? (
-        <p class="mt-10 border-t border-line pt-10 max-w-[26ch] font-display text-2xl leading-tight text-ink">
+        <p class="mt-10 max-w-[26ch] font-display text-2xl leading-tight text-ink">
           Nothing published yet.
         </p>
       ) : (
-        <ul class="mt-10 border-t border-line">
+        <ul class="mt-10">
           {posts.map((p, i) => (
             <li>
               <PostRow
@@ -111,36 +111,40 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
       )}
     </section>
 
-    <section data-about class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
-      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">About</h2>
-      <div class="mt-10 flex flex-col items-start gap-8 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
-        <p class="max-w-[38ch] font-display text-2xl leading-snug text-ink sm:text-3xl">
-          I like software that makes sense. Simple systems, maintainable code, and features that
-          solve a real problem.
-        </p>
-        <Doodle name="xiaohei-about" class="h-32 w-32 shrink-0 text-ink" />
-      </div>
-      <a
-        href={withBase('/about')}
-        class="mt-8 inline-block font-mono text-[11px] uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70"
-      >
-        More about how I work →
-      </a>
-    </section>
+    <section class="mx-auto max-w-[1000px] px-6 pb-24 pt-24 sm:pt-32">
+      <div class="grid grid-cols-1 gap-16 border-t border-line pt-8 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
+        <div data-about class="lg:pr-10">
+          <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">About</h2>
+          <div class="mt-6 flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+            <p class="max-w-[32ch] font-sans text-sm leading-relaxed text-muted">
+              I like software that makes sense. Simple systems, maintainable code, and features that
+              solve a real problem.
+            </p>
+            <Doodle name="xiaohei-about" class="h-24 w-24 shrink-0 text-ink" />
+          </div>
+          <a
+            href={withBase('/about')}
+            class="mt-6 inline-block font-mono text-[11px] uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70"
+          >
+            More about how I work →
+          </a>
+        </div>
 
-    <section data-contact class="mx-auto max-w-[1000px] px-6 pb-24 pt-24 sm:pt-32">
-      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</h2>
-      <div class="mt-6 flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-        <a href={withBase('/contact')} class="block no-underline">
-          <span class="block font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
-            Work with me
-          </span>
-        </a>
-        <Doodle name="xiaohei-contact" class="h-24 w-36 shrink-0 text-ink" />
+        <div data-contact class="lg:pl-10">
+          <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</h2>
+          <p class="mt-6 max-w-[30ch] font-sans text-sm leading-relaxed text-muted">
+            Got a project in mind? Let's build something useful together.
+          </p>
+          <a
+            href={withBase('/contact')}
+            class="mt-6 inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
+          >
+            Let's talk
+            <span aria-hidden="true">→</span>
+          </a>
+          <Doodle name="xiaohei-contact" class="mt-6 h-20 w-32 shrink-0 text-ink" />
+        </div>
       </div>
-      <p class="mt-8 font-mono text-[11px] uppercase tracking-wider text-muted">
-        {profile.location} · Remote friendly
-      </p>
     </section>
   </main>
 </Layout>
