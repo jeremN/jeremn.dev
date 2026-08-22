@@ -8,14 +8,16 @@ const {
   noindex = false,
   hideFooterCta = false,
 } = Astro.props
-// Four primary destinations, matching the comp minus Stack (dropped: no page
-// backs it) and minus Services (a homepage section, not a route). /freelance
-// is not in the comp's nav; Contact now covers the same intent, so /freelance
-// stays reachable only by direct URL rather than through nav or footer.
+// Five primary destinations, matching the comp minus Stack (dropped: no page
+// backs it). Services now has its own route (the comp's header carries a
+// link for it), so it joins the nav. /freelance predates it and covers
+// overlapping ground; Contact covers the same intent, so /freelance stays
+// reachable only by direct URL rather than through nav or footer.
 const nav = [
   { href: '/blog', label: 'Writing' },
   { href: '/about', label: 'About' },
   { href: '/cv', label: 'CV' },
+  { href: '/services', label: 'Services' },
   { href: '/contact', label: 'Contact' },
 ]
 const year = new Date().getFullYear()
@@ -69,8 +71,11 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
         <a href={withBase('/')} class="whitespace-nowrap font-sans text-base font-bold tracking-tight text-ink no-underline sm:text-lg">
           jeremn<span class="text-accent">.</span>dev
         </a>
-        <div class="flex items-center gap-3 sm:gap-9">
-          <nav class="flex gap-3 sm:gap-8" aria-label="Main">
+        <div class="flex min-w-0 items-center gap-3 sm:gap-9">
+          <nav
+            class="flex min-w-0 gap-3 overflow-x-auto [scrollbar-width:none] sm:gap-8 [&::-webkit-scrollbar]:hidden"
+            aria-label="Main"
+          >
             {nav.map((n) => (
               <a href={withBase(n.href)} class="group whitespace-nowrap no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
                 <span class:list={['font-sans text-xs text-muted transition-colors group-hover:text-ink sm:text-sm', isActive(n.href) && '!text-ink']}>{n.label}</span>

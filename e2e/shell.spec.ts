@@ -57,10 +57,10 @@ test.describe('site footer', () => {
 })
 
 test.describe('navigation after About and Contact ship', () => {
-  test('carries the four primary destinations', async ({ page }) => {
+  test('carries the five primary destinations', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const labels = await page.locator('header nav a').allTextContents()
-    expect(labels.map((l) => l.trim())).toEqual(['Writing', 'About', 'CV', 'Contact'])
+    expect(labels.map((l) => l.trim())).toEqual(['Writing', 'About', 'CV', 'Services', 'Contact'])
   })
 
   test('the footer CTA, where it still renders, leads to Contact', async ({ page }) => {
