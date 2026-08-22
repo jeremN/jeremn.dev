@@ -16,6 +16,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
 <Layout
   title="Writing · jeremn.dev"
   description="Essays and notes by Jérémie Néhlil on web development, performance, and the tooling around it."
+  hideFooterCta
 >
   {/* The page grid is 1440, but the reading list keeps its own narrower column
       so the metadata stays beside the title instead of drifting to the screen
