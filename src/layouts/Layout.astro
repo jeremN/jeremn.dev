@@ -10,8 +10,8 @@ const {
 } = Astro.props
 // Four primary destinations, matching the comp minus Stack (dropped: no page
 // backs it) and minus Services (a homepage section, not a route). /freelance
-// is not in the comp's nav and Contact now covers the same intent, so it moves
-// to the footer rather than being orphaned.
+// is not in the comp's nav; Contact now covers the same intent, so /freelance
+// stays reachable only by direct URL rather than through nav or footer.
 const nav = [
   { href: '/blog', label: 'Writing' },
   { href: '/about', label: 'About' },
@@ -113,7 +113,6 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
           ]}
         >
           <span>© {year} jeremn.dev</span>
-          <a href={withBase('/freelance')} class="text-muted no-underline transition-colors hover:text-ink">Freelance</a>
           <span>Based in France</span>
           <span>Remote friendly</span>
         </div>
