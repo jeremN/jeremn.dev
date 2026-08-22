@@ -1,22 +1,21 @@
 ---
 // One entry point for every hand-drawn mark. Two illustration languages
-// coexist here. The original abstract line-doodle set (mark-*, plus
-// svc-performance) keeps currentColor strokes plus two named fills (butter
-// sun, lavender blob), so it is correct in any context by construction. The
-// newer Xiaohei character set (the other svc-* icons, plus xiaohei-*) is
-// multi-tone: it still uses currentColor for ink outlines, but mixes in
-// literal hex accents for colours that do not need to invert, the
-// var(--color-surface) token for paper and highlight fills, three
-// dedicated tokens (--color-xiaohei-navy, --color-xiaohei-code-navy,
-// --color-xiaohei-sky) for accents that do, and (xiaohei-about-hero only)
-// var(--color-ground) for cutout shapes (eyes, mouth, spout highlight) that
-// show the page background through the mascot's solid silhouette rather
-// than a paper/card surface. A third, small set (icon-*) covers bespoke
-// small UI marks generated fresh for the Contact page's channel row (mail,
-// GitHub, LinkedIn, map pin, radar) rather than extracted from a character
-// scene; like the original mark-* set these are currentColor-only, with no
-// per-theme colour variation, because they are plain iconography rather
-// than character art.
+// coexist here. The original abstract line-doodle set (mark-*) keeps
+// currentColor strokes plus two named fills (butter sun, lavender blob), so
+// it is correct in any context by construction. The newer Xiaohei character
+// set (every svc-* icon, plus xiaohei-*) is multi-tone: it still uses
+// currentColor for ink outlines, but mixes in literal hex accents for
+// colours that do not need to invert, the var(--color-surface) token for
+// paper and highlight fills, three dedicated tokens (--color-xiaohei-navy,
+// --color-xiaohei-code-navy, --color-xiaohei-sky) for accents that do, and
+// (xiaohei-about-hero only) var(--color-ground) for cutout shapes (eyes,
+// mouth, spout highlight) that show the page background through the
+// mascot's solid silhouette rather than a paper/card surface. A third,
+// small set (icon-*) covers bespoke small UI marks generated fresh for the
+// Contact page's channel row (mail, GitHub, LinkedIn, map pin, radar)
+// rather than extracted from a character scene; like the original mark-*
+// set these are currentColor-only, with no per-theme colour variation,
+// because they are plain iconography rather than character art.
 //
 // Astro's SVG components are static imports, so the whole set is named here
 // rather than resolved from a path at runtime.
