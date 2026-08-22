@@ -108,12 +108,13 @@ test.describe('homepage sections', () => {
 })
 
 test.describe('hero mascot', () => {
-  test('shows the cropped mobile viewport and the full illustration on desktop', async ({ page }) => {
+  test('shows the full illustration, uncropped, on both mobile and desktop', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 })
     await page.goto(`${BASE}/`)
-    // The same xiaohei-hero doodle renders twice: the full illustration
-    // (hidden below lg) and a cropped "viewport" onto it (hidden at lg and
-    // up). Order matches the source, desktop instance first.
+    // The same xiaohei-hero doodle renders twice, sized for its breakpoint:
+    // full illustration (hidden below lg) and a smaller full illustration
+    // (hidden at lg and up), never cropped. Order matches the source,
+    // desktop instance first.
     const hero = page.locator('[data-hero] [data-doodle="xiaohei-hero"]')
     await expect(hero).toHaveCount(2)
     await expect(hero.nth(0)).toBeHidden()
