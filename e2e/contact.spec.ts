@@ -59,26 +59,19 @@ test.describe('contact page', () => {
 })
 
 test.describe('contact page channel and meta icons', () => {
-  test('the Email, LinkedIn and GitHub rows each carry their own icon', async ({ page }) => {
+  test('every channel row carries its own icon', async ({ page }) => {
     await page.goto(`${BASE}/contact`)
     const mailRow = page.locator(`[data-routes] a[href="mailto:${EMAIL}"]`)
     await expect(mailRow.locator('[data-doodle="icon-mail"]')).toHaveCount(1)
+
+    const maltRow = page.locator(`[data-routes] a[href="${EXTERNAL[0]}"]`)
+    await expect(maltRow.locator('[data-doodle="icon-malt"]')).toHaveCount(1)
 
     const linkedinRow = page.locator(`[data-routes] a[href="${EXTERNAL[1]}"]`)
     await expect(linkedinRow.locator('[data-doodle="icon-linkedin"]')).toHaveCount(1)
 
     const githubRow = page.locator(`[data-routes] a[href="${EXTERNAL[2]}"]`)
     await expect(githubRow.locator('[data-doodle="icon-github"]')).toHaveCount(1)
-  })
-
-  // Task 1's Pencil generation failed 4 times for icon-malt: a disclosed,
-  // pre-approved gap. The Malt row renders text-only by design, not as a
-  // broken image reference, so this asserts the absence gracefully.
-  test('the Malt row has no icon, since icon-malt was never generated', async ({ page }) => {
-    await page.goto(`${BASE}/contact`)
-    const maltRow = page.locator(`[data-routes] a[href="${EXTERNAL[0]}"]`)
-    await expect(maltRow).toBeVisible()
-    await expect(maltRow.locator('[data-doodle]')).toHaveCount(0)
   })
 
   test('the Based In and Working meta rows each carry their own icon', async ({ page }) => {

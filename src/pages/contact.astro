@@ -7,11 +7,8 @@ import { profile, links } from '../lib/cv'
 
 // Routes come from cv.ts so /cv, /cv-print and this page cannot disagree.
 // Email leads, because it is the one row that carries the data-cta marker.
-// Malt's generated icon never produced usable art (see the Doodle.astro
-// extraction task), so it renders as a text-only row by design, not a
-// broken image reference.
 const routeIcons: Record<string, DoodleName | undefined> = {
-  Malt: undefined,
+  Malt: 'icon-malt',
   LinkedIn: 'icon-linkedin',
   GitHub: 'icon-github',
 }
