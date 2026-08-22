@@ -185,4 +185,70 @@ test.describe('about page illustration', () => {
       expect(ground, `${theme}: cutout vs mascot body`).not.toBe(body)
     }
   })
+
+  // The colour-token test above only checks that the cutout shapes carry the
+  // right fill/stroke *value* -- it says nothing about where those shapes
+  // actually sit. A uniform per-shape scale bug once shipped (fixed in this
+  // same commit) that left every shape's origin correct but its extent
+  // shrunk to ~59% of true size, which pushed a cutout entirely off the
+  // mascot's silhouette while the colour check kept passing. Guard the
+  // geometry itself: sample each cutout shape's bounding box on a 3x3 grid,
+  // map every sample point into the body path's own coordinate space via
+  // getScreenCTM (so this holds regardless of the SVG's viewBox, the g
+  // transforms baked in at extraction time, or the doodle wrapper's CSS
+  // size), and require most samples to land inside the body's fill via
+  // isPointInFill. A cutout that has drifted outside the silhouette --
+  // whole or in large part -- fails this before it ever reaches a screen.
+  test('the eyes, mouth and spout highlight sit inside the mascot silhouette, in both themes', async ({ page }) => {
+    await page.goto(`${BASE}/about`)
+    const mark = page.locator('[data-doodle="xiaohei-about-hero"]').first()
+
+    const readContainment = () =>
+      mark.evaluate((el) => {
+        const svg = el.querySelector('svg')
+        if (!svg) throw new Error('no svg')
+        const body = svg.querySelector('[fill="currentColor"]')
+        if (!(body instanceof SVGGeometryElement)) throw new Error('no body path')
+        const cutouts = [
+          ...svg.querySelectorAll('[fill="var(--color-ground)"], [stroke="var(--color-ground)"]'),
+        ].filter((n): n is SVGGraphicsElement => n instanceof SVGGraphicsElement)
+
+        const sampleGrid = (shape: SVGGraphicsElement, n = 3) => {
+          const b = shape.getBBox()
+          const points: DOMPointInit[] = []
+          for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+              points.push({ x: b.x + (b.width * (i + 0.5)) / n, y: b.y + (b.height * (j + 0.5)) / n })
+            }
+          }
+          return points
+        }
+        const toScreen = (shape: SVGGraphicsElement, local: DOMPointInit) => {
+          const ctm = shape.getScreenCTM()
+          if (!ctm) throw new Error('no screen CTM')
+          return new DOMPoint(local.x, local.y).matrixTransform(ctm)
+        }
+        const toLocal = (shape: SVGGraphicsElement, screen: DOMPoint) => {
+          const ctm = shape.getScreenCTM()
+          if (!ctm) throw new Error('no screen CTM')
+          return new DOMPoint(screen.x, screen.y).matrixTransform(ctm.inverse())
+        }
+
+        return cutouts.map((cutout) => {
+          const samples = sampleGrid(cutout)
+          const inside = samples.map((p) => body.isPointInFill(toLocal(body, toScreen(cutout, p))))
+          return inside.filter(Boolean).length / inside.length
+        })
+      })
+
+    for (const theme of ['light', 'dark'] as const) {
+      await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
+      const ratios = await readContainment()
+
+      expect(ratios.length, `${theme}: cutout shapes found`).toBeGreaterThan(0)
+      for (const ratio of ratios) {
+        expect(ratio, `${theme}: cutout mostly inside the mascot silhouette`).toBeGreaterThan(0.4)
+      }
+    }
+  })
 })
