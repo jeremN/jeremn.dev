@@ -60,16 +60,10 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
 
         <Doodle name="xiaohei-hero" class="hidden shrink-0 text-ink lg:block lg:h-[28rem] lg:w-[26rem]" />
 
-        {/* The validated mobile design shows a cropped "viewport" window onto
-            the same illustration, not the full artwork shrunk down: the
-            desktop version above stays hidden below lg, and this cropped
-            version takes over below lg. */}
-        <div class="relative aspect-[35/36] overflow-hidden lg:hidden">
-          <Doodle
-            name="xiaohei-hero"
-            class="absolute left-[-23.71%] top-[-25.56%] h-[155.56%] w-[149.71%] text-ink"
-          />
-        </div>
+        <Doodle
+          name="xiaohei-hero"
+          class="mx-auto aspect-[524/560] w-full max-w-[340px] text-ink lg:hidden"
+        />
       </div>
     </section>
 
