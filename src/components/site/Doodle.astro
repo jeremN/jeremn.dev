@@ -6,9 +6,12 @@
 // newer Xiaohei character set (the other svc-* icons, plus xiaohei-*) is
 // multi-tone: it still uses currentColor for ink outlines, but mixes in
 // literal hex accents for colours that do not need to invert, the
-// var(--color-surface) token for paper and highlight fills, and three
+// var(--color-surface) token for paper and highlight fills, three
 // dedicated tokens (--color-xiaohei-navy, --color-xiaohei-code-navy,
-// --color-xiaohei-sky) for accents that do.
+// --color-xiaohei-sky) for accents that do, and (xiaohei-about-hero only)
+// var(--color-ground) for cutout shapes (eyes, mouth, spout highlight) that
+// show the page background through the mascot's solid silhouette rather
+// than a paper/card surface.
 //
 // Astro's SVG components are static imports, so the whole set is named here
 // rather than resolved from a path at runtime.
@@ -28,6 +31,7 @@ import SvcFrontend from '../../assets/doodles/svc-frontend.svg'
 import SvcFullstack from '../../assets/doodles/svc-fullstack.svg'
 import XiaoheiHero from '../../assets/doodles/xiaohei-hero.svg'
 import XiaoheiAbout from '../../assets/doodles/xiaohei-about.svg'
+import XiaoheiAboutHero from '../../assets/doodles/xiaohei-about-hero.svg'
 import XiaoheiContact from '../../assets/doodles/xiaohei-contact.svg'
 import XiaoheiMarkCode from '../../assets/doodles/xiaohei-mark-code.svg'
 import XiaoheiMarkLock from '../../assets/doodles/xiaohei-mark-lock.svg'
@@ -66,6 +70,7 @@ const DOODLES = {
   'svc-fullstack': SvcFullstack,
   'xiaohei-hero': XiaoheiHero,
   'xiaohei-about': XiaoheiAbout,
+  'xiaohei-about-hero': XiaoheiAboutHero,
   'xiaohei-contact': XiaoheiContact,
   'xiaohei-mark-code': XiaoheiMarkCode,
   'xiaohei-mark-lock': XiaoheiMarkLock,

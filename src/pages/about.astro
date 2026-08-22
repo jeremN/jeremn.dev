@@ -28,24 +28,34 @@ const tools = stack.flatMap((group) => group.items)
   description="Jérémie Néhlil, senior fullstack JavaScript engineer based in France. How I work and what I care about."
 >
   <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
-    <span class="font-mono text-[11px] uppercase tracking-wider text-accent">03 / About</span>
+    <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+      <div class="min-w-0">
+        <span class="font-mono text-[11px] uppercase tracking-wider text-accent">03 / About</span>
 
-    <div class="mt-6 flex items-start justify-between gap-10">
-      <h1 class="max-w-[13ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
-        I like software that makes <span class="relative inline-block">
-          sense.
-          <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
-        </span>
-      </h1>
-      <Doodle name="braces" class="hidden h-11 w-16 shrink-0 text-muted sm:block" />
+        <h1 class="mt-6 max-w-[13ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
+          I like software that makes <span class="relative inline-block">
+            sense.
+            <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
+          </span>
+        </h1>
+
+        <p class="mt-8 max-w-[34ch] font-sans text-base leading-relaxed text-muted">
+          {profile.title}, based in France.
+        </p>
+      </div>
+
+      <Doodle name="xiaohei-about-hero" class="hidden shrink-0 text-ink lg:block lg:h-[22rem] lg:w-[17.3rem]" />
     </div>
 
-    <div class="mt-8 flex items-end justify-between gap-10">
-      <p class="max-w-[34ch] font-sans text-base leading-relaxed text-muted">
-        {profile.title}, based in France.
-      </p>
-      <Doodle name="plant" class="h-24 w-36 shrink-0 text-ink" />
-    </div>
+    {/* The comp's own mobile node order places the illustration as its own
+        full-width block between the hero text and the Care rows, not
+        cropped beside the title like Article's landscape sources: this is a
+        single portrait-ish 330x420 asset, shown near its own native size on
+        both breakpoints rather than a viewport crop. */}
+    <Doodle
+      name="xiaohei-about-hero"
+      class="mx-auto mt-10 aspect-[330/420] w-full max-w-[330px] text-ink lg:hidden"
+    />
 
     <section class="mt-24">
       <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">What I care about</h2>
