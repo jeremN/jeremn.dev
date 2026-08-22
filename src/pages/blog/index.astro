@@ -46,7 +46,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
     </div>
 
     {tags.length > 0 && (
-      <div class="mt-24 flex flex-wrap gap-x-5 gap-y-3 border-b border-line pb-8">
+      <div class="mt-16 flex flex-wrap gap-x-5 gap-y-3 border-b border-line pb-8 sm:mt-24">
         <button type="button" data-filter="*" aria-pressed="true" class="filter-tab">All</button>
         {tags.map((t) => (
           <button type="button" data-filter={t} aria-pressed="false" class="filter-tab">{t}</button>
