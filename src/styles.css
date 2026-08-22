@@ -35,6 +35,10 @@
      lighten to the same dark-mode value in the source design. */
   --color-xiaohei-navy: light-dark(#2a44aa, #8eacff);
   --color-xiaohei-code-navy: light-dark(#0f308a, #8eacff);
+  /* A third accent from the Article illustrations: a lighter sky blue, kept
+     apart from the two navies above because its source design lightens to a
+     different dark-mode value. */
+  --color-xiaohei-sky: light-dark(#5087af, #7fc3f1);
 
   /* Illustration stroke width. Light strokes on a dark ground optically bloom
      and read heavier at the same width, so dark draws them thinner. This is

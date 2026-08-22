@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 984 540">
+  <g transform="translate(79.99984 260.99898) scale(8.00002 7.99999)">
+    <path d="M2.74335 11.19307c-1.16064-0.49741-2.73578-2.07254-2.73578-4.97409-0.16577-2.56995 2.40417-6.30052 7.12958-6.21762 3.73053 0.1658 6.71503 3.73057 6.30047 6.88083l-0.33154 1.74093c1.0777-0.41451 2.56989-2.32124 4.14502-1.40933 1.16064 1.90673-2.65283 4.55959-3.06732 4.80829l0 0 0 0c0.16583 2.48705-0.3316 3.48187-0.41449 4.31088-0.58032 3.73057-0.99487 5.1399-2.40418 5.057-1.49225 0-1.49225-1.98963-1.82385-2.23834l-2.07251 0.1658-0.3316 0c-3.15027 3.39897-5.63733 2.15545-4.47669-0.82902 0.74609-3.15026 0.82904-3.56477 0.91193-4.72538l-0.49744 1.07772c0.41455 2.23834-2.8186 3.31606-3.06738 0.82901-0.08289-1.65803 1.40936-3.56477 2.73578-4.47668z" fill="currentColor"/>
+  </g>
+  <g transform="translate(149.698 304.782) scale(7.99973 7.99917)">
+    <path d="M0 0.2487l0 0.33161 1.32642-0.2487 0-0.33161-1.32642 0.2487z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(164.952 296.161) scale(7.99904 8.00005)">
+    <path d="M0.58032 0.41451l0 0.2487-0.58032 0.08291 0.16577-0.74612 0.41455 0.1658 0 0.24871z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(134.80215 307.435) scale(7.99881 7.99917)">
+    <path d="M0.45282 0c0 0.41451 0.16577 0.58031-0.24878 0.58031-0.41449 0-0.08289 0 0 0" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(137.76 307.435) scale(8.0014 7.99981)">
+    <path d="M0 0c0 0.33161 0.41449 0.1658 0 0.41451" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(188.10888 240.30299) scale(8.00004 7.99998)">
+    <path d="M1.83075 2.42263c-1.24353 1.07772-1.90674 2.98446-1.82379 4.89119m4.7254-7.12953c3.81348-0.91192 9.03626 1.65803 10.86011 5.5544 0.74609 3.48186-0.08295 7.46114-4.55963 9.20208-1.98962 0.74611-5.05701 0.91192-7.70984-0.58031" fill="none" stroke="currentColor" stroke-width="3.316" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(272.393 259.021) scale(8.00005 7.99995)">
+    <path d="M1.49219 1.24352c-0.3316-0.33161-0.66321-0.91192-1.49219-1.24352m2.56995 5.96891c0.33154-1.07772-0.3316-3.48186-0.7461-3.97927" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="2.985" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(256.476 320.036) scale(8.0001 7.99995)">
+    <path d="M4.55957 0c-0.66321 1.49223-1.98962 2.90155-3.39899 3.23316m-0.99481 0.1658l-0.16577 0.16581" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.368" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(190.818 235.808) scale(7.99997 8.00006)">
+    <path d="M3.64764 0c-1.65802 0.66321-2.90155 1.90674-3.64764 3.81347" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.015" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(288.973 241.114) scale(8 8.00028)">
+    <path d="M0 0c1.16064 0.58031 2.32129 1.74093 2.9845 2.81865" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.015" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(287.646 335.29) scale(7.99998 8.00012)">
+    <path d="M3.56476 0c-0.49744 1.57513-1.74097 3.06736-3.56476 3.73057" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.255" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(216.682 363.808) scale(8.00004 7.958)">
+    <path d="M0 0c1.24353 0.49741 1.98962 0.74612 3.81348 0.99482" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.316" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(447.42199 228.51301) scale(8 7.99998)">
+    <path d="M1.74091 19.06736l2.73577 0.99482 1.90674-1.07772 2.32123 0.99482 0.24872 1.82383 0.41449 0.58031 3.15027 0.0829 0.41449-0.2487 0.3316-1.98964 2.15546-0.82902 1.82379 1.16063 2.40417-2.23834-1.24353-1.98964 1.07776-2.73575 2.07251-0.24871 0.24872-0.2487 0.08289-3.31607-0.33161-0.49741-1.82385-0.2487-0.91187-2.65285 0.99482-1.82383-2.32123-2.32125-1.82385 0.99482-2.40418-0.99482-0.24866-1.98964-0.49743-0.2487-2.98444 0-0.41455 0.33161-0.3316 1.90673-2.56995 0.91192-1.74091-0.91192-2.56994 2.32125 1.24347 2.56994-1.24347 3.48187-1.74097 0.0829-0.16577 2.65285 1.82379 0.33161 1.07776 2.81865-1.16064 1.98964 0 0.58031z" fill="none" stroke="currentColor" stroke-width="2.88" stroke-linecap="butt" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(478.593 263.66301) scale(7.99996 8)">
+    <path d="M5.30573 4.31088l-2.73578-2.48704m1.65802 4.80828l-4.22797 0m2.56995 4.8083l2.15545-2.23835m2.1554 4.06218l0-3.23316m4.7254 1.65803l-2.56995-2.56995m4.47669-2.15544l-3.81348-0.1658m2.15546-4.47668l-2.40418 2.32124m-2.40411-4.64249l0 3.64767" fill="none" stroke="currentColor" stroke-width="2.862" stroke-linecap="butt" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(364.99982 259.37598) scale(8 8.00002)">
+    <path d="M2.84171 11.23019l0 0c-1.24353-0.74611-3.06738-3.06736-2.8187-5.3886 0.49741-4.80829 5.05698-6.46632 8.20725-5.63731 2.65289 0.66321 5.30572 2.98446 5.13989 6.46632-0.24866 1.82383-0.58026 1.57513-0.58026 1.82384l1.49218-0.74611c1.16065-0.74611 2.32123-0.33161 2.15546 1.07771-0.16577 1.49223-2.73578 3.23316-3.15027 3.39897 0.3316 2.23834-0.24872 3.89637-0.74609 7.70984-0.24872 1.90673-3.15027 2.15544-3.48187-0.49741l-2.40418 0.16581c-2.98444 3.73057-5.55438 1.82383-4.55957-0.82902 0.58032-2.48705 0.24872-5.3057 0.74616-7.54404z" fill="currentColor"/>
+  </g>
+  <g transform="translate(425.536 304.782) scale(5.969 5.969)">
+    <path d="M0 0l0.16583 0.66321 0.41449 0.0829 0.16577-0.58031-0.74609-0.1658z" fill="none" stroke="var(--color-surface)" stroke-width="3.64" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(444.77 304.782) scale(7.99952 8.00048)">
+    <path d="M0 0.33161l0 0.3316 0.91193-0.41451-0.08295-0.2487-0.82898 0.33161z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(450.075 296.824) scale(8.00019 8.00003)">
+    <path d="M0 0.66321l0.16577 0.49741 0.66321-0.49741-0.16577-0.66321-0.58032 0.1658-0.08289 0.49741z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(446.095 323.352) scale(8.00004 7.99985)">
+    <path d="M0 2.07254c1.32642-0.41451 3.64771-1.65803 3.81348-2.07254" fill="none" stroke="var(--color-surface)" stroke-width="3.64" stroke-linecap="butt" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(689.99984 260.99898) scale(8.00002 7.99999)">
+    <path d="M2.74335 11.19307c-1.16064-0.49741-2.73578-2.07254-2.73578-4.97409-0.16577-2.56995 2.40417-6.30052 7.12958-6.21762 3.73053 0.1658 6.71503 3.73057 6.30047 6.88083l-0.33154 1.74093c1.0777-0.41451 2.56989-2.32124 4.14502-1.40933 1.16064 1.90673-2.65283 4.55959-3.06732 4.80829l0 0 0 0c0.16583 2.48705-0.3316 3.48187-0.41449 4.31088-0.58032 3.73057-0.99487 5.1399-2.40418 5.057-1.49225 0-1.49225-1.98963-1.82385-2.23834l-2.07251 0.1658-0.3316 0c-3.15027 3.39897-5.63733 2.15545-4.47669-0.82902 0.74609-3.15026 0.82904-3.56477 0.91193-4.72538l-0.49744 1.07772c0.41455 2.23834-2.8186 3.31606-3.06738 0.82901-0.08289-1.65803 1.40936-3.56477 2.73578-4.47668z" fill="currentColor"/>
+  </g>
+  <g transform="translate(759.698 304.782) scale(7.99973 7.99917)">
+    <path d="M0 0.2487l0 0.33161 1.32642-0.2487 0-0.33161-1.32642 0.2487z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(774.952 296.161) scale(7.99904 8.00005)">
+    <path d="M0.58032 0.41451l0 0.2487-0.58032 0.08291 0.16577-0.74612 0.41455 0.1658 0 0.24871z" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(744.80215 307.435) scale(7.99881 7.99917)">
+    <path d="M0.45282 0c0 0.41451 0.16577 0.58031-0.24878 0.58031-0.41449 0-0.08289 0 0 0" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(747.76 307.435) scale(8.0014 7.99981)">
+    <path d="M0 0c0 0.33161 0.41449 0.1658 0 0.41451" fill="var(--color-surface)"/>
+  </g>
+  <g transform="translate(798.10888 240.30299) scale(8.00004 7.99998)">
+    <path d="M1.83075 2.42263c-1.24353 1.07772-1.90674 2.98446-1.82379 4.89119m4.7254-7.12953c3.81348-0.91192 9.03626 1.65803 10.86011 5.5544 0.74609 3.48186-0.08295 7.46114-4.55963 9.20208-1.98962 0.74611-5.05701 0.91192-7.70984-0.58031" fill="none" stroke="currentColor" stroke-width="3.316" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(882.393 259.021) scale(8.00005 7.99995)">
+    <path d="M1.49219 1.24352c-0.3316-0.33161-0.66321-0.91192-1.49219-1.24352m2.56995 5.96891c0.33154-1.07772-0.3316-3.48186-0.7461-3.97927" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="2.985" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(866.476 320.036) scale(8.0001 7.99995)">
+    <path d="M4.55957 0c-0.66321 1.49223-1.98962 2.90155-3.39899 3.23316m-0.99481 0.1658l-0.16577 0.16581" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.368" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(800.818 235.808) scale(7.99997 8.00006)">
+    <path d="M3.64764 0c-1.65802 0.66321-2.90155 1.90674-3.64764 3.81347" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.015" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(898.973 241.114) scale(8 8.00028)">
+    <path d="M0 0c1.16064 0.58031 2.32129 1.74093 2.9845 2.81865" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.015" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(897.646 335.29) scale(7.99998 8.00012)">
+    <path d="M3.56476 0c-0.49744 1.57513-1.74097 3.06736-3.56476 3.73057" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="4.255" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+  <g transform="translate(826.682 363.808) scale(8.00004 7.958)">
+    <path d="M0 0c1.24353 0.49741 1.98962 0.74612 3.81348 0.99482" fill="none" stroke="var(--color-xiaohei-sky)" stroke-width="3.316" stroke-linecap="round" stroke-linejoin="miter" vector-effect="non-scaling-stroke"/>
+  </g>
+</svg>
