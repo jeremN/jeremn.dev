@@ -2,16 +2,25 @@
 import Layout from '../layouts/Layout.astro'
 import Underline from '../components/site/Underline.astro'
 import Doodle from '../components/site/Doodle.astro'
+import type { DoodleName } from '../components/site/Doodle.astro'
 import { profile, links } from '../lib/cv'
 
 // Routes come from cv.ts so /cv, /cv-print and this page cannot disagree.
-// Email leads, because it is the one the CTA also uses.
+// Email leads, because it is the one row that carries the data-cta marker.
+// Malt's generated icon never produced usable art (see the Doodle.astro
+// extraction task), so it renders as a text-only row by design, not a
+// broken image reference.
+const routeIcons: Record<string, DoodleName | undefined> = {
+  Malt: undefined,
+  LinkedIn: 'icon-linkedin',
+  GitHub: 'icon-github',
+}
 const routes = [
-  { label: 'Email', href: `mailto:${profile.email}`, external: false },
+  { label: 'Email', href: `mailto:${profile.email}`, external: false, icon: 'icon-mail' as const },
   // Only the name is shown. A profile URL carries an encoded slug, and the
   // email address does not need printing next to a link that already sends
   // mail to it.
-  ...links.map((l) => ({ label: l.label, href: l.href, external: true })),
+  ...links.map((l) => ({ label: l.label, href: l.href, external: true, icon: routeIcons[l.label] })),
 ]
 ---
 <Layout
@@ -20,30 +29,35 @@ const routes = [
   hideFooterCta
 >
   <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
-    <span class="font-mono text-[11px] uppercase tracking-wider text-accent">05 / Let's talk</span>
+    <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+      <div class="min-w-0">
+        <span class="font-mono text-[11px] uppercase tracking-wider text-accent">05 / Let's talk</span>
 
-    <div class="mt-6 flex items-start justify-between gap-10">
-      <h1 class="max-w-[12ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
-        Have something in <span class="relative inline-block">
-          mind?
-          <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
-        </span>
-      </h1>
-      <Doodle name="plane" class="hidden h-20 w-40 shrink-0 self-center text-ink sm:block" />
+        <h1 class="mt-6 max-w-[12ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
+          Have something in <span class="relative inline-block">
+            mind?
+            <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
+          </span>
+        </h1>
+
+        <p class="mt-8 max-w-[38ch] font-sans text-base leading-relaxed text-muted">
+          Let's talk about what you are building and how I can help.
+        </p>
+      </div>
+
+      <Doodle name="xiaohei-contact-signal" class="hidden shrink-0 text-ink lg:block lg:h-[22rem] lg:w-[24.6rem]" />
+
+      {/* Mobile shows a small symmetric "full-bleed" crop of the same
+          illustration rather than the desktop's uncropped size: the comp's
+          own 350x320 viewport bleeds 15px/10px off every edge of the 380x340
+          scene, so nothing important (mascot, signal line, dot) is lost. */}
+      <div class="relative aspect-[350/320] overflow-hidden lg:hidden">
+        <Doodle
+          name="xiaohei-contact-signal"
+          class="absolute left-[-4.29%] top-[-3.13%] h-[106.25%] w-[108.57%] text-ink"
+        />
+      </div>
     </div>
-
-    <p class="mt-8 max-w-[38ch] font-sans text-base leading-relaxed text-muted">
-      Let's talk about what you are building and how I can help.
-    </p>
-
-    <a
-      data-cta
-      href={`mailto:${profile.email}`}
-      class="mt-10 inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
-    >
-      Let's talk
-      <span aria-hidden="true">→</span>
-    </a>
 
     <ul data-routes class="mt-20 border-t border-line">
       {routes.map((r) => (
@@ -52,17 +66,39 @@ const routes = [
             href={r.href}
             target={r.external ? '_blank' : undefined}
             rel={r.external ? 'noopener noreferrer' : undefined}
-            class="group grid grid-cols-[1fr_auto] items-baseline gap-x-6 border-b border-line py-5 no-underline"
+            data-cta={r.label === 'Email' ? true : undefined}
+            class="group grid grid-cols-[1.25rem_1fr_auto] items-center gap-x-4 border-b border-line py-5 no-underline"
           >
-            <span class="font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
+            {r.icon && <Doodle name={r.icon} class="h-5 w-5 text-muted transition-colors group-hover:text-accent" />}
+            <span class="col-start-2 font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
             {r.external && <span aria-hidden="true" class="font-mono text-[11px] text-muted">↗</span>}
           </a>
         </li>
       ))}
     </ul>
 
-    <p class="mt-16 font-mono text-[11px] uppercase tracking-wider text-muted">
-      {profile.location} · Remote friendly
-    </p>
+    <section class="mt-16">
+      <ul class="border-t border-line">
+        <li class="grid grid-cols-[1.25rem_1fr] items-start gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[1.25rem_10rem_1fr] sm:items-center sm:gap-y-0">
+          <Doodle name="icon-map-pin" class="h-5 w-5 shrink-0 text-muted" />
+          <span class="col-start-2 font-mono text-[11px] uppercase tracking-wider text-muted">Based In</span>
+          <span class="col-start-2 font-sans text-sm text-ink sm:col-start-3">{profile.location}</span>
+        </li>
+        <li class="grid grid-cols-[1.25rem_1fr] items-start gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[1.25rem_10rem_1fr] sm:items-center sm:gap-y-0">
+          <Doodle name="icon-radar" class="h-5 w-5 shrink-0 text-muted" />
+          <span class="col-start-2 font-mono text-[11px] uppercase tracking-wider text-muted">Working</span>
+          <span class="col-start-2 font-sans text-sm text-ink sm:col-start-3">Remote friendly</span>
+        </li>
+      </ul>
+    </section>
+
+    {/* Mobile-only per the comp: new marketing prose not sourced from
+        cv.ts, kept as a literal string rather than a single-use export. */}
+    <section class="mt-10 rounded-sm border border-line px-6 py-6 lg:hidden">
+      <span class="font-mono text-[11px] uppercase tracking-wider text-accent">CURRENT AVAILABILITY</span>
+      <p class="mt-3 font-sans text-sm leading-relaxed text-ink">
+        Open to useful products, focused collaborations, and thoughtful engineering work.
+      </p>
+    </section>
   </main>
 </Layout>

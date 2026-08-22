@@ -11,7 +11,12 @@
 // --color-xiaohei-sky) for accents that do, and (xiaohei-about-hero only)
 // var(--color-ground) for cutout shapes (eyes, mouth, spout highlight) that
 // show the page background through the mascot's solid silhouette rather
-// than a paper/card surface.
+// than a paper/card surface. A third, small set (icon-*) covers bespoke
+// small UI marks generated fresh for the Contact page's channel row (mail,
+// GitHub, LinkedIn, map pin, radar) rather than extracted from a character
+// scene; like the original mark-* set these are currentColor-only, with no
+// per-theme colour variation, because they are plain iconography rather
+// than character art.
 //
 // Astro's SVG components are static imports, so the whole set is named here
 // rather than resolved from a path at runtime.
@@ -52,6 +57,12 @@ import XiaoheiArticleRenovatePartFour from '../../assets/doodles/xiaohei-article
 import XiaoheiArticleBestModelStillNeedsRules from '../../assets/doodles/xiaohei-article-best-model-still-needs-rules.svg'
 import XiaoheiArticleWhoChecksTheAgentsTests from '../../assets/doodles/xiaohei-article-who-checks-the-agents-tests.svg'
 import XiaoheiArticleStrykerOnASvelteMonorepo from '../../assets/doodles/xiaohei-article-stryker-on-a-svelte-monorepo.svg'
+import XiaoheiContactSignal from '../../assets/doodles/xiaohei-contact-signal.svg'
+import IconMail from '../../assets/doodles/icon-mail.svg'
+import IconGithub from '../../assets/doodles/icon-github.svg'
+import IconLinkedin from '../../assets/doodles/icon-linkedin.svg'
+import IconMapPin from '../../assets/doodles/icon-map-pin.svg'
+import IconRadar from '../../assets/doodles/icon-radar.svg'
 
 const DOODLES = {
   braces: Braces,
@@ -91,6 +102,12 @@ const DOODLES = {
   'xiaohei-article-best-model-still-needs-rules': XiaoheiArticleBestModelStillNeedsRules,
   'xiaohei-article-who-checks-the-agents-tests': XiaoheiArticleWhoChecksTheAgentsTests,
   'xiaohei-article-stryker-on-a-svelte-monorepo': XiaoheiArticleStrykerOnASvelteMonorepo,
+  'xiaohei-contact-signal': XiaoheiContactSignal,
+  'icon-mail': IconMail,
+  'icon-github': IconGithub,
+  'icon-linkedin': IconLinkedin,
+  'icon-map-pin': IconMapPin,
+  'icon-radar': IconRadar,
 } as const
 
 export type DoodleName = keyof typeof DOODLES
