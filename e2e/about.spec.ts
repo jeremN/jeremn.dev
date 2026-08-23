@@ -48,6 +48,37 @@ test.describe('about page', () => {
   })
 })
 
+// The standalone /cv page retired in favour of this page: its intro, download
+// link, and location/languages line moved here rather than duplicating both
+// pages' pitches. See e2e/cv-print.spec.ts for the detailed job-history
+// coverage, which now lives only in the downloadable PDF.
+test.describe('about page, absorbing the CV intro', () => {
+  test('leads with the CV lead paragraph, not a shorter duplicate', async ({ page }) => {
+    await page.goto(`${BASE}/about`)
+    await expect(page.locator('main')).toContainText('Frontends in SvelteKit, Next.js, React and TanStack Start')
+  })
+
+  test('links to the downloadable PDF', async ({ page }) => {
+    await page.goto(`${BASE}/about`)
+    await expect(page.getByRole('link', { name: /Download CV/ })).toHaveAttribute('href', `${BASE}/cv.pdf`)
+  })
+
+  test('shows the location and languages line', async ({ page }) => {
+    await page.goto(`${BASE}/about`)
+    await expect(page.locator('main')).toContainText('Near Paris (Sorel-Moussel), France')
+    await expect(page.locator('main')).toContainText('French (native), English (professional)')
+  })
+
+  // Same rule the old standalone /cv page followed: a page a recruiter may
+  // share is the wrong place to publish the address. Email lives on /contact
+  // and /freelance only.
+  test('publishes no email address', async ({ page }) => {
+    await page.goto(`${BASE}/about`)
+    await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0)
+    await expect(page.locator('main')).not.toContainText('@proton.me')
+  })
+})
+
 test.describe('about page illustration', () => {
   test('renders once for desktop and once for mobile, both decorative', async ({ page }) => {
     await page.goto(`${BASE}/about`)

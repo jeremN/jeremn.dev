@@ -27,16 +27,18 @@ test('blog lists the published post', async ({ page }) => {
   await expect(page.getByRole('link', { name: /Ten months of Svelte 5/ })).toBeVisible()
 })
 
-// Guards the base prefix: with base misconfigured, links drop to '/cv' and the
+// Guards the base prefix: with base misconfigured, links drop to '/about' and the
 // active-state check (which compares a base-stripped route) stops matching.
 // Asserted via attributes rather than a click, which is how this was written
 // while the home page still ran a WebGL loop. It stays attribute-based: the
 // check is about the href the base produces, not about navigation.
 test('nav links carry the configured base and mark the active page', async ({ page }) => {
   await page.goto(`${BASE}/`)
-  await expect(page.getByRole('link', { name: 'CV' })).toHaveAttribute('href', `${BASE}/cv`)
+  // exact: true -- the homepage's About/Contact panel also links to /about
+  // with the text "More about how I work →", which contains "about" too.
+  await expect(page.getByRole('link', { name: 'About', exact: true })).toHaveAttribute('href', `${BASE}/about`)
 
-  await page.goto(`${BASE}/cv`)
-  await expect(page).toHaveURL(`${ORIGIN}${BASE}/cv`)
-  await expect(page.getByRole('link', { name: 'CV' })).toHaveAttribute('aria-current', 'page')
+  await page.goto(`${BASE}/about`)
+  await expect(page).toHaveURL(`${ORIGIN}${BASE}/about`)
+  await expect(page.getByRole('link', { name: 'About', exact: true })).toHaveAttribute('aria-current', 'page')
 })

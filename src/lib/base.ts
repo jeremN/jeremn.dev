@@ -5,7 +5,7 @@
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
-/** Prefix an absolute in-site path (e.g. '/cv') with the configured base. */
+/** Prefix an absolute in-site path (e.g. '/about') with the configured base. */
 export const withBase = (path: string): string => `${BASE}${path}`
 
 /** Strip the base off a runtime pathname, yielding the base-independent route. */

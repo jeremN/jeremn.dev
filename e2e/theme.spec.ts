@@ -82,7 +82,7 @@ const firstFont = (page: import('@playwright/test').Page, selector: string) =>
   }, selector)
 
 // Expected first font per page. Every page reads the same three global
-// tokens now: /cv and /freelance dropped the `.legacy` pin and joined v2.
+// tokens now: /freelance dropped the `.legacy` pin and joined v2.
 const FONT_CASES: Array<{
   path: string
   sans: string
@@ -90,7 +90,6 @@ const FONT_CASES: Array<{
   mono: string
 }> = [
   { path: '/blog', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable' },
-  { path: '/cv', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable' },
   { path: '/freelance', sans: 'Geist Variable', display: 'Newsreader Variable', mono: 'Geist Mono Variable' },
 ]
 
@@ -100,8 +99,8 @@ test.describe('every page resolves the v2 font tokens', () => {
       await page.goto(`${BASE}${path}`)
 
       // body carries no font-* utility. It inherits --font-sans through
-      // `body { font-family: var(--font-sans) }`. This guards that /cv and
-      // /freelance really joined v2, with no v1 face leaking back in.
+      // `body { font-family: var(--font-sans) }`. This guards that /freelance
+      // really joined v2, with no v1 face leaking back in.
       expect(await firstFont(page, 'body')).toBe(sans)
       expect(await firstFont(page, 'h1')).toBe(display) // --font-display
       expect(await firstFont(page, '.font-mono')).toBe(mono) // --font-mono

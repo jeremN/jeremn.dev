@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro'
 import Underline from '../components/site/Underline.astro'
 import Doodle from '../components/site/Doodle.astro'
 import { profile, stack } from '../lib/cv'
+import { withBase } from '../lib/base'
 
 // The four principles and the "Currently" rows are the design document's own
 // copy. They are the author's words, so they are reproduced rather than
@@ -40,8 +41,26 @@ const tools = stack.flatMap((group) => group.items)
           </span>
         </h1>
 
-        <p class="mt-8 max-w-[34ch] font-sans text-base leading-relaxed text-muted">
-          {profile.title}, based in France.
+        <p class="mt-8 max-w-[46ch] font-sans text-base leading-relaxed text-muted">
+          {profile.lead}
+        </p>
+
+        {/* No email here. The address lives on /contact and /freelance, and a
+            CV a recruiter may share is the wrong place to publish it. The PDF
+            download is the one action, same rule the old standalone /cv page
+            followed before this page absorbed it. */}
+        <div class="mt-8">
+          <a
+            href={withBase('/cv.pdf')}
+            class="inline-flex items-center gap-2 rounded-sm border border-line px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-muted no-underline transition-colors hover:border-accent hover:text-accent"
+          >
+            Download CV
+            <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <p class="mt-6 font-mono text-[11px] uppercase tracking-wider text-muted">
+          {profile.location} · {profile.languages}
         </p>
       </div>
 

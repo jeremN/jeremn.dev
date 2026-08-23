@@ -43,7 +43,7 @@ test.describe('site footer', () => {
     await expect(page.locator('footer a[href$="/freelance"]')).toHaveCount(0)
   })
 
-  // Every real page now sets hideFooterCta (Home, Writing, About, CV, Contact,
+  // Every real page now sets hideFooterCta (Home, Writing, About, Contact,
   // Freelance): the lab route is the one place left that still renders it, so
   // it is what exercises this still-live code path.
   test('carries one primary CTA where it still renders', async ({ page }) => {
@@ -57,10 +57,10 @@ test.describe('site footer', () => {
 })
 
 test.describe('navigation after About and Contact ship', () => {
-  test('carries the five primary destinations', async ({ page }) => {
+  test('carries the four primary destinations', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const labels = await page.locator('header nav a').allTextContents()
-    expect(labels.map((l) => l.trim())).toEqual(['Writing', 'About', 'CV', 'Services', 'Contact'])
+    expect(labels.map((l) => l.trim())).toEqual(['Writing', 'About', 'Services', 'Contact'])
   })
 
   test('the footer CTA, where it still renders, leads to Contact', async ({ page }) => {

@@ -142,7 +142,7 @@ test.describe('no v1 typeface survives', () => {
   // almost right, which is exactly the kind of regression that goes unnoticed.
   const LEGACY = ['Fraunces', 'Hanken', 'Inter', 'JetBrains']
 
-  for (const path of ['/', '/blog', '/blog/stryker-on-a-svelte-monorepo', '/cv', '/about', '/contact', '/freelance', '/404']) {
+  for (const path of ['/', '/blog', '/blog/stryker-on-a-svelte-monorepo', '/about', '/contact', '/freelance', '/404']) {
     test(`no legacy face is painted on ${path}`, async ({ page }) => {
       await page.goto(`${BASE}${path}`)
       const families = await page.evaluate(() =>
