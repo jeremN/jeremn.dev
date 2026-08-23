@@ -34,14 +34,23 @@ test.describe('services page', () => {
     ])
   })
 
-  test('lists all three AI & automation offerings, numbered', async ({ page }) => {
+  test('lists all three AI & automation offerings, each with an icon', async ({ page }) => {
     await page.goto(`${BASE}/services`)
     const items = page.locator('section:has(h2:text("02 / AI & automation")) ul li')
     await expect(items).toHaveCount(3)
-    await expect(items.nth(0)).toContainText('01')
+    await expect(items.nth(0).locator('[data-doodle="svc-icon-agent-setup"]')).toBeAttached()
     await expect(items.nth(0)).toContainText('Agent setup')
-    await expect(items.nth(2)).toContainText('03')
+    await expect(items.nth(2).locator('[data-doodle="svc-icon-ai-tool-integration"]')).toBeAttached()
     await expect(items.nth(2)).toContainText('AI tool integration')
+  })
+
+  test('gives each development offering its own icon', async ({ page }) => {
+    await page.goto(`${BASE}/services`)
+    const marks = page.locator('h2:text("01 / Development") ~ ul [data-doodle]')
+    await expect(marks).toHaveCount(6)
+    for (const mark of await marks.all()) {
+      await expect(mark).toHaveAttribute('aria-hidden', 'true')
+    }
   })
 
   test('the quote CTA is a mailto link and never prints the raw address', async ({ page }) => {

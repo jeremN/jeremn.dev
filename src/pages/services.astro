@@ -8,19 +8,27 @@ import { profile } from '../lib/cv'
 // /freelance's fuller list): the validated comp writes each line as a short,
 // parallel offer statement, a different voice than the existing blurbs.
 const devItems = [
-  { title: 'Full-stack development', copy: 'Interface to deployment.' },
-  { title: 'Frontend development', copy: 'Accessible product interfaces.' },
-  { title: 'Backend & APIs', copy: 'Stable services and boundaries.' },
-  { title: 'Performance & audits', copy: 'Evidence, risks, and next steps.' },
-  { title: 'Automation & tooling', copy: 'Scripts, CI, and internal tools.' },
-  { title: 'AI integration', copy: 'Useful features with controls.' },
-]
+  { icon: 'svc-icon-fullstack', title: 'Full-stack development', copy: 'Interface to deployment.' },
+  { icon: 'svc-icon-frontend', title: 'Frontend development', copy: 'Accessible product interfaces.' },
+  { icon: 'svc-icon-backend', title: 'Backend & APIs', copy: 'Stable services and boundaries.' },
+  { icon: 'svc-icon-performance', title: 'Performance & audits', copy: 'Evidence, risks, and next steps.' },
+  { icon: 'svc-icon-automation', title: 'Automation & tooling', copy: 'Scripts, CI, and internal tools.' },
+  { icon: 'svc-icon-ai-integration', title: 'AI integration', copy: 'Useful features with controls.' },
+] as const
 
 const aiItems = [
-  { number: '01', title: 'Agent setup', copy: 'A governed agent with the correct tools and checks.' },
-  { number: '02', title: 'Workflow automation', copy: 'A repeatable workflow across the tools you already use.' },
-  { number: '03', title: 'AI tool integration', copy: 'A product feature with retrieval and human review.' },
-]
+  { icon: 'svc-icon-agent-setup', title: 'Agent setup', copy: 'A governed agent with the correct tools and checks.' },
+  {
+    icon: 'svc-icon-workflow-automation',
+    title: 'Workflow automation',
+    copy: 'A repeatable workflow across the tools you already use.',
+  },
+  {
+    icon: 'svc-icon-ai-tool-integration',
+    title: 'AI tool integration',
+    copy: 'A product feature with retrieval and human review.',
+  },
+] as const
 
 const quoteHref = `mailto:${profile.email}?subject=${encodeURIComponent('Project quote')}`
 ---
@@ -66,7 +74,8 @@ const quoteHref = `mailto:${profile.email}?subject=${encodeURIComponent('Project
       <ul class="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
         {devItems.map((s) => (
           <li class="border-t border-line pt-5">
-            <h4 class="font-sans text-base font-medium text-ink">{s.title}</h4>
+            <Doodle name={s.icon} class="h-8 aspect-[49/34] text-ink" />
+            <h4 class="mt-3 font-sans text-base font-medium text-ink">{s.title}</h4>
             <p class="mt-2 font-sans text-sm leading-relaxed text-muted">{s.copy}</p>
           </li>
         ))}
@@ -86,8 +95,8 @@ const quoteHref = `mailto:${profile.email}?subject=${encodeURIComponent('Project
 
       <ul class="border-t border-line">
         {aiItems.map((item) => (
-          <li class="grid grid-cols-[2.5rem_1fr] items-baseline gap-x-5 border-b border-line py-5">
-            <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{item.number}</span>
+          <li class="grid grid-cols-[2.9rem_1fr] items-center gap-x-5 border-b border-line py-5">
+            <Doodle name={item.icon} class="h-8 aspect-[49/34] text-ink" />
             <div>
               <h4 class="font-sans text-base font-medium text-ink">{item.title}</h4>
               <p class="mt-1 font-sans text-sm leading-relaxed text-muted">{item.copy}</p>

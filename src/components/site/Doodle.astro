@@ -7,7 +7,9 @@
 // currentColor for ink outlines, but mixes in literal hex accents for
 // colours that do not need to invert, the var(--color-surface) token for
 // paper and highlight fills, three dedicated tokens (--color-xiaohei-navy,
-// --color-xiaohei-code-navy, --color-xiaohei-sky) for accents that do, and
+// --color-xiaohei-code-navy, --color-xiaohei-sky) for accents that do,
+// var(--color-accent) directly (svc-icon-* only, where the source colour is
+// already the brand blue rather than a bespoke illustration tone), and
 // (xiaohei-about-hero only) var(--color-ground) for cutout shapes (eyes,
 // mouth, spout highlight) that show the page background through the
 // mascot's solid silhouette rather than a paper/card surface. A third,
@@ -59,6 +61,15 @@ import XiaoheiArticleStrykerOnASvelteMonorepo from '../../assets/doodles/xiaohei
 import XiaoheiContactSignal from '../../assets/doodles/xiaohei-contact-signal.svg'
 import XiaoheiServicesHero from '../../assets/doodles/xiaohei-services-hero.svg'
 import XiaoheiServicesHeroMobile from '../../assets/doodles/xiaohei-services-hero-mobile.svg'
+import SvcIconFullstack from '../../assets/doodles/svc-icon-fullstack.svg'
+import SvcIconFrontend from '../../assets/doodles/svc-icon-frontend.svg'
+import SvcIconBackend from '../../assets/doodles/svc-icon-backend.svg'
+import SvcIconPerformance from '../../assets/doodles/svc-icon-performance.svg'
+import SvcIconAutomation from '../../assets/doodles/svc-icon-automation.svg'
+import SvcIconAiIntegration from '../../assets/doodles/svc-icon-ai-integration.svg'
+import SvcIconAgentSetup from '../../assets/doodles/svc-icon-agent-setup.svg'
+import SvcIconWorkflowAutomation from '../../assets/doodles/svc-icon-workflow-automation.svg'
+import SvcIconAiToolIntegration from '../../assets/doodles/svc-icon-ai-tool-integration.svg'
 import IconMail from '../../assets/doodles/icon-mail.svg'
 import IconGithub from '../../assets/doodles/icon-github.svg'
 import IconLinkedin from '../../assets/doodles/icon-linkedin.svg'
@@ -107,6 +118,15 @@ const DOODLES = {
   'xiaohei-contact-signal': XiaoheiContactSignal,
   'xiaohei-services-hero': XiaoheiServicesHero,
   'xiaohei-services-hero-mobile': XiaoheiServicesHeroMobile,
+  'svc-icon-fullstack': SvcIconFullstack,
+  'svc-icon-frontend': SvcIconFrontend,
+  'svc-icon-backend': SvcIconBackend,
+  'svc-icon-performance': SvcIconPerformance,
+  'svc-icon-automation': SvcIconAutomation,
+  'svc-icon-ai-integration': SvcIconAiIntegration,
+  'svc-icon-agent-setup': SvcIconAgentSetup,
+  'svc-icon-workflow-automation': SvcIconWorkflowAutomation,
+  'svc-icon-ai-tool-integration': SvcIconAiToolIntegration,
   'icon-mail': IconMail,
   'icon-github': IconGithub,
   'icon-linkedin': IconLinkedin,
