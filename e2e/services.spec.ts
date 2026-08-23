@@ -11,14 +11,20 @@ test.describe('services page', () => {
     await expect(page.locator('h1 [data-doodle="underline"]')).toBeAttached()
   })
 
-  test('renders the hero mark once for desktop and once for mobile, both decorative', async ({ page }) => {
+  test('renders the same hero mark once for desktop and once for mobile, both decorative', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 })
     await page.goto(`${BASE}/services`)
-    const desktop = page.locator('[data-doodle="xiaohei-services-hero"]')
-    const mobile = page.locator('[data-doodle="xiaohei-services-hero-mobile"]')
-    await expect(desktop).toHaveCount(1)
-    await expect(mobile).toHaveCount(1)
-    await expect(desktop).toHaveAttribute('aria-hidden', 'true')
-    await expect(mobile).toHaveAttribute('aria-hidden', 'true')
+    const mark = page.locator('[data-doodle="xiaohei-services-hero"]')
+    await expect(mark).toHaveCount(2)
+    await expect(mark.nth(0)).toBeHidden()
+    await expect(mark.nth(1)).toBeVisible()
+    for (const el of await mark.all()) {
+      await expect(el).toHaveAttribute('aria-hidden', 'true')
+    }
+
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await expect(mark.nth(0)).toBeVisible()
+    await expect(mark.nth(1)).toBeHidden()
   })
 
   test('lists all six development offerings', async ({ page }) => {
