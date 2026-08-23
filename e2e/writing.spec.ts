@@ -171,16 +171,14 @@ test.describe('hover is colour only', () => {
   // A post row used to nudge its title right and lift its mark. Hover now
   // changes colour and nothing else. Measure the geometry: a transform is
   // invisible to any assertion on classes or computed colour.
-  test('hovering a post row moves neither the title nor the mark', async ({ page }) => {
+  test('hovering a post row moves neither the title nor its colour', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const row = page.locator('[data-post-row]').first()
     const title = row.locator('[data-title]')
-    const mark = row.locator('[data-doodle]')
 
     await row.scrollIntoViewIfNeeded()
     const before = {
       title: await offsetIn(row, title),
-      mark: await offsetIn(row, mark),
       colour: await title.evaluate((el) => getComputedStyle(el).color),
     }
 
@@ -188,9 +186,16 @@ test.describe('hover is colour only', () => {
     await page.waitForTimeout(350)
 
     expect(await offsetIn(row, title)).toEqual(before.title)
-    expect(await offsetIn(row, mark)).toEqual(before.mark)
     // And the hover does something, so a dead selector cannot pass this.
     expect(await title.evaluate((el) => getComputedStyle(el).color)).not.toBe(before.colour)
+  })
+
+  // The mark added nothing next to the already-visible category and reading
+  // time, so /blog's rows dropped it (the homepage teaser keeps it). Asserted
+  // as an absence so it cannot creep back in unnoticed.
+  test('post rows carry no decorative mark', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('[data-post-row] [data-doodle]')).toHaveCount(0)
   })
 
   test('the keep-reading arrow does not slide', async ({ page }) => {

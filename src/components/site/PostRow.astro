@@ -13,11 +13,12 @@ interface Props {
   publishedAt: Date
   body?: string
   variant?: 'index' | 'teaser'
-  /** Overrides the tag-derived mark. The homepage teaser rows use this to show
-   * the three Xiaohei article marks in the validated design's fixed
-   * code/lock/cubes sequence, which is positional rather than tag-derived
-   * (see index.astro). Every other caller leaves this unset and keeps the
-   * tag-derived mark, so `/blog` is unaffected. */
+  /** Overrides the tag-derived mark. Only the 'teaser' variant (the homepage's
+   * three-row preview) renders a mark at all, using this to show the three
+   * Xiaohei article marks in the validated design's fixed code/lock/cubes
+   * sequence, which is positional rather than tag-derived (see index.astro).
+   * The 'index' variant (`/blog`'s full list) renders no mark: it added
+   * nothing there and is dropped rather than kept tag-derived. */
   mark?: DoodleName
 }
 const {
@@ -42,7 +43,10 @@ const mark = markOverride ?? markForTags(tags)
   data-post-row
   data-variant={variant}
   href={withBase(`/blog/${slug}`)}
-  class="group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:grid-cols-[4.5rem_1fr_auto_2.75rem] sm:gap-x-10"
+  class:list={[
+    'group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:gap-x-10',
+    variant === 'teaser' ? 'sm:grid-cols-[4.5rem_1fr_auto_2.75rem]' : 'sm:grid-cols-[4.5rem_1fr_auto]',
+  ]}
 >
   {/* One colour, one weight, no coloured chip. The homepage teaser and the
       full index render the date identically. */}
@@ -67,10 +71,13 @@ const mark = markOverride ?? markForTags(tags)
     <span class="mt-1 block">{readingTime(body)}</span>
   </span>
 
-  {/* The mark is decorative and repeats the category, so it is aria-hidden and
-      only appears once there is room for a fourth column. */}
-  <Doodle
-    name={mark}
-    class="col-start-4 row-start-1 hidden h-7 w-11 self-start text-muted transition-colors duration-200 group-hover:text-accent sm:block"
-  />
+  {/* The mark is decorative and repeats the category. Only the homepage
+      teaser keeps it: on /blog's full list it added nothing beside the
+      already-visible category and reading time. */}
+  {variant === 'teaser' && (
+    <Doodle
+      name={mark}
+      class="col-start-4 row-start-1 hidden h-7 w-11 self-start text-muted transition-colors duration-200 group-hover:text-accent sm:block"
+    />
+  )}
 </a>

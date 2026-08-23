@@ -55,75 +55,10 @@ test.describe('doodle authoring contract', () => {
   })
 })
 
-test.describe('writing row marks', () => {
-  test('every row carries a mark', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
-    const rows = page.locator('[data-post-row]')
-    const count = await rows.count()
-    expect(count).toBeGreaterThan(0)
-    for (let i = 0; i < count; i++) {
-      await expect(rows.nth(i).locator('[data-doodle]')).toHaveCount(1)
-    }
-  })
-
-  test('the mark matches the row subject', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
-    // A Svelte-tagged post takes the braces mark unless a more specific tag precedes it.
-    const row = page.locator('[data-post-row]', { has: page.locator('[data-meta]') }).first()
-    const name = await row.locator('[data-doodle]').getAttribute('data-doodle')
-    expect([
-      'xiaohei-writing-code',
-      'xiaohei-writing-braces',
-      'xiaohei-writing-cubes',
-      'xiaohei-writing-grid',
-      'xiaohei-writing-lock',
-      'xiaohei-writing-server',
-    ]).toContain(name)
-  })
-
-  // `markForTags` (src/lib/doodles.ts) walks a post's tags in order and
-  // returns the mark for the first tag that has a BY_TAG entry. Verified
-  // against the real frontmatter in src/content/blog: with today's tags,
-  // "renovate" and "agents" always precede any other mapped tag on the posts
-  // that carry them, so xiaohei-writing-code and xiaohei-writing-server
-  // (mapped from tooling/engineering/ci) never win a real post today. That is
-  // the fallback logic working as designed, not a gap. This list only covers
-  // the four marks that do surface.
-  const TAG_TO_MARK: Array<[slug: string, mark: string]> = [
-    // tags: [Agents, Svelte, Refactoring] -> "agents" is the first BY_TAG hit.
-    ['best-model-still-needs-rules', 'xiaohei-writing-cubes'],
-    // tags: [Testing, Svelte, CI] -> "testing" is the first BY_TAG hit.
-    ['stryker-on-a-svelte-monorepo', 'xiaohei-writing-grid'],
-    // tags: [Svelte, Migration] -> "svelte" is the first BY_TAG hit.
-    ['ten-months-of-svelte-5', 'xiaohei-writing-braces'],
-    // tags: [Renovate, Agents, CI] -> "renovate" is the first BY_TAG hit.
-    ['two-years-of-renovate-part-four', 'xiaohei-writing-lock'],
-  ]
-
-  for (const [slug, mark] of TAG_TO_MARK) {
-    test(`${slug} resolves to ${mark}`, async ({ page }) => {
-      await page.goto(`${BASE}/blog`)
-      const row = page.locator(`[data-post-row][href$="/blog/${slug}"]`)
-      await expect(row.locator('[data-doodle]')).toHaveAttribute('data-doodle', mark)
-    })
-  }
-
-  test('a mark inherits the row colour rather than baking one in', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
-    const stroke = await page
-      .locator('[data-post-row] [data-doodle]')
-      .first()
-      .evaluate((el) => {
-        // The mark transitions its colour on hover, so a computed read taken
-        // straight after the assignment returns the pre-transition value.
-        // Kill the transition first, or this measures the old colour.
-        ;(el as HTMLElement).style.transition = 'none'
-        ;(el as HTMLElement).style.color = 'rgb(4, 5, 6)'
-        const shape = el.querySelector('path, rect, circle, ellipse')!
-        const s = getComputedStyle(shape)
-        // dot-grid marks are filled, every other mark is stroked
-        return s.stroke === 'none' ? s.fill : s.stroke
-      })
-    expect(stroke).toBe('rgb(4, 5, 6)')
-  })
-})
+// The per-row mark on /blog (tag-derived via `markForTags`, src/lib/doodles.ts)
+// was removed: it added nothing beside the already-visible category and
+// reading time (see e2e/writing.spec.ts's "post rows carry no decorative
+// mark"). markForTags/BY_TAG and the six xiaohei-writing-* marks are now
+// unreachable from any rendered page -- the homepage teaser is PostRow's
+// only remaining caller, and it always passes an explicit override rather
+// than using tag derivation.
