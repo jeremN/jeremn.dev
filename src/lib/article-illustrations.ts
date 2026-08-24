@@ -14,6 +14,7 @@ const BY_SLUG: Record<string, DoodleName> = {
   'best-model-still-needs-rules': 'xiaohei-article-best-model-still-needs-rules',
   'who-checks-the-agents-tests': 'xiaohei-article-who-checks-the-agents-tests',
   'stryker-on-a-svelte-monorepo': 'xiaohei-article-stryker-on-a-svelte-monorepo',
+  'contract-tests-without-the-stack': 'xiaohei-article-contract-tests-without-the-stack',
 }
 
 /**
@@ -45,6 +46,7 @@ const ASPECT_BY_SLUG: Record<string, string> = {
   'best-model-still-needs-rules': '927.70 / 455.35',
   'who-checks-the-agents-tests': '870.16 / 228.36',
   'stryker-on-a-svelte-monorepo': '801.51 / 411.07',
+  'contract-tests-without-the-stack': '662.30 / 429.60',
 }
 
 /** CSS `aspect-ratio` value for a post's illustration, or `undefined` if it has none. */
