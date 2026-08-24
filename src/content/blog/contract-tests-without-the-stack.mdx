@@ -1,0 +1,282 @@
+---
+title: 'Contract tests without the stack'
+summary: 'A suite that checks two applications still agree without starting either of them. What Pact writes down, the two settings that stop it reporting green over half a contract, the pipeline rule that admits its own blind spot, and the part of the work worth handing to an agent.'
+publishedAt: 2026-08-24
+tags: [Testing, CI, Agents]
+draft: false
+---
+
+Two applications, one GraphQL schema between them, and nothing checking that the
+two still agree about it. The end to end suite catches a disagreement
+eventually, and it wants the whole stack running to do that.
+
+Contract testing is the tier in between. This post covers what Pact is, how the
+suite is shaped locally and in the pipeline, and which part of the work turned
+out to be worth handing to an agent.
+
+## What Pact is
+
+Pact is an open source framework for consumer driven contract testing, and Pact
+JS is its JavaScript and Node implementation. Consumer driven means the client's
+real usage decides what the contract covers: a field nobody asks for is in no
+contract, and a field the web app reads cannot change without turning a build
+red.
+
+What it covers is only the shape of the conversation. Whether the journey works,
+and whether the values coming back are correct, stay the end to end suite's job.
+
+It is usually described in terms of microservices, though the pressure is the
+same at any size. Two services that talk over HTTP drift apart, and checking
+that by standing the whole environment up takes long enough that nobody does it
+while working.
+
+On the consumer side it is an ordinary unit test. Pact starts a mock server on
+loopback, your real client code makes its request against it, and Pact checks
+that request against what you declared. What falls out of the run is a JSON
+document, the pact itself, listing every interaction: a state, a description, a
+request and a response. You never write that JSON by hand.
+
+```ts
+await provider
+  .addInteraction()
+  .given('places exist in the Paris area')
+  .uponReceiving('a request for places within bounds')
+  .withRequest('POST', '/graphql', (builder) => {
+    builder.headers({ 'Content-Type': 'application/json' }).jsonBody({
+      query: regex('query SearchPlaces[\\s\\S]*', SEARCH_PLACES),
+      variables: {
+        input: {
+          types: like(['HOTEL']),
+          bounds: {
+            northeast: { lat: like(48.87), lng: like(2.36) },
+            southwest: { lat: like(48.86), lng: like(2.34) },
+          },
+          perPage: like(50),
+        },
+      },
+    })
+  })
+```
+
+The query itself goes in as a regex against the real document. Everything else
+is wrapped in a matcher.
+
+## Matching on shape, not values
+
+```ts
+  .willRespondWith(200, (builder) => {
+    builder.headers({ 'Content-Type': 'application/json' }).jsonBody({
+      data: {
+        searchPlaces: {
+          totalCount: integer(1),
+          items: eachLike({
+            __typename: string('Hotel'),
+            id: string('1'),
+            name: string('Hotel Name'),
+            coordinates: { lat: decimal(48.86), lng: decimal(2.34) },
+            rating: like(null),
+          }),
+        },
+      },
+    })
+  })
+```
+
+`string('Hotel Name')` does not assert that the name is Hotel Name. It asserts
+that the field is present and holds a string, and the literal is the value the
+mock serves back while the consumer test runs. `eachLike` says the array holds
+at least one element of that shape. `integer`, `decimal` and `regex` do the
+obvious thing.
+
+This is why the suite does not turn red every time somebody renames a record in
+the source data.
+
+## States the provider has to set up
+
+`given('places exist in the Paris area')` names a precondition. On the consumer
+side it is only a string. The provider side is where it has to become true.
+
+```ts
+const stateHandlers = {
+  'places exist in the Paris area': async () => {
+    server.use(placesHandlers.createParisHotelHandler(testEnv.PLACES_API_URL))
+  },
+}
+
+const verifier = new Verifier({
+  provider: 'backend',
+  providerBaseUrl: serverUrl,
+  pactUrls: [path.resolve(process.cwd(), '../../pacts/web-backend.json')],
+  stateHandlers,
+  beforeEach: async () => resetMocksAndHandlers(),
+})
+
+await verifier.verifyProvider()
+```
+
+The provider run boots the actual server and points `providerBaseUrl` at it, so
+every replayed request goes through the real resolvers rather than a stub of
+them. Only the calls the backend makes outward are mocked, with MSW, from the
+same fixtures the unit and integration tests use.
+
+## Two suites, one artifact
+
+There are twenty two consumer files on the web side and one verification file on
+the backend side, driven by three commands. The order in the first one is not
+optional.
+
+```json
+{
+  "test:contract": "pnpm --filter web test:contract && pnpm --filter backend test:contract:verify",
+  "test:contract:consumer": "pnpm --filter web test:contract",
+  "test:contract:provider": "pnpm --filter backend test:contract:verify"
+}
+```
+
+The provider has nothing to verify until the consumer has written the file,
+which is why these are two jobs in the pipeline rather than one, and why the
+next two settings exist.
+
+## Sequential, on purpose
+
+```ts
+export default defineConfig({
+  test: {
+    include: ['tests/contract/**/*.pact.ts'],
+    // Run tests sequentially to ensure Pact files are properly merged
+    // Pact V4 writes to the same file and parallel execution causes overwrites
+    pool: 'forks',
+    fileParallelism: false,
+    sequence: { shuffle: false },
+  },
+  envPrefix: [], // Don't load .env files for contract tests
+})
+```
+
+Every consumer file writes into the same contract, and nothing coordinates those
+writes. Pact is blunt about this in its own documentation: the API is not thread
+safe, and the troubleshooting guide puts duplicate and extraneous interactions
+down to tests running in parallel, because Pact cannot tell when the file is
+safe to clear. The comment in our config records the other direction,
+interactions going missing rather than doubling.
+
+The direction matters less than the shape of the failure. The suite passes
+either way. Every file's interactions were checked against a mock and passed, so
+the run is green, and the file left on disk is not the file the run verified.
+The provider job then checks whatever that file happens to contain. A check that
+quietly covers less than its subject is worse than no check, because you will
+trust it. I wrote about that at length in [Who checks the agent's
+tests](/blog/who-checks-the-agents-tests).
+
+The cost is startup time. One file at a time, each in a fresh fork, each
+re-importing the module graph from cold, which ends up being most of what a full
+run spends its time on. The setting that makes the contract complete is the
+setting that makes startup dominate, and at this size that trade is worth
+making.
+
+`envPrefix: []` is a smaller version of the same problem. Without it the
+generated contract picks up whatever is in your local `.env`, and the file you
+commit describes your machine rather than the agreement.
+
+## In the pipeline
+
+The pipeline runs two jobs in sequence. The consumer job runs the web suite and
+publishes the contract as a build artifact, and the provider job takes that
+artifact and replays it. Both set `PACT_DO_NOT_TRACK`, which turns off Pact's
+usage telemetry.
+
+The job is triggered by a changes filter:
+
+```yaml
+contract_tests:
+  rules:
+    # Always run on the default branch as a post-merge safety net: a changes
+    # filter cannot catch a provider that drifts out from under a fixed contract
+    # once two merge requests combine.
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - web/tests/contract/**/*
+        - web/src/**/*.gql
+        - backend/tests/contract/**/*
+        - backend/src/**/*
+        - backend/schema/**/*.gql
+        - pacts/**/*
+```
+
+A `.gql` file or the schema changing wakes the suite, which is most of why it is
+there. The backend source is in the list because the provider run boots the real
+resolvers, so a mapper edit can break a contract without touching a contract
+file.
+
+A changes filter reasons about one merge request at a time. One request edits a
+resolver and touches no contract file. Another fixes an interaction and touches
+no backend source. Each passes its own filtered pipeline. They combine on main,
+the contract breaks, and no filtered run ever looked at the combination. A
+cleverer filter does not close that hole, so the job runs unfiltered on the
+default branch as well. That run is the only thing that ever sees the
+combination.
+
+## Handing the pattern over
+
+All of that covers one seam, the one where we own both ends. The backend has a
+second role. It is a consumer too, of the third party APIs behind it, and those
+seams break the same way with nothing watching them.
+
+They cannot be covered the same way. Consumer driven contract testing assumes
+the provider will run your contract, and no third party is going to add our
+state handlers to their pipeline. Only the consumer half exists.
+
+A half contract cannot tell you the provider changed. It tells you that you
+changed, and it records what you assumed. That is narrower than the claim the
+first suite makes, and still worth having, because most of what breaks a client
+integration is the client.
+
+The work is mechanical once the first one exists: read the client, map the
+generated types, write the matchers, write the scenarios. We had Claude write
+the second service's test from the first one's pattern and it did that well. The
+part that did not transfer is choosing the scenarios, and you choose those by
+reading the calling code rather than the API documentation. Ours branches on a
+non 200 status, so there is a 401 case. It branches on an array check and a
+length, so there is an empty result case. An agent that has not read the caller
+writes the happy path and stops, and the happy path is the case that already
+worked. It is the same shape as [The best model still needs
+rules](/blog/best-model-still-needs-rules): the model does the work, and the
+context that says which work is worth doing has to come from you.
+
+```ts
+.withRequest('GET', '/1/activities', (builder) => {
+  builder.query({
+    currency: 'EUR',
+    'coordinates[]': ['48.8566', '2.3522', '10000'],
+    limit: '3',
+  })
+})
+```
+
+The array alone is a reason to write the test. `openapi-fetch` serialises it as
+`coordinates[]=48.8566&coordinates[]=2.3522&coordinates[]=10000`, three repeated
+parameters rather than one joined string, and the contract records which of
+those two the API actually wants. Nothing above this tier has an opinion about
+it.
+
+None of this half is merged. It came out of a workshop and it does not run in
+the pipeline.
+
+## Two things missing
+
+The result is a suite that runs on a laptop with nothing else switched on, and a
+pipeline job that wakes whenever the schema moves. Two things would make it
+worth more than it is.
+
+The contract is a file committed to the repository, which is fine while the web
+app is the only consumer. A Pact broker stores contracts versioned and published
+instead, and that is what would let the mobile team put their own expectations
+against the same backend. A change there would then have to satisfy both clients
+before it could ship, rather than only the one whose tests happen to run.
+
+The second is `can-i-deploy`, which Pact ships for exactly this. It asks the
+broker whether the version you are about to release still honours every contract
+it owes, and stops the deploy when the answer is no. Today the suite reports and
+somebody decides whether to act on it. The broker has to come first, because
+`can-i-deploy` has nothing to ask without one.
