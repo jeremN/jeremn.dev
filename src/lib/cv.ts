@@ -11,6 +11,20 @@ export const profile = {
   email: 'jeremie.nehlil.freelance@proton.me',
 }
 
+// The French twin. /cv-print and scripts/render-cv-pdf.mjs read `profile`
+// directly and stay English only, so this lives alongside it rather than
+// replacing it. The email is identical in both: it is not a copy-paste slip.
+const profileFr: typeof profile = {
+  name: 'Jérémie Néhlil',
+  title: 'Développeur fullstack JavaScript senior',
+  lead: "Développeur fullstack JavaScript senior. Des interfaces en SvelteKit, Next.js, React et TanStack Start, et les backends Node derrière. Je livre pour des équipes produit et des agences depuis 2016.",
+  location: 'Près de Paris (Sorel-Moussel), France',
+  languages: 'Français (langue maternelle), anglais (professionnel)',
+  email: 'jeremie.nehlil.freelance@proton.me',
+}
+
+export const getProfile = (lang: 'en' | 'fr') => (lang === 'fr' ? profileFr : profile)
+
 export type Mission = {
   client: string
   period: string

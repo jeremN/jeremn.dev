@@ -118,3 +118,34 @@ test.describe('French services page', () => {
     await expect(fr).toHaveAttribute('href', /subject=Demande%20de%20devis/)
   })
 })
+
+test.describe('French about page', () => {
+  test('renders at /fr/a-propos with the French headline', async ({ page }) => {
+    await page.goto(`${BASE}/fr/a-propos`)
+    await expect(page.locator('h1')).toContainText("J'aime les logiciels qui ont")
+    await expect(page.locator('h1')).toContainText('du sens.')
+  })
+
+  test('the About nav link points at the French route under /fr/', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.getByRole('link', { name: 'À propos', exact: true })).toHaveAttribute(
+      'href',
+      `${BASE}/fr/a-propos`,
+    )
+  })
+
+  test('pairs with the English page through hreflang', async ({ page }) => {
+    await page.goto(`${BASE}/fr/a-propos`)
+    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/about$/)
+    await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', /\/fr\/a-propos$/)
+  })
+})
+
+test.describe('French home page lead', () => {
+  test('the French home page lead is entirely French', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    const lead = page.locator('[data-hero] p').first()
+    await expect(lead).toContainText('Développeur fullstack JavaScript senior')
+    await expect(lead).not.toContainText('Senior fullstack')
+  })
+})
