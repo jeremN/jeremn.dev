@@ -13,8 +13,8 @@ self-hosted fonts (`@fontsource-variable/*`) · Astro Content Layer (MDX) · Shi
 (`github-dark`) + `rehype-sanitize` · `@astrojs/rss` + `@astrojs/sitemap` ·
 Playwright. Deployed to **GitHub Pages**.
 
-Three.js is still a dependency, but it ships to one unlisted page only. See
-[Retired work](#retired-work).
+The site ships **no client-side framework and no WebGL**. Every page is HTML and
+CSS, with two small inline scripts for the theme and the table of contents.
 
 ## Local development
 
@@ -30,7 +30,7 @@ npm run build      # static build → dist/
 npm run preview    # serve dist/ locally on :4321
 npm run check      # astro check (type-check .astro + TS)
 npm run og         # re-render the social cards into public/og/
-npm run cv:pdf     # re-render the printable CV
+npm run cv:pdf     # re-render both printable CVs (public/cv.pdf, public/cv-fr.pdf)
 ```
 
 ## Two languages
@@ -134,8 +134,8 @@ the certificate.
 ## Notes
 
 - **The email address is never visible text.** A `mailto:` href is the only place it
-  may live, and e2e tests hold that on every page. `/cv-print` is the one deliberate
-  exception: it is a printable CV, `noindex`, and excluded from the sitemap.
+  may live, and e2e tests hold that on every page. The two CV sheets are the one
+  deliberate exception, for the reason given under [The CV](#the-cv).
 - **Security:** author-written markdown is sanitized (`rehype-sanitize`) at build. The
   custom schema in `astro.config.mjs` preserves Shiki's inline token colors while
   still stripping scripts, event handlers, and disallowed tags. `serialiseLd` covers
@@ -145,10 +145,17 @@ the certificate.
 - **`scripts/infra-canary.sh`** checks the live DNS, certificate and headers, and has
   its own test file next to it.
 
-## Retired work
+## The CV
 
-`/hero-lab` and `/hero-lab/galaxy` are unlisted pages that keep earlier designs
-runnable: the WebGL "Brick Milky Way" galaxy hero the home page used before the
-Xiaohei illustrations, and a comparison of six black-hole warp laws. Both are
-`noindex` and excluded from the sitemap. They are the only reason `three` is still a
-dependency, and they never ship to any listed page.
+`src/lib/cv.ts` is the single source. Each field that reads as prose carries both
+languages as `{ en, fr }`, so a missing translation is a type error rather than an
+English sentence on the French sheet. The two languages share one list, which is
+what stops an experience being added to one CV and not the other.
+
+`/cv-print` and `/fr/cv-print` render the sheet. `npm run cv:pdf` screenshots both
+into `public/cv.pdf` and `public/cv-fr.pdf`, which are committed artifacts:
+**re-run it after editing `src/lib/cv.ts`**, or the downloadable PDFs go stale.
+Both pages are `noindex` and excluded from the sitemap.
+
+The CV pages are the one deliberate exception to the email rule above. A CV handed
+to a recruiter needs a way to answer.

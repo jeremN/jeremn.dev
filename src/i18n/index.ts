@@ -14,7 +14,9 @@ import frFreelance from './fr/freelance'
 import enBlog from './en/blog'
 import frBlog from './fr/blog'
 import enArticle from './en/article'
+import enCv from './en/cv'
 import frArticle from './fr/article'
+import frCv from './fr/cv'
 
 export const LOCALES = ['en', 'fr'] as const
 export type Locale = (typeof LOCALES)[number]
@@ -43,13 +45,13 @@ export const localeOf = (route: string): Locale => {
 }
 
 /** The pair a route belongs to, or null when the route has no twin
- *  (/hero-lab, /cv-print, and any article published in one language only). */
+ *  (/cv-print, its French twin, and any article published in one language only). */
 export const alternatesFor = (route: string): { en: string; fr: string } | null =>
   BY_EN.get(strip(route)) ?? BY_FR.get(strip(route)) ?? null
 
 const COPY = {
-  en: { home: enHome, services: enServices, about: enAbout, contact: enContact, freelance: enFreelance, blog: enBlog, article: enArticle },
-  fr: { home: frHome, services: frServices, about: frAbout, contact: frContact, freelance: frFreelance, blog: frBlog, article: frArticle },
+  en: { home: enHome, services: enServices, about: enAbout, contact: enContact, freelance: enFreelance, blog: enBlog, article: enArticle, cv: enCv },
+  fr: { home: frHome, services: frServices, about: frAbout, contact: frContact, freelance: frFreelance, blog: frBlog, article: frArticle, cv: frCv },
 } as const
 
 export type Page = keyof (typeof COPY)['en']

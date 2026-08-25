@@ -5,7 +5,7 @@ import { withBase } from '../../lib/base'
 
 interface Props { alternates: { en: string; fr: string } | null; lang: Locale }
 const { alternates, lang } = Astro.props
-// A route with no twin (/hero-lab, /cv-print, a one-language article) renders
+// A route with no twin (a one-language article) renders
 // nothing rather than a dead link.
 const target = alternates ? (lang === 'fr' ? alternates.en : alternates.fr) : null
 const ui = getUi(lang)
