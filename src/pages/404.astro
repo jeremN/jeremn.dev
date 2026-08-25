@@ -28,6 +28,15 @@ const routes = [
       The address is wrong, or the page moved. Here is where to go instead.
     </p>
 
+    {/* GitHub Pages serves this one root 404.html for every missing path, in
+        both trees, so the page cannot know the visitor's language. It stays
+        English and carries one French line, so a French visitor still reads
+        something. `lang="fr"` on that line alone keeps the screen reader on the
+        right voice. No hreflang: a page with no address has no twin. */}
+    <p lang="fr" class="mt-3 max-w-[42ch] font-sans text-base leading-relaxed text-muted">
+      L'adresse est fausse, ou la page a été déplacée. Voici où aller.
+    </p>
+
     <ul data-routes class="mt-16 border-t border-line">
       {routes.map((r) => (
         <li>

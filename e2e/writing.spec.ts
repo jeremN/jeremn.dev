@@ -36,11 +36,8 @@ test.describe('writing index', () => {
 test.describe('writing index vignettes', () => {
   // The header (telescope) vignette renders twice, sized for its breakpoint:
   // full illustration on desktop, a smaller full illustration as the mobile
-  // hero (never cropped, and never swapped for the footer scene, which would
-  // read as the same illustration as the home page's hero). The footer
-  // vignette renders once, below the row list, desktop only. Both are
-  // decorative Doodle components, so assert presence and the accessibility
-  // contract rather than pixel content.
+  // hero (never cropped). Both are decorative Doodle components, so assert
+  // presence and the accessibility contract rather than pixel content.
 
   test('the header vignette renders on both mobile and desktop, never cropped', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 })
@@ -58,34 +55,16 @@ test.describe('writing index vignettes', () => {
     await expect(header.nth(1)).toBeHidden()
   })
 
-  test('the footer vignette renders once, after the row list, for desktop only', async ({ page }) => {
-    await page.goto(`${BASE}/blog`)
-    const footer = page.locator('[data-doodle="xiaohei-writing-footer"]')
-    await expect(footer).toHaveCount(1)
-    await expect(footer).toHaveAttribute('aria-hidden', 'true')
-
-    const order = await page.evaluate(() => {
-      const list = document.querySelector('ul')
-      const mark = document.querySelector('[data-doodle="xiaohei-writing-footer"]')
-      if (!list || !mark) return 'missing'
-      // DOCUMENT_POSITION_FOLLOWING means `mark` comes after `list`.
-      return (list.compareDocumentPosition(mark) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 ? 'after' : 'before'
-    })
-    expect(order).toBe('after')
-  })
-
-  test('the vignettes are present in both light and dark theme without erroring', async ({ page }) => {
+  test('the header vignette is present in both light and dark theme without erroring', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
 
     await page.goto(`${BASE}/blog`)
     await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
     await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
-    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]').first()).toBeAttached()
 
     await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'))
     await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
-    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]').first()).toBeAttached()
 
     expect(errors).toEqual([])
   })

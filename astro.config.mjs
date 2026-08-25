@@ -21,14 +21,23 @@ const sanitizeSchema = {
   },
 }
 
+// Private routes, excluded under every locale prefix. Both carry `noindex`,
+// so listing them would invite a crawler to pages we then tell it to ignore.
+// Matched by path SEGMENT, not by substring: a future article slug that merely
+// contains "hero-lab" would drop out of the sitemap silently.
+const PRIVATE = ['/hero-lab', '/cv-print']
+
 // https://astro.build/config
 export default defineConfig({
   site: SITE,
   base: BASE || '/',
   output: 'static',
-  // `/hero-lab` and `/cv-print` both carry `noindex` — keep them out of the
-  // sitemap too, so we never invite a crawler to pages we then tell it to ignore.
-  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/hero-lab') && !page.includes('/cv-print') })],
+  i18n: {
+    locales: ['en', 'fr'],
+    defaultLocale: 'en',
+    routing: { prefixDefaultLocale: false },
+  },
+  integrations: [mdx(), sitemap({ filter: (page) => !PRIVATE.some((p) => new URL(page).pathname.split('/').includes(p.slice(1))) })],
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
     shikiConfig: {

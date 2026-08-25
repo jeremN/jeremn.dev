@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content'
+import ArticlePage from '../../../components/pages/ArticlePage.astro'
+import { isVisible } from '../../../lib/posts'
+
+export async function getStaticPaths() {
+  const posts = (
+    await getCollection('blog', (p) => p.data.lang === 'fr' && isVisible(p))
+  ).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  // Newest-first, so index i has its older neighbour at i+1. Only the older one
+  // is passed: the template offers a single onward link, never a back one.
+  // The list is filtered to one language first, so a reader never crosses into
+  // the other one by following "keep reading".
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, older: posts[i + 1] ?? null },
+  }))
+}
+
+const { post, older } = Astro.props
+---
+<ArticlePage post={post} older={older} lang="fr" />
