@@ -1,10 +1,11 @@
 ---
 import { getCollection } from 'astro:content'
 import ArticlePage from '../../components/pages/ArticlePage.astro'
+import { isVisible } from '../../lib/posts'
 
 export async function getStaticPaths() {
   const posts = (
-    await getCollection('blog', ({ data }) => data.lang === 'en' && (!data.draft || import.meta.env.DEV))
+    await getCollection('blog', (p) => p.data.lang === 'en' && isVisible(p))
   ).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   // Newest-first, so index i has its older neighbour at i+1. Only the older one
   // is passed: the template offers a single onward link, never a back one.

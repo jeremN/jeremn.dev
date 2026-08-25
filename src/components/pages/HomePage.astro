@@ -15,6 +15,9 @@ const t = getCopy(lang, 'home')
 const services = getServices(lang)
 const profile = getProfile(lang)
 
+// Not `isVisible`: the teaser hides drafts even in dev, unlike the index and
+// the article routes. Three curated rows have no room for a half-written post.
+// This predates the bilingual work — `main` has the same test.
 const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3)

@@ -5,13 +5,14 @@ import PostRow from '../site/PostRow.astro'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import { getCopy, type Locale } from '../../i18n'
+import { isVisible } from '../../lib/posts'
 
 interface Props { lang: Locale }
 const { lang } = Astro.props
 const t = getCopy(lang, 'blog')
 
 const posts = (
-  await getCollection('blog', ({ data }) => data.lang === lang && (!data.draft || import.meta.env.DEV))
+  await getCollection('blog', (p) => p.data.lang === lang && isVisible(p))
 ).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
 
 // Tags actually in use, alphabetical. Deriving them from the collection means
