@@ -5,7 +5,7 @@ const copy: typeof en = {
   description: "Contactez Jérémie Néhlil, développeur fullstack JavaScript senior disponible en freelance.",
   eyebrow: '04 / Parlons-en',
   headlineBefore: 'Vous avez un projet en ',
-  headlineEmphasis: 'tête ?',
+  headlineEmphasis: 'tête ?',
   lead: 'Parlons de ce que vous construisez et de ce que je peux y apporter.',
   emailLabel: 'E-mail',
   basedInLabel: 'Basé à',
