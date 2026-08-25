@@ -1,6 +1,6 @@
 ---
 import '../styles.css'
-import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
+import { withBase, toRoute, isSubpathDeploy, absolute } from '../lib/base'
 import { localeOf, alternatesFor, ROUTE_MAP, type Locale } from '../i18n'
 import { getUi } from '../i18n/ui'
 import LangSwitch from '../components/site/LangSwitch.astro'
@@ -36,11 +36,13 @@ const year = new Date().getFullYear()
 const route = toRoute(Astro.url.pathname)
 const isActive = (href: string) => route === href || route.startsWith(href + '/')
 const canonical = Astro.site ? new URL(withBase(route), Astro.site).href : withBase(route)
-// Articles pass their own rendered card. Every other page keeps the shared one.
-const ogImage = Astro.props.ogImage ?? (Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href : withBase('/og-cover.jpg'))
 
 const lang: Locale = Astro.props.lang ?? localeOf(route)
 const ui = getUi(lang)
+// Articles pass their own rendered card. Every other page takes the site card
+// for its own language: the French one writes the French job title, which is
+// the line a French prospect sees when the link is shared.
+const ogImage = Astro.props.ogImage ?? absolute(lang === 'fr' ? '/og/site-fr.jpg' : '/og/site.jpg')
 // Nav hrefs are English routes. Under /fr/, swap each one for its twin.
 const nav = ui.nav.map((n) => ({ ...n, href: lang === 'fr' ? (ROUTE_MAP[n.href] ?? n.href) : n.href }))
 // An explicit prop wins. Articles pass their pair, which ROUTE_MAP cannot hold
