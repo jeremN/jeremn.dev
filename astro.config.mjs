@@ -21,6 +21,10 @@ const sanitizeSchema = {
   },
 }
 
+// Private routes, excluded under every locale prefix. Both carry `noindex`,
+// so listing them would invite a crawler to pages we then tell it to ignore.
+const PRIVATE = ['/hero-lab', '/cv-print']
+
 // https://astro.build/config
 export default defineConfig({
   site: SITE,
@@ -31,9 +35,7 @@ export default defineConfig({
     defaultLocale: 'en',
     routing: { prefixDefaultLocale: false },
   },
-  // `/hero-lab` and `/cv-print` both carry `noindex` — keep them out of the
-  // sitemap too, so we never invite a crawler to pages we then tell it to ignore.
-  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/hero-lab') && !page.includes('/cv-print') })],
+  integrations: [mdx(), sitemap({ filter: (page) => !PRIVATE.some((p) => new URL(page).pathname.includes(p)) })],
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
     shikiConfig: {

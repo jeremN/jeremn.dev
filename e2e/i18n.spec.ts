@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { BASE } from '../site.config.mjs'
+import { ROUTE_MAP } from '../src/i18n'
 
 test.describe('French home page', () => {
   test('renders the French headline at /fr/', async ({ page }) => {
@@ -304,5 +305,110 @@ test.describe('article routes', () => {
     await page.goto(`${BASE}${FR}`)
     await expect(page.locator('.code-block__copy').first()).toHaveText('Copier')
     await expect(page.locator('article .heading-anchor').first()).toHaveAttribute('aria-label', 'Lien vers cette section')
+  })
+})
+
+test.describe('untranslated routes', () => {
+  test('/hero-lab and /cv-print emit no hreflang and no switcher', async ({ page }) => {
+    for (const path of ['/hero-lab', '/cv-print']) {
+      await page.goto(`${BASE}${path}`)
+      await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
+      await expect(page.locator('[data-lang-switch]')).toHaveCount(0)
+    }
+  })
+
+  test('they stay noindex', async ({ page }) => {
+    for (const path of ['/hero-lab', '/cv-print']) {
+      await page.goto(`${BASE}${path}`)
+      await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1)
+    }
+  })
+})
+
+test.describe('no English survives on the French side', () => {
+  // This branch shipped an English /fr/ home page once, and four more English
+  // leaks were caught in review rather than by a test. Every one of them lived
+  // outside the page component, where the extraction grep is blind: an imported
+  // data module, a hardcoded `en-US` date locale, a string returned by a
+  // function, a string inside a client script. The two tests below are the net
+  // that does not depend on remembering where prose can hide.
+
+  // If a French route renders its English twin's content, the two pages' main
+  // text is character-identical. Nothing else makes that happen, so this single
+  // assertion covers every page at once, including pages added later.
+  for (const [en, fr] of Object.entries(ROUTE_MAP)) {
+    test(`${fr} does not render ${en}'s content`, async ({ page }) => {
+      await page.goto(`${BASE}${en}`)
+      const english = await page.locator('main').innerText()
+      await page.goto(`${BASE}${fr}`)
+      const french = await page.locator('main').innerText()
+      expect(french, `${fr} rendered the English page`).not.toBe(english)
+      await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
+    })
+  }
+
+  // A page can be mostly French and still leak a phrase. These are the chrome
+  // strings a partial leak lands on: they come from shared modules, a shared
+  // layout, or a client script, so no single page owns them.
+  const ENGLISH_ONLY = [
+    'min read',
+    'Keep reading',
+    'On this page',
+    'All notes',
+    'Get in touch',
+    'Work with me',
+    'Based in France',
+    'Remote friendly',
+  ]
+
+  for (const fr of Object.values(ROUTE_MAP)) {
+    test(`${fr} carries no English chrome`, async ({ page }) => {
+      await page.goto(`${BASE}${fr}`)
+      // Case-folded, and that is load-bearing rather than defensive. `innerText`
+      // returns the RENDERED text, and several of these strings live in spans
+      // the design uppercases: the reading time renders as "5 MIN READ" and the
+      // footer eyebrow as "GET IN TOUCH". Compared as written, those two
+      // phrases could never match, so the assertion would have stayed green
+      // through the exact leak it exists to catch. Verified: pinning
+      // `readingTime` to English leaves this test passing without the fold and
+      // fails it with the fold.
+      const text = (await page.locator('body').innerText()).toLowerCase()
+      for (const phrase of ENGLISH_ONLY) {
+        expect(text, `${fr} leaked "${phrase}"`).not.toContain(phrase.toLowerCase())
+      }
+    })
+  }
+})
+
+test.describe('sitemap', () => {
+  test('lists both locales and excludes the private routes', async ({ request }) => {
+    const res = await request.get(`${BASE}/sitemap-0.xml`)
+    expect(res.ok()).toBeTruthy()
+    const xml = await res.text()
+    for (const path of ['/services', '/fr/services', '/about', '/fr/a-propos', '/blog', '/fr/blog']) {
+      expect(xml, path).toContain(`jeremn.dev${path}`)
+    }
+    for (const path of ['/hero-lab', '/cv-print']) {
+      expect(xml, path).not.toContain(`jeremn.dev${path}`)
+    }
+  })
+})
+
+test.describe('landmark labels per locale', () => {
+  // `innerText` cannot read an attribute, so the English-chrome sweep above is
+  // blind to these two. Both were hardcoded in Layout.astro, so a screen reader
+  // on any French page announced the navigation landmark and the theme button
+  // in English while every visible string around them was French.
+  test('the nav and the theme toggle are announced in the page language', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.locator('header nav')).toHaveAttribute('aria-label', 'Principale')
+    await expect(page.locator('#theme-toggle')).toHaveAttribute(
+      'aria-label',
+      'Basculer entre le thème clair et le thème sombre',
+    )
+
+    await page.goto(`${BASE}/`)
+    await expect(page.locator('header nav')).toHaveAttribute('aria-label', 'Main')
+    await expect(page.locator('#theme-toggle')).toHaveAttribute('aria-label', 'Switch between light and dark theme')
   })
 })

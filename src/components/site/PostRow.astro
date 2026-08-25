@@ -44,9 +44,15 @@ const blogBase = lang === 'fr' ? '/fr/blog' : '/blog'
 // The comps stack the date over three lines: day, month, year.
 // `.toUpperCase()` stays: the row's date is uppercase by design. 'fr-FR'
 // returns 'août', which uppercases to 'AOÛT'.
+// 'fr-FR' abbreviates eight months with a period (JANV., FÉVR., AVR., JUIL.,
+// SEPT., OCT., NOV., DÉC.) and leaves four bare (MARS, MAI, JUIN, AOÛT). In a
+// fixed decorative stack that mixed set reads as ragged, so the period goes.
+// This is a date stack, not running prose, so the bare abbreviation is ordinary
+// typography. 'en-US' never emits a trailing period, so English rows are
+// untouched.
 const dateLocale = lang === 'fr' ? 'fr-FR' : 'en-US'
 const day = publishedAt.toLocaleDateString(dateLocale, { day: '2-digit' })
-const month = publishedAt.toLocaleDateString(dateLocale, { month: 'short' }).toUpperCase()
+const month = publishedAt.toLocaleDateString(dateLocale, { month: 'short' }).toUpperCase().replace(/\.$/, '')
 const year = publishedAt.getFullYear()
 const category = tags.join(' / ').toUpperCase()
 const mark = markOverride ?? markForTags(tags)

@@ -12,6 +12,10 @@ const en = {
     { href: '/services', label: 'Services' },
     { href: '/contact', label: 'Contact' },
   ],
+  // The two landmark labels a screen reader announces on every page. They sat
+  // hardcoded in Layout.astro and stayed English under /fr/.
+  navLabel: 'Main',
+  themeToggleLabel: 'Switch between light and dark theme',
   getInTouch: 'Get in touch',
   footerCta: 'Work with me',
   basedIn: 'Based in France',
@@ -26,6 +30,8 @@ const fr: typeof en = {
     { href: '/services', label: 'Services' },
     { href: '/contact', label: 'Contact' },
   ],
+  navLabel: 'Principale',
+  themeToggleLabel: 'Basculer entre le thème clair et le thème sombre',
   getInTouch: 'Me contacter',
   footerCta: 'Travaillons ensemble',
   basedIn: 'Basé en France',

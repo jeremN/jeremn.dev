@@ -6,6 +6,7 @@ import { withBase } from '../../lib/base'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import { illustrationForKey, articleAspectForKey } from '../../lib/article-illustrations'
+import { isVisible } from '../../lib/posts'
 import { getCopy, type Locale } from '../../i18n'
 
 interface Props {
@@ -21,7 +22,7 @@ const { Content, headings } = await render(post)
 // The draft filter is the same one both routes apply, and it has to be here
 // too: an unfiltered lookup pairs a published article with a draft twin, and
 // then advertises a URL the production build never writes.
-const twin = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).find(
+const twin = (await getCollection('blog', isVisible)).find(
   (p) => p.data.translationKey === post.data.translationKey && p.data.lang !== post.data.lang,
 )
 const alternates = twin
@@ -30,11 +31,17 @@ const alternates = twin
       fr: post.data.lang === 'fr' ? `/fr/blog/${post.id}` : `/fr/blog/${twin.id}`,
     }
   : null
-const date = post.data.publishedAt.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-})
+// The same uppercase mono meta register as the blog row's date stack, and the
+// same `month: 'short'`, so it takes the same trailing-period trim: 'fr-FR'
+// gives 'sept.' for eight months and 'mars' for four, and the mixed set reads
+// as ragged. 'en-US' never emits one, so English articles are untouched.
+const date = post.data.publishedAt
+  .toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+  .replace('.', '')
 const category = post.data.tags.join(' / ').toUpperCase()
 const readTime = readingTime(post.body, lang)
 // "On this page" rail — only worth showing once a post has real structure.

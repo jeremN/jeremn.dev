@@ -91,7 +91,7 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
         <div class="flex min-w-0 items-center gap-3 sm:gap-9">
           <nav
             class="flex min-w-0 gap-3 overflow-x-auto [scrollbar-width:none] sm:gap-8 [&::-webkit-scrollbar]:hidden"
-            aria-label="Main"
+            aria-label={ui.navLabel}
           >
             {nav.map((n) => (
               <a href={withBase(n.href)} class="group whitespace-nowrap no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
@@ -103,7 +103,7 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
           <button
             id="theme-toggle"
             type="button"
-            aria-label="Switch between light and dark theme"
+            aria-label={ui.themeToggleLabel}
             class="-my-1 flex items-center text-muted transition-colors hover:text-accent"
           >
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
