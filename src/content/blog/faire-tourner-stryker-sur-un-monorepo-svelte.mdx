@@ -1,6 +1,6 @@
 ---
 title: 'Faire tourner Stryker sur un monorepo Svelte'
-summary: "La moitié pratique : comment on découpe les configs, ce qu'un mutant survivant raconte vraiment, les quatre correctifs qui en couvrent la plupart et les détails qui coûtent du temps quand tout doit tourner sur chaque merge request."
+summary: "La moitié pratique : comment on découpe les configs, ce qu'un mutant survivant raconte vraiment, les quatre correctifs qui règlent la plupart des cas et les détails qui coûtent du temps quand tout doit tourner sur chaque merge request."
 publishedAt: 2026-08-17
 tags: [Testing, Svelte, CI]
 draft: false
@@ -9,10 +9,10 @@ translationKey: 'stryker-on-a-svelte-monorepo'
 ---
 
 [L'article précédent](/blog/who-checks-the-agents-tests) parlait de l'endroit où
-un check a sa place et de ce qu'il doit prouver avant d'avoir le droit de
+un checker a sa place et de ce qu'il doit prouver avant d'avoir le droit de
 bloquer quoi que ce soit. Celui-ci est la moitié pratique. Comment Stryker
 s'installe sur un monorepo Svelte, ce qu'un mutant survivant raconte vraiment et
-ce qu'il faut pour faire tourner tout ça sur chaque merge request sans qu'il
+ce qu'il faut pour faire tourner tout ça sur chaque merge request sans que ça
 mente en douce.
 
 ## Quatre configs, un seul runner
@@ -26,11 +26,11 @@ Ici, ça se découpe en quatre : le TypeScript de l'app web, ses composants
 Svelte, le BFF et la librairie métier partagée. Chacun a sa config, parce que
 chacun a un setup de test runner différent derrière.
 
-Les exclusions comptent plus que les inclusions. Le code généré est l'évidence :
-le muter produit des survivants sur lesquels personne ne peut agir. Les fichiers
-de types purs et les barrel exports sont l'autre cas. Il n'y a aucun
-comportement à casser dedans, donc chaque mutant est soit équivalent, soit du
-bruit.
+Les exclusions comptent plus que les inclusions. Le code généré est le cas
+évident : le muter produit des survivants sur lesquels personne ne peut agir.
+Les fichiers de types purs et les barrel exports sont l'autre cas. Il n'y a
+aucun comportement à casser dedans, donc chaque mutant est soit équivalent, soit
+du bruit.
 
 ```jsonc
 {
@@ -55,9 +55,9 @@ minutes.
 pnpm exec stryker run --mutate "src/lib/utils/distance.ts"
 ```
 
-Viser le plus étroit possible. Le score d'un package est un chiffre pour un
-rapport. Le score du fichier dont on vient d'écrire le test, c'est quelque chose
-sur quoi on peut agir dans la minute.
+Cibler le plus étroitement possible. Le score d'un package est un chiffre pour
+un rapport. Le score du fichier dont on vient d'écrire le test, c'est quelque
+chose sur quoi on peut agir dans la minute.
 
 ## Lire un survivant
 
@@ -125,15 +125,15 @@ une entrée indépendamment d'une autre.
 ## Les survivants qu'on ne peut pas tuer
 
 Certains mutants ne changent rien d'observable. Un guard `typeof` qui n'existe
-que pour le narrowing TypeScript d'une union, alors que l'appel derrière gère
-déjà l'autre cas. Un replace de string sur un token que le template ne contient
+que pour le narrowing TypeScript d'une union, alors que l'appel qu'il protège
+gère déjà l'autre cas. Un replace sur un token que le template ne contient
 jamais. Un check de null dans un handler, là où la valeur est la cible de
 l'événement et ne peut pas être null.
 
-Si on casse l'un de ces trois cas, le programme se comporte pareil, donc aucune
-assertion ne sépare les deux versions. Stryker les signale comme des trous, et
-ce n'en sont pas. Le seul geste possible, c'est de les désactiver dans la
-source, en écrivant la raison.
+Si on casse l'une de ces trois protections, le programme se comporte pareil,
+donc aucune assertion ne sépare les deux versions. Stryker les signale comme des
+trous, mais ce ne sont pas des trous. Le seul geste possible, c'est de les
+désactiver dans la source, en écrivant la raison.
 
 ```ts
 // Stryker disable next-line ConditionalExpression: guard typeof pour le narrowing TS
@@ -182,9 +182,9 @@ lui-même.
 l'optimisation related-tests de Stryker, parce que le module graph qu'elle
 consulte vit du côté Node. Sans cette optimisation, un run de composants exige
 que toute la suite de composants passe sous le dry run de Stryker. Aucun autre
-job ne vérifie cette condition, donc l'étape casserait sur n'importe quel test
-de composant sans rapport, et la panne ressemblerait à un problème de mutation.
-Les composants restent un run local, et c'est un choix.
+job ne vérifie cette condition. Le job casserait donc sur n'importe quel test de
+composant sans rapport, et l'échec ressemblerait à un problème de mutation. Les
+composants restent un run local, et c'est un choix.
 
 ## Petits pièges
 
@@ -198,15 +198,15 @@ pnpm exec stryker run stryker.component.config.json --mutate "..."
 
 Sous l'isolation stricte de pnpm, l'autoloader de plugins ne trouve rien, donc
 chaque config doit nommer son runner explicitement dans un tableau `plugins`. Et
-passer `--mutate` à travers un script de package avec `--` n'arrive jamais
+un `--mutate` passé dans un script de package derrière `--` n'arrive jamais
 jusqu'à Stryker. Appeler le binaire directement pour cibler un fichier.
 
 ## Ce que ça vaut
 
-Le setup n'a pas été gratuit. L'essentiel du temps est parti dans les parties
-que personne ne montre en démo : décider ce qu'il ne faut pas muter, garder un
-seul writer sur le commentaire, vérifier qu'un run planté ne peut pas faire
-passer un vieux chiffre pour un neuf.
+Le setup n'a pas été gratuit. L'essentiel du temps est passé sur ce que personne
+ne montre en démo : décider ce qu'il ne faut pas muter, garder un seul writer
+sur le commentaire, vérifier qu'un run planté ne peut pas faire passer un vieux
+chiffre pour un neuf.
 
 En échange, une seule chose, et c'est celle dont parlait l'article précédent.
 Tous les autres signaux de la suite disent qu'un bout de code a tourné. Celui-ci
