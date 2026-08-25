@@ -3,7 +3,9 @@ import mdx from '@astrojs/mdx'
 import tailwindcss from '@tailwindcss/vite'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import sitemap from '@astrojs/sitemap'
+import { fileURLToPath } from 'node:url'
 import { SITE, BASE } from './site.config.mjs'
+import { readArticles, routeOf } from './scripts/articles.mjs'
 
 // Sanitize agent/author-authored markdown (defense-in-depth) WITHOUT destroying
 // Astro's Shiki highlighting. Astro runs its built-in Shiki before user rehype
@@ -21,11 +23,22 @@ const sanitizeSchema = {
   },
 }
 
-// Private routes, excluded under every locale prefix. Both carry `noindex`,
+// Private routes, excluded under every locale prefix. All carry `noindex`,
 // so listing them would invite a crawler to pages we then tell it to ignore.
 // Matched by path SEGMENT, not by substring: a future article slug that merely
 // contains "hero-lab" would drop out of the sitemap silently.
-const PRIVATE = ['/hero-lab', '/cv-print']
+// `/og` holds the social cards' source pages, which exist only to be
+// screenshotted by `npm run og`.
+const PRIVATE = ['/hero-lab', '/cv-print', '/og']
+
+// Article route -> publication date, for the sitemap's `lastmod`. Read off the
+// frontmatter here because the sitemap integration runs outside the content
+// layer and cannot call `getCollection`.
+const ARTICLE_DATES = new Map(
+  readArticles(fileURLToPath(new URL('./src/content/blog', import.meta.url)))
+    .filter((a) => !a.draft)
+    .map((a) => [routeOf(a), a.publishedAt]),
+)
 
 // https://astro.build/config
 export default defineConfig({
@@ -37,7 +50,19 @@ export default defineConfig({
     defaultLocale: 'en',
     routing: { prefixDefaultLocale: false },
   },
-  integrations: [mdx(), sitemap({ filter: (page) => !PRIVATE.some((p) => new URL(page).pathname.split('/').includes(p.slice(1))) })],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !PRIVATE.some((p) => new URL(page).pathname.split('/').includes(p.slice(1))),
+      // `lastmod` on the article URLs only. Every other page's real change date
+      // lives in git, not in any field the build can read, so inventing one
+      // there would tell a crawler the whole site changed on every deploy.
+      serialize: (item) => {
+        const published = ARTICLE_DATES.get(new URL(item.url).pathname.replace(/\/$/, ''))
+        return published ? { ...item, lastmod: published } : item
+      },
+    }),
+  ],
   markdown: {
     // GFM is on by default. Match the old Shiki theme.
     shikiConfig: {

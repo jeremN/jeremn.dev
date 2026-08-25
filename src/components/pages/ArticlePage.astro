@@ -2,12 +2,13 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
 import { readingTime } from '../../lib/reading-time'
-import { withBase } from '../../lib/base'
+import { withBase, absolute } from '../../lib/base'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import { illustrationForKey, articleAspectForKey } from '../../lib/article-illustrations'
 import { isVisible } from '../../lib/posts'
 import { getCopy, type Locale } from '../../i18n'
+import { articleLd } from '../../lib/structured-data'
 
 interface Props {
   post: CollectionEntry<'blog'>
@@ -31,21 +32,25 @@ const alternates = twin
       fr: post.data.lang === 'fr' ? `/fr/blog/${post.id}` : `/fr/blog/${twin.id}`,
     }
   : null
-// The same uppercase mono meta register as the blog row's date stack, and the
-// same `month: 'short'`, so it takes the same trailing-period trim: 'fr-FR'
-// gives 'sept.' for eight months and 'mars' for four, and the mixed set reads
-// as ragged. 'en-US' never emits one, so English articles are untouched.
-// Anchored, like `PostRow`'s `/\.$/`, but on a boundary rather than on the end
-// of the string: 'fr-FR' puts the month mid-string ('17 sept. 2026'), so the
-// period this trims is followed by a space, never final. The `|$` arm keeps it
-// correct for a pattern that ends on the month.
-const date = post.data.publishedAt
-  .toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-  .replace(/\.(?=\s|$)/, '')
+// English keeps the comp's short month: 'SEP 17, 2026'.
+// French takes the LONG month, unlike `PostRow`'s stack. This line is one
+// running sentence, so a trimmed 'fr-FR' abbreviation reads as a word: '17
+// SEPT 2026' is '17 seven 2026', and 'AVR' and 'JUIL' are no better. Keeping
+// the period instead would fix the meaning but leave the ragged mix the stack
+// was trimmed to avoid, since 'fr-FR' abbreviates eight months and leaves four
+// bare. The long month removes both problems and is what French prose uses.
+// `PostRow` cannot follow: its column is 3.5rem wide and 'SEPTEMBRE' overflows.
+const date = post.data.publishedAt.toLocaleDateString(
+  lang === 'fr' ? 'fr-FR' : 'en-US',
+  lang === 'fr'
+    ? { year: 'numeric', month: 'long', day: 'numeric' }
+    : { year: 'numeric', month: 'short', day: 'numeric' },
+)
+// The article's own route, and the social card `npm run og` renders for it.
+// Keyed on the slug rather than on `translationKey`, unlike the illustration:
+// the card prints the article's own title, so a translation needs its own.
+const route = lang === 'fr' ? `/fr/blog/${post.id}` : `/blog/${post.id}`
+const ogImage = absolute(`/og/${post.id}.jpg`)
 const category = post.data.tags.join(' / ').toUpperCase()
 const readTime = readingTime(post.body, lang)
 // "On this page" rail — only worth showing once a post has real structure.
@@ -61,7 +66,24 @@ const illustration = illustrationForKey(post.data.translationKey)
 const illustrationAspect = articleAspectForKey(post.data.translationKey)
 const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
 ---
-<Layout lang={lang} alternates={alternates} title={`${post.data.title} · jeremn.dev`} description={post.data.summary} hideFooterCta>
+<Layout
+  lang={lang}
+  alternates={alternates}
+  title={`${post.data.title} · jeremn.dev`}
+  description={post.data.summary}
+  ogImage={ogImage}
+  article={{ publishedAt: post.data.publishedAt }}
+  jsonLd={articleLd({
+    lang,
+    abs: absolute,
+    route,
+    headline: post.data.title,
+    description: post.data.summary,
+    publishedAt: post.data.publishedAt,
+    image: ogImage,
+  })}
+  hideFooterCta
+>
   <main
     class:list={[
       'relative z-10 mx-auto px-6 pb-24 pt-2',
@@ -101,7 +123,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
 
       <div class="mt-10 flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
         <div class="min-w-0">
-          <p class="font-mono text-[11px] uppercase tracking-wider text-muted">
+          <p data-article-meta class="font-mono text-[11px] uppercase tracking-wider text-muted">
             {date}{category && ` · ${category}`}
           </p>
 

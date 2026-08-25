@@ -1,0 +1,9 @@
+---
+/** Renders one JSON-LD block. The escaping that makes it safe lives in
+ *  `lib/structured-data.ts`, where a test can reach it. */
+import { serialiseLd, type JsonLdObject } from '../../lib/structured-data'
+
+interface Props { data: JsonLdObject }
+const { data } = Astro.props as Props
+---
+<script type="application/ld+json" is:inline set:html={serialiseLd(data)} />

@@ -9,7 +9,7 @@ import { ROUTE_MAP } from '../src/i18n'
 // article added by a later translation task joins the sweeps without an edit.
 const BLOG_DIR = fileURLToPath(new URL('../src/content/blog', import.meta.url))
 
-type Article = { slug: string; lang: string; translationKey: string; body: string }
+type Article = { slug: string; lang: string; translationKey: string; publishedAt: string; body: string }
 
 const ARTICLES: Article[] = readdirSync(BLOG_DIR)
   .filter((file) => file.endsWith('.mdx'))
@@ -24,6 +24,7 @@ const ARTICLES: Article[] = readdirSync(BLOG_DIR)
       slug: file.replace(/\.mdx$/, ''),
       lang: field('lang'),
       translationKey: field('translationKey'),
+      publishedAt: field('publishedAt'),
       body: parts.slice(2).join('---'),
     }
   })
@@ -300,10 +301,40 @@ test.describe('article routes', () => {
     await expect(page.locator('[data-doodle="xiaohei-article-stryker-on-a-svelte-monorepo"]')).toHaveCount(2)
   })
 
+  // Both directions of the same rule, derived from the collection rather than
+  // pinned to one slug. This test used to name `ten-months-of-svelte-5` as the
+  // untranslated article; wave 2 translated it, and the assertion broke on a
+  // content change rather than on a defect. Derived, it cannot go stale again.
+  const twinned = new Set(
+    ARTICLES.filter(
+      (a) => ARTICLES.some((b) => b.translationKey === a.translationKey && b.lang !== a.lang),
+    ).map((a) => a.translationKey),
+  )
+  const routeOfArticle = (a: Article) => (a.lang === 'fr' ? `/fr/blog/${a.slug}` : `/blog/${a.slug}`)
+
+  test('every article with a twin carries the full reciprocal hreflang set', async ({ page }) => {
+    const paired = ARTICLES.filter((a) => twinned.has(a.translationKey))
+    expect(paired.length, 'no paired article to check').toBeGreaterThan(0)
+    for (const article of paired) {
+      const route = routeOfArticle(article)
+      await page.goto(`${BASE}${route}`)
+      await expect(page.locator('link[rel="alternate"][hreflang]'), route).toHaveCount(3)
+      await expect(page.locator('[data-lang-switch]'), route).toHaveCount(1)
+    }
+  })
+
   test('an article with no twin emits no hreflang and hides the switcher', async ({ page }) => {
-    await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
-    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
-    await expect(page.locator('[data-lang-switch]')).toHaveCount(0)
+    const lonely = ARTICLES.filter((a) => !twinned.has(a.translationKey))
+    // Reported as skipped rather than passing on an empty loop. Every article
+    // is translated today, so this rule has no subject; the day one ships in a
+    // single language it gets checked again, and the report says which it was.
+    test.skip(lonely.length === 0, 'every article is translated, so this rule has no subject')
+    for (const article of lonely) {
+      const route = routeOfArticle(article)
+      await page.goto(`${BASE}${route}`)
+      await expect(page.locator('link[rel="alternate"][hreflang]'), route).toHaveCount(0)
+      await expect(page.locator('[data-lang-switch]'), route).toHaveCount(0)
+    }
   })
 
   test('the English article keeps its illustration and its highlighted code', async ({ page }) => {
@@ -344,6 +375,50 @@ test.describe('article routes', () => {
     await page.goto(`${BASE}${FR}`)
     await expect(page.locator('.code-block__copy').first()).toHaveText('Copier')
     await expect(page.locator('article .heading-anchor').first()).toHaveAttribute('aria-label', 'Lien vers cette section')
+  })
+})
+
+test.describe('the article meta date reads as prose in each language', () => {
+  // 'fr-FR' abbreviates eight months and leaves four bare. The blog row's date
+  // stack trims the trailing period, which is ordinary typography in a
+  // decorative column. On the article's meta line the same trim produces a
+  // word: '17 SEPT 2026' reads as '17 seven 2026', and AVR and JUIL are no
+  // better. The article page takes the long month in French for that reason.
+  //
+  // The expected string is derived from each article's own frontmatter, with
+  // the same `new Date(...)` the content schema builds, so a translation added
+  // later is covered without editing this file. Asserting one hardcoded date
+  // would pass on `août`, which is one of the four months that never
+  // abbreviates, and so would never have caught the bug.
+  const FRENCH = ARTICLES.filter((a) => a.lang === 'fr')
+
+  test('every French article spells its month out in full', async ({ page }) => {
+    expect(FRENCH.length, 'no French article to check').toBeGreaterThan(0)
+    for (const article of FRENCH) {
+      await page.goto(`${BASE}/fr/blog/${article.slug}`)
+      const expected = new Date(article.publishedAt)
+        .toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
+      // `ignoreCase`, because the uppercase on this line is `text-transform`,
+      // not text. The DOM still holds '17 août 2026', so an assertion written
+      // against the rendered capitals matches nothing.
+      await expect(page.locator('[data-article-meta]'), article.slug).toContainText(expected, {
+        ignoreCase: true,
+      })
+    }
+  })
+
+  // Without this, switching the English page to the long month too would leave
+  // the test above green while silently changing every English article.
+  test('English articles keep the short month the comp specifies', async ({ page }) => {
+    const english = ARTICLES.filter((a) => a.lang === 'en')
+    for (const article of english) {
+      await page.goto(`${BASE}/blog/${article.slug}`)
+      const expected = new Date(article.publishedAt)
+        .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      await expect(page.locator('[data-article-meta]'), article.slug).toContainText(expected, {
+        ignoreCase: true,
+      })
+    }
   })
 })
 

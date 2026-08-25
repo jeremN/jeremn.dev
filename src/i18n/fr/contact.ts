@@ -2,7 +2,8 @@ import type en from '../en/contact'
 
 const copy: typeof en = {
   title: 'Contacter un développeur freelance fullstack · jeremn.dev',
-  description: "Contactez Jérémie Néhlil, développeur fullstack JavaScript senior disponible en freelance.",
+  description:
+    'Contactez Jérémie Néhlil, développeur freelance fullstack JavaScript. SvelteKit, React et Node. Disponible pour une mission freelance.',
   eyebrow: '04 / Parlons-en',
   headlineBefore: 'Vous avez un projet en ',
   headlineEmphasis: 'tête ?',

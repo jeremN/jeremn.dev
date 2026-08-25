@@ -29,8 +29,9 @@ const ai: ServiceItem[] = [
 ]
 
 export default {
-  title: 'Services · jeremn.dev',
-  description: 'Freelance engineering for product teams, plus scoped AI systems for repetitive work.',
+  title: 'Freelance web development and AI automation · jeremn.dev',
+  description:
+    'Freelance web development, performance audits and AI automation. SvelteKit, Next.js, React and Node. Available for product teams and agencies.',
   eyebrow: '06 / Services',
   headlineBefore: 'Useful systems, ',
   headlineEmphasis: 'built with intent.',

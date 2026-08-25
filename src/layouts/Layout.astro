@@ -1,9 +1,11 @@
 ---
 import '../styles.css'
-import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
+import { withBase, toRoute, isSubpathDeploy, absolute } from '../lib/base'
 import { localeOf, alternatesFor, ROUTE_MAP, type Locale } from '../i18n'
 import { getUi } from '../i18n/ui'
 import LangSwitch from '../components/site/LangSwitch.astro'
+import JsonLd from '../components/site/JsonLd.astro'
+import type { JsonLdObject } from '../lib/structured-data'
 interface Props {
   title?: string
   description?: string
@@ -12,12 +14,21 @@ interface Props {
   lang?: Locale
   /** Overrides the route map. `null` means "this page has no twin". */
   alternates?: { en: string; fr: string } | null
+  /** This page's structured data. Built by `lib/structured-data.ts`. */
+  jsonLd?: JsonLdObject
+  /** Absolute URL of the social card. Articles pass their own. */
+  ogImage?: string
+  /** Set on an article, so the head can carry `og:type="article"` and the
+   *  publication date. Every other page stays `website`. */
+  article?: { publishedAt: Date } | null
 }
 const {
   title = 'Jérémie Néhlil',
-  description = 'Jérémie Néhlil, freelance software engineer. CV, writing, and a WebGL galaxy.',
+  description = 'Jérémie Néhlil, freelance fullstack JavaScript engineer. SvelteKit, React and Node.',
   noindex = false,
   hideFooterCta = false,
+  jsonLd,
+  article = null,
 } = Astro.props
 const year = new Date().getFullYear()
 
@@ -25,10 +36,13 @@ const year = new Date().getFullYear()
 const route = toRoute(Astro.url.pathname)
 const isActive = (href: string) => route === href || route.startsWith(href + '/')
 const canonical = Astro.site ? new URL(withBase(route), Astro.site).href : withBase(route)
-const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href : withBase('/og-cover.jpg')
 
 const lang: Locale = Astro.props.lang ?? localeOf(route)
 const ui = getUi(lang)
+// Articles pass their own rendered card. Every other page takes the site card
+// for its own language: the French one writes the French job title, which is
+// the line a French prospect sees when the link is shared.
+const ogImage = Astro.props.ogImage ?? absolute(lang === 'fr' ? '/og/site-fr.jpg' : '/og/site.jpg')
 // Nav hrefs are English routes. Under /fr/, swap each one for its twin.
 const nav = ui.nav.map((n) => ({ ...n, href: lang === 'fr' ? (ROUTE_MAP[n.href] ?? n.href) : n.href }))
 // An explicit prop wins. Articles pass their pair, which ROUTE_MAP cannot hold
@@ -66,9 +80,19 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
     <link rel="manifest" href={withBase('/manifest.json')} />
+    {/* Both feeds are advertised on every page, each titled in its own
+        language, so a reader subscribing from either tree can pick. */}
+    <link rel="alternate" type="application/rss+xml" title="jeremn.dev · Writing" href={withBase('/rss.xml')} />
+    <link rel="alternate" type="application/rss+xml" title="jeremn.dev · Articles" href={withBase('/fr/rss.xml')} />
     {(noindex || isSubpathDeploy) && <meta name="robots" content="noindex" />}
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    {article && (
+      <>
+        <meta property="article:published_time" content={article.publishedAt.toISOString()} />
+        <meta property="article:author" content="Jérémie Néhlil" />
+      </>
+    )}
     <meta property="og:site_name" content="jeremn.dev" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -78,6 +102,11 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+
+    {/* Skipped on the subpath deploy for the same reason as hreflang above:
+        `withBase` puts the project prefix into the path, so every URL in the
+        block would resolve against the apex origin and come out wrong. */}
+    {jsonLd && !isSubpathDeploy && <JsonLd data={jsonLd} />}
   </head>
   <body class:list={['antialiased', '[overflow-wrap:anywhere]']}>
     <header

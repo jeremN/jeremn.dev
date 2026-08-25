@@ -1,0 +1,105 @@
+---
+// The social cards. One per article, plus one default per locale, all rendered
+// at 1200x630 by `npm run og` and written to public/og/<slug>.jpg.
+//
+// This is a page rather than a canvas or an image library because the card then
+// inherits the real design system: the same fonts, the same tokens, and the
+// same illustration components the article itself uses. A drifted card is
+// impossible, because there is only one definition of what the site looks like.
+//
+// The route carries `noindex` and is excluded from the sitemap (astro.config.mjs).
+import { getCollection, type CollectionEntry } from 'astro:content'
+import '../../styles.css'
+import Doodle from '../../components/site/Doodle.astro'
+import { illustrationForKey } from '../../lib/article-illustrations'
+import { isVisible } from '../../lib/posts'
+import { getProfile } from '../../lib/cv'
+import { getCopy, type Locale } from '../../i18n'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', isVisible)
+  return [
+    // The two defaults every non-article page points at. `site-fr` is a
+    // separate card, not the same file: the French card writes the French
+    // job title, which is the whole reason a prospect shares it.
+    { params: { slug: 'site' }, props: { post: null, lang: 'en' as Locale } },
+    { params: { slug: 'site-fr' }, props: { post: null, lang: 'fr' as Locale } },
+    ...posts.map((post) => ({ params: { slug: post.id }, props: { post, lang: post.data.lang } })),
+  ]
+}
+
+interface Props {
+  post: CollectionEntry<'blog'> | null
+  lang: Locale
+}
+const { post, lang } = Astro.props as Props
+const profile = getProfile(lang)
+const home = getCopy(lang, 'home')
+
+// The same long-month rule the article page follows, and for the same reason.
+const date = post
+  ? post.data.publishedAt.toLocaleDateString(
+      lang === 'fr' ? 'fr-FR' : 'en-US',
+      lang === 'fr'
+        ? { year: 'numeric', month: 'long', day: 'numeric' }
+        : { year: 'numeric', month: 'short', day: 'numeric' },
+    )
+  : ''
+const eyebrow = post
+  ? [date, post.data.tags.join(' / ')].filter(Boolean).join(' · ')
+  : home.availability
+const heading = post ? post.data.title : profile.name
+// The byline. On an article it says who wrote it, which the card otherwise
+// never states; on the site card the name is already the heading.
+const tail = post ? `${profile.name} · ${profile.title}` : profile.title
+const illustration = post ? illustrationForKey(post.data.translationKey) : 'xiaohei-hero'
+---
+<!doctype html>
+{/* The card is a fixed image. It has no viewer and no theme preference, so it
+    pins the light palette rather than inheriting `prefers-color-scheme` from
+    whatever machine runs the render script. */}
+<html lang={lang} data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>{heading}</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body class="antialiased">
+    <div
+      data-og-card
+      class="flex h-[630px] w-[1200px] flex-col justify-between overflow-hidden bg-ground px-16 py-14"
+    >
+      <div class="flex items-center justify-between">
+        <span class="font-sans text-2xl font-bold tracking-tight text-ink">
+          jeremn<span class="text-accent">.</span>dev
+        </span>
+        <span class="font-mono text-base uppercase tracking-wider text-muted">{eyebrow}</span>
+      </div>
+
+      {/* `flex-1` with centred content, rather than the outer `justify-between`
+          doing the work: with only two children that pins the block to the
+          bottom edge and leaves the top third empty. */}
+      <div class="flex flex-1 items-center justify-between gap-12">
+        <div class="min-w-0 flex-1">
+          <h1
+            class:list={[
+              'max-w-[16ch] font-display font-medium leading-[1.05] tracking-tight text-ink',
+              // The longest article title runs past 60 characters, and a single
+              // size would either wrap to five lines there or look lost on a
+              // short one. Two steps, chosen on the title's own length.
+              heading.length > 42 ? 'text-6xl' : 'text-7xl',
+            ]}
+          >
+            {heading}
+          </h1>
+          <div class="mt-8 h-[3px] w-24 bg-accent"></div>
+          <p class="mt-8 max-w-[34ch] font-sans text-2xl leading-snug text-muted">{tail}</p>
+        </div>
+
+        {illustration && (
+          <Doodle name={illustration} class="h-[22rem] w-[22rem] shrink-0 text-ink" />
+        )}
+      </div>
+    </div>
+  </body>
+</html>

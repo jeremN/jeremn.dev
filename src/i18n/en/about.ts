@@ -1,6 +1,7 @@
 export default {
-  title: 'About · jeremn.dev',
-  description: 'Jérémie Néhlil, senior fullstack JavaScript engineer based in France. How I work and what I care about.',
+  title: 'About Jérémie Néhlil, freelance engineer · jeremn.dev',
+  description:
+    'Jérémie Néhlil, freelance fullstack JavaScript engineer near Paris. SvelteKit, React and Node. How I work, and what I take on.',
   eyebrow: '03 / About',
   headlineBefore: 'I like software that makes ',
   headlineEmphasis: 'sense.',

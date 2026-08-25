@@ -8,9 +8,11 @@
     "preview": "astro preview",
     "check": "astro check",
     "test:e2e": "playwright test",
-    "cv:pdf": "node scripts/render-cv-pdf.mjs"
+    "cv:pdf": "node scripts/render-cv-pdf.mjs",
+    "og": "node scripts/render-og.mjs"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
