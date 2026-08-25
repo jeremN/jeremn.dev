@@ -1,0 +1,192 @@
+---
+title: "Qui vérifie les tests de l'agent"
+summary: "La coverage dit qu'une ligne a tourné, pas que quelque chose a été vérifié, et un agent à qui on demande des tests produira volontiers la différence. Le mutation testing sépare les deux. Le mettre dans la boucle de l'agent a échoué exactement de la façon qu'il était censé attraper, et réparer ça est ce qui donne à un check automatique le droit de bloquer."
+publishedAt: 2026-08-17
+tags: [Agents, Testing, Svelte]
+draft: false
+lang: 'fr'
+translationKey: 'who-checks-the-agents-tests'
+---
+
+Un agent t'écrira un test qui ne prouve rien, et le rapport de coverage le déclarera vert.
+
+```ts
+function isAdult(age: number) {
+  return age >= 18
+}
+
+it('detects adults', () => {
+  isAdult(25)
+})
+```
+
+C'est une coverage complète sur `isAdult`. La ligne a tourné. Rien n'a été vérifié. Change
+le `>=` en `>`, ou en `<=`, et le test passe les deux fois.
+
+Ce n'est pas un exemple tordu. C'est la forme que tu obtiens quand on demande à un modèle
+d'ajouter des tests à un fichier et qu'il n'a aucun moyen de savoir à quoi sert ce fichier.
+
+Un agent est pressé d'atteindre le vert. Ce n'est pas un défaut d'un modèle particulier,
+c'est ce que le signal visible récompense. La suite passe, le chiffre de coverage monte, et
+la tâche se déclare terminée. Rien dans cette boucle ne peut faire la différence entre un
+test qui tient le code à quelque chose et un test qui le fait tourner.
+
+## Ce qu'est un mutant
+
+La coverage demande si une ligne a tourné. La question qui nous intéresse vraiment, c'est
+de savoir si quelqu'un s'en apercevrait si la ligne était fausse.
+
+Stryker répond à celle-là. Il fait un petit changement dans le source, un à la fois, et
+lance la suite contre chaque version. Chaque version modifiée est un mutant. Un test
+échoue, le mutant est tué. Tous les tests passent, le mutant a survécu, et un survivant est
+une assertion manquante avec un fichier et un numéro de ligne accrochés dessus.
+
+Lance-le sur le code ci-dessus et le score est zéro. Deux mutants, tous les deux vivants,
+et un test posé là avec l'air productif.
+
+## Le mettre dans la boucle de l'agent
+
+La première version tournait dans la session. Un hook se déclenchait après chaque écriture
+ou édition de l'agent, calculait quel fichier source le test édité couvrait, lançait
+Stryker sur ce seul fichier, et réaffichait le score à l'agent en texte. Il tournait de
+façon asynchrone pour que l'agent puisse continuer.
+
+L'idée, c'était que l'agent découvre en cours de tâche si le test qu'il venait d'écrire
+était réel, et le corrige avant de passer à la suite. Personne n'a rien à lire. La boucle
+se ferme toute seule.
+
+Ça n'a pas marché, et la façon dont ça a échoué est la raison pour laquelle j'écris ceci.
+
+Le hook avait trois façons distinctes de ne rien produire. Stryker prend une minute ou plus
+par fichier et un agent édite plus vite que ça, donc un verrou empêchait les runs de
+s'empiler, et pendant qu'un run tournait, tous les autres déclenchements sortaient tôt.
+Stryker ne fait silencieusement rien quand on lui passe un fichier hors de son glob de
+mutation, ce que le commentaire du script notait lui-même. Et l'appel était encapsulé pour
+qu'un crash ne puisse pas tuer la session, ce qui voulait aussi dire qu'un crash ne
+produisait rien.
+
+Chacune de ces trois choses est défendable prise seule. Ensemble, elles voulaient dire que
+le hook restait muet pour trois raisons différentes, et rester muet est aussi ce qu'il
+faisait quand les tests allaient vraiment bien.
+
+L'agent lisait le silence comme une réussite.
+
+Le check qu'on avait construit pour attraper les tests qui ne vérifient rien était donc
+devenu un check qui ne vérifiait rien, et il rapportait ce fait de la même façon que ces
+tests-là : en ayant l'air vert. On l'a supprimé des trois agents de code qu'on fait
+tourner.
+
+## Où il est parti à la place
+
+C'est un job de CI aujourd'hui.
+
+Il calcule quels fichiers source la merge request touche réellement et ne mute que
+ceux-là. Le mode incrémental veut dire qu'il réutilise l'analyse précédente, donc un run
+prend des secondes plutôt que les quelques minutes qu'un package complet demande.
+
+Et il ne bloque rien. Le job est marqué en allow failure, ce qui correspond aux seuils de
+chaque config Stryker du dépôt : une marque haute, une marque basse, et aucun score
+bloquant. Sa seule sortie est une section dans un commentaire sur la merge request, qui
+liste chaque mutant survivant avec son fichier, sa ligne et l'opérateur qui a survécu. Un
+score nu ne dit rien d'actionnable à un relecteur.
+
+Une personne le lit, et décide. C'est là qu'on en est aujourd'hui, et c'est une étape
+plutôt qu'une conclusion.
+
+## Pourquoi il ne bloque pas encore
+
+La raison n'est pas de la modestie sur le mutation testing. C'est qu'un check gagne le
+droit d'arrêter un merge seulement quand on peut lui faire confiance pour parler, et que
+tout dans ce système commence en étant capable d'échouer en silence.
+
+Le support Svelte de Stryker est le cas le plus clair. Il parse les expressions du markup
+comme si c'étaient des instructions, donc un attribut contenant un objet à deux clés
+échoue net sur un point-virgule manquant. Celle-là est bruyante et tu la corriges. Mais un
+objet à une seule clé est un labelled block valide en JavaScript. Ça parse. Stryker mute
+alors une construction qui n'existe pas dans ton fichier et rapporte un score dessus. Pas
+d'erreur, pas de warning, un chiffre qui décrit du code que tu n'as jamais écrit. C'est
+patché en local, et le correctif upstream n'en couvre que la moitié.
+
+Le cache avait la même forme de problème. Mettre en cache le dossier de rapport entre les
+pipelines a l'air évidemment juste, et ça veut dire que quand Stryker crashe, le rapport du
+run précédent est encore sur le disque, prêt à être posté comme s'il décrivait le
+changement courant. Seul le fichier d'analyse incrémentale est mis en cache maintenant, et
+le rapport est supprimé juste avant chaque run pour que le job ne puisse jamais en trouver
+qu'un qu'il a produit lui-même.
+
+Même ne rien poster s'est avéré faux. Le commentaire vit dans une note qui survit à la
+pipeline, donc un commit qui retire la dernière cible de mutation doit activement effacer
+la section. Sinon le score de la semaine dernière reste sur la merge request, à décrire un
+diff qui n'existe plus. Le script tourne même quand il n'a rien mesuré du tout,
+précisément pour pouvoir le dire.
+
+Trois façons pour le vérificateur d'avoir tort avec assurance, toutes trouvées en câblant
+un seul job. Chacune est fermée aujourd'hui. C'est ça le vrai travail, et ce n'est pas
+monter le score : c'est supprimer tous les chemins par lesquels le job peut ne rien
+produire et que ça se lise comme un « tout va bien ».
+
+## La partie qui ne s'automatise pas
+
+Il y a un plafond au-dessus de tout ça, et ce n'est pas un bug.
+
+Certains survivants ne peuvent être tués par aucun test. Un garde `typeof` qui n'existe que
+pour que TypeScript restreigne une union. Un remplacement de chaîne pour un token que le
+template ne contient jamais. Un check de nullité dans un handler où la valeur est la cible
+de l'événement et ne peut pas être nulle. Change n'importe lequel et le programme se
+comporte à l'identique, donc aucune assertion ne peut distinguer les deux versions. Stryker
+les rapporte comme des trous dans tes tests. Ce ne sont pas des trous.
+
+La seule sortie, c'est que quelqu'un lise chacun et décide, puis écrive la raison à côté de
+la suppression. Sans la raison, ça devient une ligne que personne n'osera toucher dans six
+mois.
+
+Ça ressemble à une limite, et c'est aussi ce qui rend le chiffre stable. Une fois qu'un
+jugement est écrit dans le source avec sa raison attachée, il cesse d'être rejugé à chaque
+run. La partie humaine ne disparaît pas. Elle est enregistrée.
+
+## Le rouge automatique
+
+L'outil gagne sa place à cause de ce qu'il fait au problème de l'empressement.
+
+Le test-driven development a déjà une réponse. Écrire le test qui échoue en premier. Le
+rouge prouve que le test est capable d'échouer, donc le vert qui suit veut dire quelque
+chose. Demande à un agent de travailler comme ça et il le fera, et il produira aussi
+parfois un rouge pour la mauvaise raison et un vert qui n'a jamais dépendu du comportement
+testé. Le rituel est facile à satisfaire sans la substance.
+
+Un mutant survivant est un test qui ne peut pas passer au rouge. Stryker casse le code
+volontairement et vérifie que quelqu'un le remarque, ce qui est la même preuve que la
+première étape du cycle est censée te donner, appliquée à chaque assertion et répétée après
+coup. Ça ne remplace pas d'écrire le test d'abord. Ça vérifie que le test que tu as écrit
+d'abord a jamais vraiment été rouge.
+
+C'est la raison précise pour laquelle il a sa place dans la boîte à outils plutôt que dans
+une liste de bonnes pratiques. Il vise un mode de panne que ces outils ont par
+construction.
+
+## Gagner le droit de bloquer
+
+Le [dernier article que j'ai écrit ici](/fr/blog/le-meilleur-modele-a-besoin-de-regles) se
+terminait sur l'agent incapable de certifier son propre travail. Construire la chose qui
+vérifie l'agent s'est avéré avoir le même problème un niveau au-dessus, et la sortie n'a
+pas été un meilleur outil. Ça a été de rendre le vérificateur incapable de rester muet.
+
+L'étape suivante est donc déjà décidée. Le job cesse d'autoriser l'échec et se met à
+bloquer le merge. Même job, même sortie, un flag en moins.
+
+Ce qui rend ça raisonnable n'a rien à voir avec la montée du score. C'est que le job ne
+peut plus ne rien rapporter et que ça se lise comme une réussite. Une porte dont le silence
+est ambigu est pire que pas de porte du tout, parce qu'elle transforme « n'a pas tourné »
+en « approuvé » et met une coche verte à côté. Une fois le silence impossible, bloquer sur
+le résultat cesse d'être un pari.
+
+Rien de tout ça n'est réglé. On cherche encore quelles parties de la boucle fermer
+mécaniquement et lesquelles laisser à une personne, et tous les quelques mois les modèles
+changent assez pour que certaines de ces réponses bougent. Ce qui a tenu jusqu'ici est plus
+étroit qu'une méthodologie. Un check automatique gagne le droit de bloquer quand il ne peut
+plus échouer en silence, et tant qu'il ne passe pas cette barre, c'est un commentaire,
+adressé à quelqu'un qui doit décider de toute façon.
+
+La mécanique derrière tout ça, y compris comment un mutant survivant se lit et ce qu'il
+faut pour faire tourner le job sur chaque merge request, est dans
+[la seconde partie](/fr/blog/faire-tourner-stryker-sur-un-monorepo-svelte).

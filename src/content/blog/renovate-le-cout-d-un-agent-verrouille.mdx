@@ -1,0 +1,203 @@
+---
+title: "Renovate : le coût d'un agent verrouillé"
+summary: "Les montées majeures que l'automatisation n'ouvre pas d'elle-même. Un agent frontier sur un runner verrouillé a produit des merge requests sûres d'elles et fausses, parce que les garde-fous qui l'ont durci l'ont aussi coupé de ce dont il avait besoin. Sans ces contraintes, un autre agent a pu vérifier la même montée. Le problème n'a jamais été le modèle."
+publishedAt: 2026-07-23
+tags: [Renovate, Agents, CI]
+draft: false
+lang: 'fr'
+translationKey: 'two-years-of-renovate-part-four'
+---
+
+Les majeures sont les mises à jour que la configuration ne merge pas d'elle-même. Tout ce
+qui précède dans les trois premiers articles parlait de réduire ce qu'une personne doit
+regarder : grouper le bruit, laisser les petites mises à jour se merger seules, pointer un
+modèle bon marché sur les échecs qui se répètent. Une montée majeure est l'endroit où
+cette réduction s'arrête. Renovate a pour consigne de ne jamais ouvrir la merge request
+d'une majeure.
+
+```json
+{
+  "packageRules": [
+    { "matchUpdateTypes": ["major"], "prCreation": "approval" }
+  ]
+}
+```
+
+Une majeure n'arrive donc pas comme une merge request. Elle arrive comme une ligne dans le
+dependency dashboard, une case non cochée qui attend que quelqu'un décide que ça vaut le
+travail. Cet article parle de confier ce travail à un agent, deux fois, et du mur contre
+lequel les deux tentatives sont venues buter.
+
+## Le triage qui se contente de recommander
+
+Un petit modèle lit le dashboard. Pour chaque majeure en attente, il cherche les breaking
+changes et ouvre une issue : une courte note de risque et un brief pour la personne qui
+reprendra. Il recommande, rien de plus. Il ne coche pas la case, n'ouvre pas de merge
+request, et ne touche pas au code.
+
+L'issue est toute l'interface, et l'assigner constitue l'approbation. Une personne qui
+décide qu'une majeure vaut le coup assigne l'issue à l'agent de code. Il n'y a pas d'autre
+interrupteur.
+
+Une partie de ça, on l'a d'abord ratée. Le brief doit être écrit dans le corps de l'issue
+par un script, pas par le modèle de triage. Quand le modèle de triage écrivait le brief
+lui-même, il devinait comment une librairie était utilisée et envoyait l'agent de code sur
+la mauvaise API : il décrivait la migration comme si le projet utilisait `commander` alors
+que le code importait `cac`. Le corps de l'issue est le seul canal que l'agent de code lit
+de façon fiable. Un fichier commité dans le dépôt qui explique comment faire les montées
+n'est pas lu du tout. On a sondé ça deux fois et on n'a rien récupéré ni l'une ni l'autre
+fois.
+
+Les instructions doivent aller là où l'agent lit vraiment, c'est-à-dire le corps de
+l'issue, et y aller de la même façon à chaque fois.
+
+## Le plus gros modèle, sous verrou
+
+Assigner l'issue réveille l'agent de code hébergé par la plateforme, un modèle frontier de
+la classe Codex. Il lit l'issue, fait le changement, et ouvre la merge request sans
+surveillance.
+
+Le runner sur lequel il travaille est verrouillé, et chaque verrou est défendable. Pas de
+réseau, pas de secrets, un plafond de mémoire. C'est une posture raisonnable pour une
+machine qui fait tourner un modèle de langage avec un accès en écriture aux dépôts d'une
+entreprise. L'ennui, c'est ce que les garde-fous donnent une fois additionnés. Chaque
+verrou est sensé. Empilés, ils laissent l'agent incapable de faire le travail : il ne peut
+ni récupérer le guide de migration du package, ni joindre le registry pour quoi que ce
+soit que le lockfile ne pinne pas déjà, et les generators et les étapes d'intégration qui
+ont besoin d'un réseau ne tournent pas. Il travaille à partir du code qu'il a sous les
+yeux et de son propre entraînement, et de rien d'autre.
+
+Sur la plupart des majeures, on y survit. Sur une, non. La nouvelle majeure avait supprimé
+le support de la base de données sur laquelle le service tourne. Aucune version du
+changement ne pouvait fonctionner. L'agent ne le savait pas, parce que le savoir demandait
+des release notes qu'il ne pouvait pas lire. Il a donc produit une merge request propre et
+bien structurée : le bump appliqué, les sites d'appel évidents mis à jour, la description
+sûre d'elle. Ça avait l'air fini et ça ne pouvait pas marcher, ce qui est pire qu'un diff
+brouillon, parce que ça demande au relecteur de faire confiance.
+
+L'agent était assez capable. Il était coupé de tout ce dont il avait besoin pour vérifier
+son propre travail, et la confiance par-dessus, c'est la panne que tu obtiens. Tu ne peux
+pas contraindre un agent à ce point et attendre encore de lui qu'il juge si une montée est
+seulement possible. Un modèle plus intelligent sur le même runner heurte les mêmes murs.
+La contrainte était le problème, pas le modèle.
+
+Deux choses en découlent, et les deux sont construites dans le système plutôt que demandées
+à l'agent. La pipeline de merge request reste l'autorité sur la qualité d'un changement,
+devant la confiance de l'agent et devant le brief. Et les parties du design qui doivent
+tenir quoi que fasse l'agent sont accrochées à l'identité. Le job de changeset des deux
+premiers articles est le cas d'école : il tourne sur ces merge requests parce qu'elles sont
+écrites par l'identité de l'agent, pas parce qu'on a demandé à l'agent d'ajouter un
+changeset. Il a même survécu à un bug qui mérite un nom. L'agent de code a tendance à
+pousser plus d'un commit, le bump puis un correctif de suivi, donc un diff pris contre le
+commit précédent ratait le bump et sautait le changeset. La réparation a été de differ
+contre la base de la merge request. L'agent peut ignorer une instruction. Il ne peut pas
+changer qui GitLab enregistre comme auteur de sa merge request, et le job s'accroche à ça.
+
+## La même majeure, sans les verrous
+
+La chose suivante à essayer était la même majeure difficile, contraintes coupées. On en a
+donc lancé une en local avec Claude Code, où il pouvait lire la documentation du package et
+lancer les gates que le runner verrouillé ne peut pas.
+
+Prends la majeure du générateur de code, un codegen GraphQL qui passe de la version six à
+la sept, et qui a changé son format de config et la forme des types générés. Sur le runner
+verrouillé, le bot avait produit un diff plausible, étayé par des casts de types pour faire
+compiler la nouvelle sortie. Lancée en local, avec la doc et le generator lui-même
+disponibles, la même migration est sortie différemment. Beaucoup de ces casts étaient
+évitables, remplacés par un `satisfies` ou un champ renseigné une fois les vrais types
+visibles, et les quelques-uns qui sont restés pouvaient être défendus dans la description
+plutôt qu'enterrés. Le diff est passé de plausible à vérifié.
+
+La doc et les gates sont ce qui a changé le résultat. Donne-les à un agent et une majeure
+qui relevait de la devinette devient quelque chose de vérifiable ; sans elles, le meilleur
+modèle disponible continue de deviner. Ce que Claude a eu en local, c'est la capacité que
+le runner verrouillé retenait, et avec la doc et les gates à portée il a pu réussir la
+migration.
+
+## La publication qu'il ne peut pas faire
+
+Le run local pouvait vérifier la majeure. Il ne pouvait pas ouvrir la merge request.
+
+Depuis la machine d'un développeur, `git push` marche, mais l'appel qui ouvre une merge
+request passe par l'API GitLab, et cette API est derrière un pare-feu qui filtre sur
+l'origine de la requête. Hors du réseau d'entreprise, elle refuse. L'agent qui pouvait
+vérifier la montée n'avait donc aucun moyen de la publier. Le seul agent qui pouvait
+publier, le bot de la plateforme à l'intérieur du réseau, était celui encore sous verrou.
+
+Cette asymétrie est aussi la sortie. Le pare-feu bloque l'API depuis l'extérieur du réseau.
+Il ne la bloque pas depuis un runner à l'intérieur du réseau. Les jobs de la plateforme le
+prouvent tous les jours : le triage et l'agent de code ouvrent tous les deux des merge
+requests depuis la CI, depuis l'intérieur. Le chemin autonome pour un agent que tu peux
+piloter est donc le même chemin. Le faire tourner en CI, dans le réseau, là où l'appel de
+publication est autorisé.
+
+C'est l'étape logique suivante, et sur le papier c'est un petit job. Un planning de
+pipeline le réveille, il lit les issues de montée majeure assignées à l'agent, et il lance
+la montée depuis l'intérieur du réseau, là où le pare-feu autorise la publication.
+
+```yaml
+# A scheduled job: take a major-upgrade issue assigned to the agent, do the
+# upgrade, and open the merge request from inside the network, where the
+# firewall allows it. The next step, pending platform approval.
+claude-major-upgrade:
+  image: $CLAUDE_CODE_IMAGE   # mirrored into the internal registry
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  variables:
+    ANTHROPIC_BASE_URL: $LLM_GATEWAY_URL   # internal proxy, no egress
+    ANTHROPIC_AUTH_TOKEN: $LLM_GATEWAY_TOKEN
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+  script:
+    - >
+      claude -p "Take the oldest open issue labelled renovate-major
+      assigned to the agent, follow its brief, apply the upgrade, and
+      open a merge request that closes it. If it cannot be done,
+      comment on the issue and stop."
+      --model sonnet
+      --permission-mode acceptEdits
+      --allowedTools "Bash,Read,Edit,Write,mcp__gitlab"
+      --mcp-config "$GITLAB_MCP_CONFIG"
+```
+
+Le YAML est la partie courte. Ce dont le job a besoin n'est pas du code : un moyen pour le
+runner de joindre un modèle sans ouvrir son egress, une image mirrorée à faire tourner, et
+un token limité à l'ouverture d'une merge request. Tout ça appartient à l'équipe
+plateforme. C'est ce que l'étape suivante attend. Approuve-les et le job tourne ; d'ici là,
+non.
+
+## Celui qui est déjà autonome
+
+Il y a aujourd'hui un agent qui ouvre des merge requests majeures à l'intérieur du réseau,
+et c'est celui sous verrou. Assigne l'issue et l'agent hébergé par la plateforme ouvre la
+merge request tout seul. Le hic est le même : l'équipe ne peut pas le piloter. Son modèle,
+son prompt, ses skills appartiennent à la plateforme, pas au projet. La raison de vouloir
+un job Claude en CI était simple : ça mettrait un agent qu'on peut vraiment instruire au
+seul endroit où la publication est autorisée.
+
+Voilà donc la forme de la chose. L'agent qui est autonome est celui qu'on ne peut pas
+contrôler. L'agent qu'on peut contrôler n'est pas encore autonome.
+
+## Le bilan
+
+Chaque mur de cet article était une contrainte que quelqu'un a choisi d'imposer. Un runner
+verrouillé a transformé le travail d'un agent frontier en une merge request qui ne pouvait
+pas merger ; un pare-feu a laissé l'agent capable vérifier mais jamais publier ; la
+plateforme possède le seul agent déjà autonome. Change le modèle à n'importe lequel de ces
+points et rien ne bouge.
+
+Ce qui survit à tout ça, c'est la partie du design qui ne dépend pas du bon comportement de
+l'agent : la pipeline comme autorité sur un changement, les jobs accrochés à l'identité, le
+brief posé là où l'agent lit vraiment. Appuie-toi sur ce que le bot est, pas sur ce que tu
+lui as dit, et construis les garanties dans la CI, où elles tiennent que l'agent coopère ou
+non.
+
+Et la fin, honnêtement. La montée qui est vérifiée aujourd'hui est celle qu'on lance à la
+main, hors du runner verrouillé. La version autonome, celle qui tourne toute seule à
+l'intérieur du réseau, est conçue et pas encore construite. Quand un premier run ouvrira
+une vraie majeure depuis l'intérieur du réseau, il y aura quelque chose à dire sur comment
+ça s'est passé. Il n'y a rien pour l'instant, et c'est un endroit plus utile pour s'arrêter
+qu'une affirmation que c'est réglé.
+
+La façon inverse de travailler avec ces outils, un agent piloté de près par une personne
+plutôt que laissé seul, est dans [Le meilleur modèle a quand même besoin de
+règles](/fr/blog/le-meilleur-modele-a-besoin-de-regles).

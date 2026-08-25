@@ -238,3 +238,45 @@ test.describe('sitemap', () => {
     }
   })
 })
+
+test.describe('internal links inside articles', () => {
+  // Translated slugs make this worth a test. An English article's links were
+  // written once and never move; a French article's are hand-rewritten to point
+  // at French slugs, and a typo there produces a 404 that nothing else notices.
+  // The sweep reads the bodies off disk, so an article added later joins it.
+  const linksOf = (body: string) =>
+    [...body.matchAll(/]\((\/[^)\s]*)\)/g)].map((m) => m[1])
+
+  test('every in-site link in every article resolves', async ({ request }) => {
+    expect(ARTICLES.length).toBeGreaterThan(0)
+    let checked = 0
+    for (const article of ARTICLES) {
+      for (const link of linksOf(article.body)) {
+        const res = await request.get(`${BASE}${link}`)
+        expect(res.status(), `${article.slug} links to ${link}`).toBe(200)
+        checked += 1
+      }
+    }
+    expect(checked, 'no article link was checked').toBeGreaterThan(0)
+  })
+
+  // The point of translating an article is that a French reader stays in the
+  // French tree. A link out to English is correct only while no twin exists.
+  test('no French article links into the English tree when a twin exists', async () => {
+    const frenchKeys = new Set(ARTICLES.filter((a) => a.lang === 'fr').map((a) => a.translationKey))
+    const englishSlugToKey = new Map(
+      ARTICLES.filter((a) => a.lang === 'en').map((a) => [a.slug, a.translationKey]),
+    )
+    for (const article of ARTICLES.filter((a) => a.lang === 'fr')) {
+      for (const link of linksOf(article.body)) {
+        const match = link.match(/^\/blog\/([^/]+)\/?$/)
+        if (!match) continue
+        const key = englishSlugToKey.get(match[1])
+        expect(
+          key && frenchKeys.has(key),
+          `${article.slug} links to the English ${link}, which now has a French twin`,
+        ).toBeFalsy()
+      }
+    }
+  })
+})

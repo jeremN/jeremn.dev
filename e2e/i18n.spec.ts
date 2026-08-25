@@ -301,10 +301,40 @@ test.describe('article routes', () => {
     await expect(page.locator('[data-doodle="xiaohei-article-stryker-on-a-svelte-monorepo"]')).toHaveCount(2)
   })
 
+  // Both directions of the same rule, derived from the collection rather than
+  // pinned to one slug. This test used to name `ten-months-of-svelte-5` as the
+  // untranslated article; wave 2 translated it, and the assertion broke on a
+  // content change rather than on a defect. Derived, it cannot go stale again.
+  const twinned = new Set(
+    ARTICLES.filter(
+      (a) => ARTICLES.some((b) => b.translationKey === a.translationKey && b.lang !== a.lang),
+    ).map((a) => a.translationKey),
+  )
+  const routeOfArticle = (a: Article) => (a.lang === 'fr' ? `/fr/blog/${a.slug}` : `/blog/${a.slug}`)
+
+  test('every article with a twin carries the full reciprocal hreflang set', async ({ page }) => {
+    const paired = ARTICLES.filter((a) => twinned.has(a.translationKey))
+    expect(paired.length, 'no paired article to check').toBeGreaterThan(0)
+    for (const article of paired) {
+      const route = routeOfArticle(article)
+      await page.goto(`${BASE}${route}`)
+      await expect(page.locator('link[rel="alternate"][hreflang]'), route).toHaveCount(3)
+      await expect(page.locator('[data-lang-switch]'), route).toHaveCount(1)
+    }
+  })
+
   test('an article with no twin emits no hreflang and hides the switcher', async ({ page }) => {
-    await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
-    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
-    await expect(page.locator('[data-lang-switch]')).toHaveCount(0)
+    const lonely = ARTICLES.filter((a) => !twinned.has(a.translationKey))
+    // Reported as skipped rather than passing on an empty loop. Every article
+    // is translated today, so this rule has no subject; the day one ships in a
+    // single language it gets checked again, and the report says which it was.
+    test.skip(lonely.length === 0, 'every article is translated, so this rule has no subject')
+    for (const article of lonely) {
+      const route = routeOfArticle(article)
+      await page.goto(`${BASE}${route}`)
+      await expect(page.locator('link[rel="alternate"][hreflang]'), route).toHaveCount(0)
+      await expect(page.locator('[data-lang-switch]'), route).toHaveCount(0)
+    }
   })
 
   test('the English article keeps its illustration and its highlighted code', async ({ page }) => {

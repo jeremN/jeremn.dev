@@ -1,0 +1,161 @@
+---
+title: 'Renovate : un petit agent pour les échecs courants'
+summary: "Les merge requests de dépendances automatiques échouent d'une poignée de façons prévisibles. Un petit modèle règle les échecs mécaniques, et quand il n'y arrive pas, il écrit ce qu'il a trouvé."
+publishedAt: 2026-07-22
+tags: [Renovate, Agents, CI]
+draft: false
+lang: 'fr'
+translationKey: 'two-years-of-renovate-part-three'
+---
+
+La partie deux était la première réduction : les mises à jour assez sûres pour merger sans
+surveillance. Cet article est la seconde, les échecs. Merger sans surveillance ne marche
+que tant que la pipeline est verte, et un bump de dépendance est l'un des moyens les plus
+fiables de la passer au rouge. Cette série a essayé d'être honnête sur les rouges aussi.
+Ce qui suit est un compte rendu de la façon dont ces merge requests échouent en pratique,
+du petit modèle qu'on a pointé sur ces échecs, et de la seule habitude qui rend son
+existence rentable : quand il ne peut pas réparer, il laisse un commentaire qui explique
+pourquoi.
+
+## Ce qui casse vraiment
+
+Une merge request de dépendance échoue d'une courte liste de façons, et la liste ne change
+presque pas d'une semaine à l'autre.
+
+Le lockfile dérive. Renovate met à jour le manifeste et régénère le lockfile dans une
+étape séparée, et cette seconde étape peut échouer toute seule. Quand ça arrive, tu
+obtiens un `package.json` bumpé contre un lock périmé, et chaque job en aval meurt sur une
+install frozen. Les erreurs disent exactement ça :
+
+```
+ERR_PNPM_OUTDATED_LOCKFILE
+ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
+```
+
+Le package est trop récent. Le cooldown supply chain de la partie deux refuse une version
+qui n'a pas vieilli le nombre de jours requis, et l'install s'arrête avec
+`ERR_PNPM_NO_MATURE_MATCHING_VERSION` ou une erreur de trust policy. Rien n'est cassé ici.
+Le contrôle fonctionne, et le package doit vieillir.
+
+Les types ont bougé. Un bump mineur resserre une signature ou renomme un export, et le
+type-check passe au rouge contre du code qui compilait hier.
+
+Un snapshot a bougé. Une dépendance change sa sortie d'un espace et un test de snapshot ne
+correspond plus.
+
+Aucune de ces pannes n'est intéressante. Les quatre mêmes formes couvrent l'essentiel de
+ce qu'une personne ouvrait la merge request pour traiter, et aucune ne demande de
+jugement. Chacune doit juste être repérée et associée à un correctif.
+
+## Un petit modèle, volontairement
+
+L'agent est un job dans la pipeline de merge request qui ne se réveille que quand une
+branche Renovate a une pipeline en échec. Il liste les jobs échoués, lit leurs logs, et
+descend un arbre de décision. Ensuite il pousse un correctif, ou il dit pourquoi il ne
+peut pas.
+
+```yaml
+renovate-fix:
+  rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^renovate\//'
+      when: on_failure
+```
+
+Le modèle est `gpt-5-mini`, et la taille est délibérée. Les pannes ci-dessus sont des
+problèmes petits et mécaniques. Reconnaître un lockfile périmé et lancer une install ne
+demande pas un modèle frontier, et un modèle frontier n'achèterait qu'un raisonnement que
+la tâche n'utilise jamais.
+
+La bonne question, c'est pourquoi un modèle, alors que les quatre formes sont énumérables
+et que leurs correctifs sont proches du déterministe. Un script shell pourrait matcher les
+codes d'erreur et lancer l'install. La réponse est la cinquième forme, celle qui n'est pas
+sur la liste. Un script traite exactement ce que tu as énuméré et ne produit rien pour le
+reste, et sur des merge requests automatiques, « rien » ne se distingue pas d'un succès
+tant que personne ne remarque que la branche est rouge depuis une semaine. Le modèle est
+là pour les pannes que personne n'a énumérées à l'avance, celles pour lesquelles un script
+n'a pas de branche.
+
+## Ce qu'il a le droit de faire, et ce qu'il n'a pas le droit de faire
+
+L'arbre de décision est une liste de permissions.
+
+Sur un lockfile périmé, il lance l'install et commite le lockfile seul. Si l'install ne
+produit aucun diff, la branche a déjà été réparée par un run précédent et il s'arrête sans
+commit. Sur un package trop récent, il n'essaie pas de contourner le cooldown : il
+recommande une version attestée plus récente, ou une exception de cooldown limitée quand
+le dossier tient, et il n'affaiblit jamais la trust policy globale. Sur une erreur de
+type, il fait le correctif étroit, en mettant à jour le site d'appel vers l'export renommé
+ou la signature resserrée. Sur un test qui échoue, il écrit d'abord pourquoi le test a
+cassé, en termes de la dépendance qui a changé, et seulement ensuite il peut agir, dans
+une petite allowlist : mettre à jour un snapshot, ajuster une fixture de types, migrer un
+matcher vers un matcher au moins aussi strict.
+
+Tout ce qui sort de cette allowlist est refusé. Il n'a pas le droit d'affaiblir une
+assertion, de skipper ou de supprimer un test, d'éditer une fixture pour que le chemin qui
+échoue ne soit jamais pris, ni de toucher au code de production que le test couvre.
+
+L'allowlist est écrite autour de ce que fait un modèle quand tu lui demandes de faire
+passer un build rouge au vert. Laissé à lui-même, il trouve le chemin le moins cher, et le
+chemin le moins cher est presque toujours d'affaiblir le test plutôt que de réparer le
+code. L'allowlist refuse donc exactement ce mouvement.
+
+## Quand il ne peut pas
+
+Quand l'échec n'est pas une des formes connues, ou que le seul correctif disponible tombe
+hors de l'allowlist, l'agent s'arrête et écrit un commentaire sur la merge request : ce
+qui a échoué, quels logs il a lus, et pourquoi il n'a pas pu réparer.
+
+Même quand il ne peut pas réparer la branche, ce commentaire donne un diagnostic de départ
+à la personne qui triera ensuite.
+
+Ça referme aussi quelque chose autour de quoi cette série tourne. La partie un avait une
+décision sur ce qui comptait comme cassant, et elle n'a laissé aucune trace. La partie deux
+avait la description la plus précise d'un bug logée dans un commentaire de CI, parce que le
+commit qui l'a corrigé avait un corps vide. Le dépôt n'arrête pas de perdre son propre
+raisonnement, et ici l'agent, au moment où il échoue, écrit le raisonnement.
+
+## Le label qu'il ne doit pas gaspiller
+
+Un petit mécanisme décide si l'agent échoue proprement. Pour l'empêcher de réessayer la
+même merge request à chaque pipeline, une tentative terminée marque la merge request avec
+un label, et ce label éteint l'agent sur cette branche à partir de là.
+
+Ce qui rend le label cher. Dépense-le sur une non-tentative, un hoquet d'infrastructure, un
+timeout d'outil, un run mort avant d'avoir décidé quoi que ce soit, et tu as désactivé
+définitivement le seul job qui aurait réparé la branche à la pipeline suivante. Il ne
+marque donc la merge request que sur une issue définitive : un correctif poussé, ou un
+« je ne peux pas réparer ça » écrit. S'il n'a pas pu aller jusque-là, il sort sans avoir
+rien touché, et le run suivant a droit à une tentative propre. La règle tient en deux
+lignes, et sans elle un seul run échoué désactiverait le réparateur pour de bon.
+
+## Celui qui est redevenu un script
+
+Tout ce qui a commencé comme un agent n'est pas resté un agent. Le job qui labellise les
+merge requests par type, en lisant le préfixe de branche, le titre et les fichiers
+touchés, puis en appliquant les bons labels, était un agent. C'est un script simple
+aujourd'hui, avec ses règles dans une fonction testée, et il ne peut appliquer qu'un label
+qui existe déjà sur le projet plutôt qu'en inventer un.
+
+Revenir à un script était le bon mouvement. Labelliser par préfixe de branche est une
+consultation de table : les labels sont fixes, les entrées sont structurées, il n'y a rien
+à peser. Une fonction testée le décide donc sans le coût ni le non-déterminisme qu'un
+modèle apporte. Ce qui a vraiment besoin d'un modèle est une autre sorte de tâche, où la
+réponse dépend de la lecture de quelque chose de non structuré et de la décision de ce que
+ça veut dire. Reconnaître pourquoi un test a cassé à partir d'un log, c'est ça. L'agent de
+correction reste un modèle parce que sa sortie utile, sur les branches qu'il ne peut pas
+réparer, est de la prose écrite.
+
+## Le bilan
+
+Les échecs sur les merge requests de dépendances automatiques sont peu nombreux, et ils se
+répètent. Un petit modèle règle les échecs mécaniques pour pas cher. Ce qui lui donne sa
+place, en revanche, c'est l'échec qu'il ne peut pas réparer : au lieu de forcer un mauvais
+changement ou de laisser la branche rouge sans un mot, il écrit ce qu'il a trouvé. Un
+travail qui dépendait de quelqu'un se souvenant de vérifier une branche bloquée laisse
+maintenant une trace dans les deux cas.
+
+C'était le petit bout du problème : les mises à jour qui avaient le droit d'ouvrir une
+merge request. [L'article suivant](/fr/blog/renovate-le-cout-d-un-agent-verrouille) parle
+de celles qui ne l'ont pas, les majeures que cette configuration refuse toujours de
+merger, et de ce qui s'est passé quand on a pointé un agent beaucoup plus gros dessus,
+puis un autre.

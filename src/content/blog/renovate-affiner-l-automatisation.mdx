@@ -1,0 +1,406 @@
+---
+title: "Renovate : affiner l'automatisation"
+summary: "Le grouping pour que la sortie reste lisible, des cooldowns qu'il a fallu empêcher de se contredire, le passage sur un swarm managé, et enfin le fait de laisser les mises à jour mineures et patch se merger toutes seules."
+publishedAt: 2026-07-21
+tags: [Renovate, Dependencies, CI]
+draft: false
+lang: 'fr'
+translationKey: 'two-years-of-renovate-part-two'
+---
+
+Le [premier article](/fr/blog/renovate-automatiser-la-gestion-des-dependances) couvrait
+l'installation de Renovate et l'apprentissage de ce qu'était vraiment notre dépôt : un job
+de CI pour écrire les changesets qu'il n'écrit pas lui-même, un manager regex pour qu'il
+remarque une chaîne de version dans un fichier YAML.
+
+Ça nous laissait un bot qui ouvrait des merge requests correctes et attendait une personne
+sur chacune. Utile, mais pas encore rentable. Tout ce qui suit, ce sont les deux ans
+d'affinage entre cet état et l'état actuel, où la plupart des mises à jour partent sans
+que personne les regarde. C'est la première réduction : les mises à jour assez sûres pour
+qu'une personne n'ait jamais à les voir.
+
+## Affiner la configuration
+
+### Le planning
+
+Celle-là est une comédie. La config d'installation étendait `schedule:weekly`. Six jours
+plus tard, un commit l'a retiré, et le dépôt a ensuite tourné sans aucun planning pendant
+vingt et un mois, ce qui veut dire que le bot avait le droit d'agir à n'importe quelle
+heure de n'importe quel jour. Un planning est revenu en lundi seulement, puis s'est élargi
+du lundi au jeudi :
+
+```json
+"schedule": ["* 8 * * 1-4"],
+"timezone": "Europe/Paris"
+```
+
+La ligne de timezone a été ajoutée deux mois après l'heure. Pendant ces deux mois, `8`
+voulait dire huit heures UTC, ce qui n'est pas l'heure à laquelle cette équipe commence.
+Quant à savoir pourquoi le vendredi est exclu, je ne sais pas. Le corps du commit est
+vide, comme presque tous. L'hypothèse évidente, c'est que personne ne veut de mises à jour
+de dépendances qui s'automergent dans un week-end, et je ne vais pas l'écrire comme une
+raison alors que le dépôt ne le dit pas.
+
+### Le lockfile
+
+Le problème qui a duré le plus longtemps ici, et celui contre lequel je mettrais en garde
+en premier. Renovate met à jour `package.json` puis régénère le lockfile dans une étape
+séparée, et cette seconde étape peut échouer toute seule. Quand ça arrive, tu obtiens une
+branche avec un manifeste bumpé et un lockfile périmé, et chaque job en aval meurt sur une
+install en frozen lockfile.
+
+Le premier correctif ajoutait une tâche post-upgrade pour réparer :
+
+```json
+"postUpgradeTasks": {
+  "commands": ["pnpm install --no-frozen-lockfile"],
+  "executionMode": "branch",
+  "fileFilters": ["pnpm-lock.yaml", "package.json"]
+}
+```
+
+Ce commit est arrivé à 10h34. Un second commit est arrivé à 18h28 le même jour, et il
+ajoutait uniquement la même chaîne à `allowedCommands`. Les commandes post-upgrade ne
+tournent pas si elles ne sont pas explicitement en allowlist. Pendant huit heures, le
+dépôt contenait donc un correctif configuré, commité, relu, et inerte.
+
+Ce n'était pas fini. Un mois plus tard, une série de nouvelles tentatives en deux heures
+et quinze minutes : bumper l'image Renovate en espérant, arracher les deux tentatives
+précédentes et les remplacer par un seul `updateLockFiles`, restructurer les includes de
+CI pour que la pipeline planifiée et la pipeline de merge request cessent de se
+chevaucher, puis retirer encore une fois le bloc post-upgrade dans un commit dont le sujet
+entier est `chore(Renovate): test`. Le bloc a fini par être supprimé pour de bon au profit
+de `rangeStrategy: "update-lockfile"` avec la lockfile maintenance activée, qui est le
+réglage qu'on aurait dû prendre dès le début.
+
+Le problème a survécu à tout ça et a resurgi un an plus tard, à un moment où la réparation
+ne pouvait plus vivre dans `renovate.json` du tout. Cette histoire est dans la section
+swarm plus bas.
+
+### Quand le bot édite sa propre config
+
+Deux des pires incidents ici ont la même cause. Renovate coupe une branche, la config
+change sur `main`, et la branche merge en ramenant l'ancienne config. Un commit de routine
+`fix(deps): update all minor patch`, écrit par Renovate, a supprimé en silence tout le
+bloc `schedule` et annulé `rangeStrategy`.
+
+Le planning est revenu trois jours plus tard. J'ai supposé qu'une personne l'avait
+réparé ; ce n'est pas le cas. Il a été restauré dans un autre commit Renovate, dont le
+sujet est un bump de sécurité d'un framework web sans rapport. La config a guéri comme
+effet de bord d'une branche coupée après le dégât et avant la réparation, ce qui est
+exactement le mécanisme qui l'avait cassée.
+
+Un mois plus tard, la migration de config de Renovate lui-même a réécrit les patterns de
+fichiers du manager regex Playwright avec des slashs doublés, et l'a cassé sans bruit.
+Celui-là a mis une semaine à se voir, parce qu'un manager regex qui ne matche rien
+n'échoue pas. Il arrête simplement de trouver des mises à jour.
+
+C'est le mode de panne à surveiller. Un bot qui casse bruyamment est un bot que tu
+répares. Un bot qui arrête en silence de regarder trois fichiers est un bot que tu
+continues de croire.
+
+## Le grouping, ou comment rester lisible
+
+Un monorepo pnpm ne produit pas des mises à jour de dépendances par lots. Il produit un
+goutte-à-goutte, un package à la fois, plusieurs fois par semaine. Sans grouping, c'est un
+projet dont tout le monde a coupé les notifications dès la deuxième semaine, ce qui
+transforme un gain d'automatisation en perte de qualité de revue.
+
+Le grouping est la façon de récupérer ça, et ce que personne ne te dit, c'est qu'il fait
+deux boulots opposés selon le type de mise à jour.
+
+Pour les mises à jour mineures et patch, tu groupes pour réduire le bruit. L'idéal est une
+merge request contenant une pile de bumps ennuyeux que personne n'a besoin de lire ligne à
+ligne, parce que les lire une par une n'a aucune valeur et que n'en lire aucune est ce qui
+se passe réellement.
+
+Pour les majeures, tu groupes pour isoler le risque. L'idéal est une merge request par
+famille, pour que quand la montée de Vite casse le build, elle ne soit pas dans la même
+branche que la montée de Prisma :
+
+```json
+{
+  "groupName": "Vitest [major]",
+  "matchPackageNames": ["/^@vitest/", "/vitest/"],
+  "matchUpdateTypes": ["major"]
+}
+```
+
+Même mécanisme, objectif opposé. Notre grouping a commencé par des familles de packages
+mineurs et patch et a dérivé en deux ans vers des familles surtout majeures. Le bruit
+avait d'autres correctifs, à ce moment-là. Isoler le risque, non. C'est donc le boulot que
+les groupes ont gardé.
+
+Trois groupes sortent des deux boulots, et leurs raisons sont écrites, mais pas dans git.
+Elles sont sur la page interne de l'équipe consacrée au bot, qui se trouve être l'endroit
+où le raisonnement est parti :
+
+- **Storybook** est groupé et retenu pour approbation manuelle, parce que Storybook est
+  censé se mettre à jour via sa propre CLI, qui lance des codemods. Un bump de version
+  dans `package.json` n'est pas la mise à jour, il en est une fraction.
+- **Changesets** a sa propre merge request, parce que ses mises à jour ont déjà cassé la
+  CI. C'est l'outil qui garde toutes les autres merge requests, donc c'est le seul package
+  que tu ne veux jamais mettre dans le même lot que le reste. Il est quand même
+  automergé, ce qui est une position plus confiante que ce que la note laisse croire :
+  l'isolement sert à rendre une mauvaise release lisible quand la CI passe au rouge, pas à
+  ce qu'un humain la lise d'abord.
+- **Playwright** a la sienne à cause de la paire package npm et image Docker de la partie
+  un.
+
+Rien de tout ça ne se déduit de la config. Une règle qui dit `"automerge": false` te dit
+qu'une décision a été prise et rien sur le pourquoi. Dans trois ans, la personne qui la
+lira supposera que c'était de la prudence.
+
+## La sécurité
+
+`minimumReleaseAge` refuse de proposer une version tant qu'elle n'est pas sur le registry
+depuis un temps donné. Il est arrivé dans un commit qui dit à quoi il sert : réduire le
+risque de malware dans les packages fraîchement publiés. L'attaque contre laquelle il
+défend, c'est la compromission d'un compte mainteneur, où une version malveillante est
+publiée puis retirée en quelques heures. Un cooldown veut dire que ton bot n'est jamais le
+premier à installer quoi que ce soit.
+
+Il est arrivé sous forme de copies séparées de `"7 days"` collées dans chaque package
+rule, et son histoire depuis n'est pas une ligne droite. Il a disparu, est revenu en un
+seul sept au niveau racine, a disparu encore deux jours plus tard, et s'est stabilisé des
+mois après en un huit au niveau racine. Deux suppressions en quinze jours de remue-ménage
+de config, aucune expliquée. La raison du huit plutôt que du sept est écrite, mais dans un
+autre fichier :
+
+```yaml
+minimumReleaseAge: 10080 # 7 days; renovate.json uses 8 days so Renovate's picks always clear this window
+```
+
+pnpm a son propre cooldown, réglé à sept jours. Celui de Renovate est réglé à huit pour
+que tout ce que Renovate propose ait déjà passé la porte de pnpm au moment de l'install.
+Deux contrôles indépendants, décalés volontairement d'un jour pour qu'ils ne puissent pas
+se contredire. Sans le décalage, tu obtiens des merge requests qu'on ne peut pas
+installer, ce qui est un mode de panne qui ressemble à un bot cassé plutôt qu'à une
+politique qui fonctionne.
+
+Le second contrôle est la provenance attestation. La trust policy de pnpm rejette un
+package dont la version publiée est moins attestée que celle qu'elle remplace, et c'est là
+que ça devient gênant, parce que les deux contrôles peuvent pointer dans des directions
+opposées. Si un package publie une version sans attestation et corrige au patch suivant,
+la version qui a passé le cooldown est la cassée, et la version attestée est trop récente
+pour être installée. La porte de sortie est une liste d'exclusion, et les entrées portent
+leur propre raisonnement :
+
+```yaml
+minimumReleaseAgeExclude:
+  # <pkg> 5.21.1 was published WITHOUT provenance attestation (upstream release
+  # hiccup, fixed in 5.21.2), so trustPolicy no-downgrade rejects it. Excluded
+  # from the cooldown so ^5.21.1 resolves to the attested 5.21.2 instead of the
+  # unattested cooldown-aged version.
+```
+
+La plupart des exclusions sont épinglées sur une version exacte plutôt que sur un nom de
+package, donc elles expirent toutes seules, et un job planifié élague les entrées quand la
+version épinglée dépasse la fenêtre. Les deux entrées les plus anciennes sont des noms de
+packages nus, sans version, ce qui est exactement pourquoi la convention a été écrite
+juste en dessous : une liste d'exceptions qu'on ne peut pas nettoyer devient permanente
+par défaut.
+
+Tout ce qui précède ralentit les mises à jour. Un contrôle tire dans l'autre sens.
+Renovate peut vérifier les dépendances contre la base de vulnérabilités OSV et ouvrir une
+merge request quand l'une d'elles a un avis connu, et sur notre plateforme ces merge
+requests sont exemptées du plafond du nombre de merge requests ouvertes. Le cooldown
+existe parce qu'une version toute neuve peut être malveillante. L'alerte de vulnérabilité
+existe parce que la version que tu fais déjà tourner est connue comme exploitable, et ce
+n'est pas une situation où on attend huit jours.
+
+Deux réserves, et aucune n'est visible dans notre dépôt, ce qui est justement le point. La
+vérification OSV de Renovate ne couvre que les dépendances directes, donc une
+vulnérabilité trois niveaux plus bas dans ton arbre ne produit pas d'alerte. Et le réglage
+qui l'active n'est plus du tout dans notre config : il y était le premier jour, et
+aujourd'hui il arrive du preset d'organisation qu'on étend.
+
+Le dernier contrôle est l'endroit où l'humain reste. Les majeures sont activées, mais
+elles n'ouvrent pas de merge request toutes seules :
+
+```json
+"major": {
+  "enabled": true,
+  "prCreation": "approval",
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": true
+}
+```
+
+Renovate liste chaque majeure en attente sur une issue de dashboard et attend une case
+cochée. Y arriver a pris trois jours d'itération, chaque tentative étant une théorie
+différente sur la façon de garder les majeures : un seul groupe attrape-tout, puis des
+groupes par famille avec approbation sur chacun, puis une passe pour corriger les
+patterns, puis la suppression de l'attrape-tout au profit d'une règle racine, puis l'ajout
+du dashboard. Il n'y a aucun revert dans cette séquence, seulement des tentatives
+successives, et la forme sur laquelle ça s'est stabilisé a survécu dix-sept mois.
+
+Ce bloc est aussi l'endroit où les incidents sont enregistrés, parce que les corps de
+commit ici sont presque toujours vides et que le champ `description` est le seul endroit
+durable pour poser une raison :
+
+```json
+{
+  "description": "adapter-node 5.5.5 introduced a circular dependency between server init
+   and hook retrieval that crashes the app on startup: the top-level await server.init()
+   never settles, so the server never listens and the review deploy times out. Fixed
+   upstream in 5.5.6. package.json pins 5.5.4 (last good); allowedVersions >=5.5.6 skips
+   the broken release and lets Renovate adopt the fix once it clears the cooldown.",
+  "matchPackageNames": ["@sveltejs/adapter-node"],
+  "allowedVersions": ">=5.5.6"
+}
+```
+
+C'est un trou découpé autour d'une mauvaise release avec la raison écrite à côté, et c'est
+ce qui ressemble le plus à un rapport d'incident dans ce dépôt. Quatre jours après ce
+commit, Renovate a ouvert et mergé le bump vers la version corrigée. Personne n'a été
+impliqué.
+
+## Passer sur le swarm
+
+Pendant vingt et un mois, on a fait tourner notre propre job planifié. Puis l'organisation
+a monté une plateforme Renovate-as-a-Service, construite sur le mode swarm de Renovate, et
+on a migré dessus. Le fichier de job self-hosted et son stage de pipeline ont été
+supprimés purement et simplement.
+
+Ce qui change est moins que tu ne le crois, et plus que ce qui est confortable.
+L'onboarding devient un sujet sur le projet plutôt qu'un job que tu maintiens : la
+plateforme découvre le dépôt et tourne dessus. Le même `renovate.json` pilote toujours le
+comportement, donc le grouping et les package rules passent inchangés. La plateforme scanne
+en continu, mais ta fenêtre `schedule` gouverne toujours le moment où les merge requests
+peuvent apparaître. Le planning cesse donc d'être un moyen d'économiser des minutes de CI
+et devient purement une politique sur le moment où tu veux être interrompu.
+
+Ce que tu perds, c'est l'exécution arbitraire. Une plateforme partagée ne laissera pas un
+projet lancer le shell qu'il veut pendant un run Renovate. C'est une chose raisonnable à
+refuser, et c'est aussi précisément le mécanisme dont dépendait notre réparation de
+lockfile. Cinq jours après la migration, le bloc `postUpgradeTasks` est sorti. Rien dans le
+dépôt ne dit pourquoi, mais c'est la seule explication qui colle, et nos notes internes le
+disent.
+
+La réparation de lockfile a donc déménagé dans la CI, en étape non fatale sur les branches
+du bot. Le commentaire dessus est la description la plus précise du problème dans tout le
+dépôt, et c'est un commentaire plutôt qu'un message de commit, ce qui à ce stade ne te
+surprendra pas :
+
+> Renovate's artifact-update step sometimes fails on its side (pnpm trustPolicy /
+> minimumReleaseAge), pushing manifest bumps WITHOUT regenerating pnpm-lock.yaml,
+> the setup job then fails with `ERR_PNPM_OUTDATED_LOCKFILE` or
+> `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`.
+
+La leçon dépasse ce bug précis. Une porte de sortie qui vit dans la config de ton bot ne
+t'appartient que tant que tu opères le bot. Si tu es sur une plateforme managée, l'endroit
+durable pour poser un contournement, c'est ta propre pipeline.
+
+L'autre chose héritée d'une plateforme partagée, ce sont les valeurs par défaut. La nôtre
+fournit le preset recommandé, l'alerting de vulnérabilités, le plafond de concurrence et
+la configuration de registry, ce qui explique pourquoi plusieurs réglages qui étaient dans
+notre fichier n'y sont plus. C'est surtout bien et parfois déroutant : la réponse à
+« pourquoi il fait ça » n'est parfois pas dans ton dépôt du tout.
+
+Une panne liée a l'air alarmante et ne l'est pas. Renovate régénère le lockfile en lançant
+pnpm, pnpm applique son propre cooldown, et si une dépendance transitive se résout vers
+quelque chose publié ces derniers jours, l'install est rejetée avec
+`ERR_PNPM_NO_MATURE_MATCHING_VERSION` et la merge request passe au rouge. Rien n'est
+cassé. Le package doit vieillir. Ça se résout au run suivant, et le runbook de l'équipe dit
+exactement ça : vérifier si c'est la panne transitoire, et si oui cliquer sur rebase et
+passer à autre chose.
+
+## L'automerge, pour les mineures et les patch
+
+Coupé à l'installation, et coupé pendant un an et demi. C'est la seule décision que je
+défendrais le plus fermement face à quelqu'un d'impatient : tout ce qui précède est une
+raison pour laquelle l'équipe a eu raison d'être lente. Tu ne veux pas d'un bot qui merge
+en ton nom avant de savoir ce qu'il fait quand l'étape de lockfile échoue, ce qu'il fait à
+sa propre config sur une branche périmée, et ce qu'il n'a pas le droit de proposer.
+
+Le premier `"automerge": true` ici est un diff d'une ligne limité à exactement un groupe,
+l'attrape-tout des mineures et des patch. Pas global, pas les majeures, pas les packages
+aux angles connus. Quatre mois plus tard, il s'est étendu à un second groupe. Treize jours
+après, il est passé au niveau racine, avec des exceptions nommées plutôt que des
+inclusions nommées, et c'est le basculement qui compte : la valeur par défaut est devenue
+oui.
+
+Storybook et Playwright restent les irréductibles, tous les deux en `"automerge": false`
+volontairement, pour les raisons de la section grouping.
+
+Le débit du bot te dit quand ça a basculé sans que tu aies à regarder la config. Il a
+tourné à plat pendant bien plus d'un an, puis a grimpé d'un coup et n'est jamais
+redescendu. Activer l'automerge n'a pas fait trouver plus de mises à jour à Renovate. Ça a
+fait cesser d'attendre un humain à celles qu'il trouvait déjà.
+
+## La boucle qui reste
+
+La config n'est que la moitié de tout ça. L'autre moitié est le runbook, et il est assez
+court pour en citer la forme.
+
+Renovate ouvre ses merge requests en début de semaine, et chaque mardi l'équipe passe
+quelques minutes sur ce qui est encore ouvert et se l'assigne. Depuis que l'automerge est
+actif, la consigne permanente est que les mises à jour mineures et patch se mergent toutes
+seules, et qu'un humain touche exactement trois choses : les automerges passés au rouge,
+Storybook, et les majeures.
+
+Pour tout ce qui est dans ces trois catégories, la procédure n'est pas légère. S'assigner.
+Ouvrir un ticket de suivi qui lie la merge request. Lire les changelogs que Renovate a
+rassemblés dans la description. Checkout la branche en local, installer, puis :
+
+```shell
+pnpm ci:check
+pnpm build
+pnpm test
+```
+
+Puis lancer l'app et exercer à la main les fonctionnalités qui ont bougé. Puis router pour
+validation, au tech lead pour Storybook, Changesets et Playwright, à la QA pour tout le
+reste.
+
+C'est le vrai coût unitaire d'une mise à jour de dépendance, et rien là-dedans n'est
+devenu moins cher. Renovate n'a pas rendu la revue d'une montée de version plus rapide. Ce
+qui a changé, c'est la fréquence à laquelle quelqu'un doit le faire.
+
+## Ce qui a vraiment changé
+
+J'ai cherché le chiffre qui montre que ça a payé, et je n'en ai pas trouvé un que je
+défendrais. Compter le travail manuel sur les dépendances avant et après te donne la
+réponse que tu espérais, selon la façon dont tu formules la requête. J'ai failli publier
+une version flatteuse avant de remarquer que j'avais compté les deux fenêtres de deux
+façons différentes. Personne n'a non plus loggé d'heures là-dessus, donc il n'y a pas de
+chiffre honnête à citer.
+
+Ce que le log soutient, c'est un changement de nature plutôt que de quantité. Avant :
+
+```
+chore(updates): update all dependencies
+chore: update dependencies
+chore(updates): update dependencies to latest as of 29.04.2024 excluding some major breaking
+```
+
+Après :
+
+```
+chore(deps): Upgrade/vite 6.4.1 to 7.2.1
+chore(deps): major upgrade @graphql-eslint/eslint-plugin to v4
+chore(deps): upgrade normalize-url from v8 to v9
+```
+
+La première liste, c'est quelqu'un qui vide un backlog que personne ne suivait. La seconde,
+c'est quelqu'un qui met à jour une chose volontairement, avec un ticket, un changelog et
+une passe manuelle sur les écrans qu'elle touche. Le travail manuel sur les dépendances n'a
+pas disparu. Il a cessé d'être indifférencié.
+
+Tout le reste est passé sous cette ligne, dans des merge requests qui se sont ouvertes,
+sont passées au vert et ont mergé sans jamais atteindre une personne. Celles-là n'ont aucun
+équivalent dans la fenêtre d'avant, et c'est là toute la différence. Personne n'a à se
+souvenir de la dernière mise à jour, parce que la réponse est toujours cette semaine.
+
+adapter-node est l'argument en miniature. Une mauvaise release est partie, une ligne de
+config l'a exclue, le correctif est arrivé automatiquement quatre jours plus tard, et la
+raison est encore lisible dans le fichier. Sous l'ancien régime, cette casse arrive au
+milieu d'une passe de quarante packages et coûte un après-midi à quelqu'un pour la trouver.
+
+Renovate n'a pas réduit le nombre de décisions sur les dépendances. Il a rendu chacune
+assez petite pour qu'on puisse se tromper dessus toute seule.
+
+[La partie trois](/fr/blog/renovate-un-petit-agent-pour-les-echecs-courants) parle des
+mises à jour automatiques qui s'ouvrent puis passent au rouge, et du petit agent qui
+répare les pannes courantes ou écrit ce qu'il ne peut pas réparer.

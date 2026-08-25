@@ -1,0 +1,160 @@
+---
+title: 'Le meilleur modèle a quand même besoin de règles'
+summary: "Un refactoring qu'on ne pouvait pas éviter est devenu un test honnête des agents de code, parce qu'il devait vraiment partir en production. Le modèle le plus fort a produit du code médiocre tout seul. Ce qui l'a rendu utile, c'est la structure construite autour, une correction à la fois, et la limite que cette structure n'a jamais levée, c'est de savoir que le travail est correct."
+publishedAt: 2026-07-28
+tags: [Agents, Svelte, Refactoring]
+draft: false
+lang: 'fr'
+translationKey: 'best-model-still-needs-rules'
+---
+
+Certains refactorings, on les choisit. Celui-là, on ne pouvait pas l'éviter. La librairie
+qu'on utilisait pour lire et écrire les search params d'URL n'était plus maintenue, son
+support de Svelte 5 était en bêta depuis un an, et les bugs qu'on rencontrait n'allaient
+être corrigés par personne d'autre que nous. Le typage était mince par-dessus : chaque
+composant qui lisait un paramètre de query devinait sa forme, et les valeurs par défaut
+étaient copiées-collées d'un fichier à l'autre.
+
+Un refactoring qu'on ne peut pas éviter est une façon honnête de tester un agent de code.
+C'est du vrai travail avec une vraie barre. Il faut que ça compile, que ça passe la revue,
+et que ça parte en production. Donc pendant que le changement devait se faire, c'était
+aussi l'occasion de voir jusqu'où les agents actuels pouvaient l'emmener, et où ils
+s'arrêtaient.
+
+On a écrit un seul brief et on l'a donné à quatre agents sans le modifier. Lire le code
+actuel et lister ce qu'il fait. Regarder trois façons de le remplacer. Esquisser chacune
+en pseudo-code avant d'écrire quoi que ce soit. Les contraintes étaient étroites :
+utiliser Zod pour sérialiser et désérialiser, et viser Svelte 5. Au-delà, ils étaient
+libres de poser des questions et de proposer quelque chose auquel on n'avait pas pensé.
+
+## Ce que produit un agent brut
+
+Les quatre agents ont échoué de deux façons familières. Un type d'échec surconstruisait,
+réécrivant des méthodes qui existaient déjà dans le dépôt et allant chercher une solution
+générale là où une solution locale était juste à côté. L'autre suivait la documentation de
+loin et inventait des API qui n'y étaient pas, sûr de lui sur des appels qui n'existaient
+pas.
+
+La meilleure sortie brute venait de Claude, en Opus. Elle sortait du lot, et elle était
+quand même médiocre. Le code était générique, écrit pour aucun dépôt en particulier : il
+importait depuis des barrel files qu'on n'utilise pas, et il mélangeait des idiomes
+Svelte 4 et Svelte 5 dans le même fichier. Laissé seul, même le meilleur modèle disponible
+produisait du code qu'on n'aurait pas mergé.
+
+Le modèle n'était pas le problème, et un meilleur modèle ne l'aurait pas réglé. Ce qui
+manquait à l'agent, c'était tout ce qui est spécifique à ce dépôt, et rien de ça n'est dans
+son entraînement.
+
+## Le corriger une seule fois
+
+Le correctif, c'était un endroit où écrire ce que l'agent avait raté, pour qu'il ne le rate
+qu'une fois. Un meilleur prompt n'allait jamais faire ça.
+
+La boucle est ennuyeuse et elle marche. L'agent produit quelque chose. Il navigue avec le
+helper générique du framework au lieu du helper typé du projet. Je corrige : utilise le
+codec, pas le helper. Cette correction part dans un fichier de conventions que l'agent lit
+au début de chaque session, et l'erreur ne revient pas.
+
+```md
+## Search params
+Read and write them through their codec, never `goto()` or the framework's
+generic navigation helper. The codec is the only typed path in and out.
+```
+
+Fais ça pendant une semaine et le fichier devient une description correcte de la façon
+dont ce dépôt veut vraiment être écrit. Des hooks locaux pour le lint et les tests ferment
+la boucle de l'autre côté, pour qu'un build cassé le dise directement à l'agent au lieu
+que je le relaie.
+
+## Quand un fichier ne suffit plus
+
+Le fichier de conventions a un plafond. Tout ce qu'il contient se charge dans chaque
+session, et passé un certain point c'est beaucoup de contexte dépensé en règles que la
+plupart des tâches ne touchent jamais. La réponse a été de le découper. Les conventions
+générales sont restées dans le fichier qui se charge toujours. Le reste est parti dans des
+skills, chacune limitée à un domaine : une pour le routing et le chargement de données de
+SvelteKit, une pour Vitest, une pour Playwright. Une skill ne se charge que quand la tâche
+l'appelle, donc le contexte reste léger et les règles pertinentes sont quand même là quand
+elles comptent.
+
+## Travailler comme un développeur, pas comme un générateur de code
+
+Un agent qui se contente d'écrire du code est une façon plus rapide de taper. Le changement
+plus important a été de lui donner la forme du travail qu'un développeur fait vraiment.
+Explorer les options avant de s'engager sur une. Découper le changement en étapes et nommer
+les risques. Écrire le test en premier. Relire le résultat contre les standards du projet.
+Ce sont des commandes maintenant, pas des habitudes que j'espère que l'agent retient.
+
+Une fois que chaque étape est sa propre instruction, les étapes peuvent tourner en
+parallèle. Le refactoring a cessé d'être un agent qui déroule une file pendant que je
+regarde, et est devenu plusieurs agents qui travaillent en même temps pendant que je les
+dirige : un sur la migration, un sur les tests, un sur la couverture end-to-end, relus et
+commités ensemble. L'ancien plafond était la fenêtre de contexte d'une seule conversation.
+La nouvelle limite est le nombre de sièges que tu peux diriger utilement sur le même dépôt.
+
+## Ce que la structure ne règle pas
+
+Tout ça rend l'agent productif. Rien de tout ça ne le rend fiable, et les deux se
+confondent facilement.
+
+La première limite, c'est qu'un modèle ne tient pas bien une longue conversation. Au début,
+son raisonnement est fiable. À mesure que la session se remplit, il perd le fil, et passé
+un certain point il oublie des décisions antérieures et mélange des choses qui devraient
+rester séparées. Les défenses sont sans gloire : un fichier de notes persistant que l'agent
+écrit et relit, pour que les décisions survivent entre les sessions ; des conversations
+courtes et ciblées plutôt qu'une longue ; et le coût en tokens de chaque échange maintenu
+bas.
+
+La seconde limite, c'est le jugement. L'architecture reste mieux faite par une personne.
+Tout ce qui repose sur une décision que le code n'énonce pas aussi, le genre de raison
+métier implicite qu'un modèle n'a aucun moyen de connaître. Et les tests récompensent
+l'explicite : une spec claire et un test écrit d'abord laissent bien moins de place à
+l'agent pour produire quelque chose de plausible et de faux.
+
+Cette dernière est la limite qui est sous toutes les autres. Un agent peut produire un
+travail qui a l'air fini et qui se lit avec assurance, et être sûr qu'il est réellement
+correct est la partie difficile. La génération a pris de l'avance sur la vérification.
+Tant que cet écart n'est pas comblé, la correction s'établit par une personne qui lit le
+travail, et rien de la structure ci-dessus ne lève ça. Elle rend l'agent plus rapide et
+plus régulier. Elle ne le rend pas juste tout seul.
+
+## Ce que ça a donné
+
+Le refactoring est parti en production. Le signal le plus clair était la forme de l'effort
+tout du long. Les premiers fichiers demandaient plusieurs corrections chacun. Sur la
+dernière ligne droite, ils n'en demandaient aucune, parce que chaque correction en chemin
+était devenue une règle que l'agent suivait déjà. Le travail s'est composé : l'agent est
+devenu meilleur sur ce dépôt à mesure qu'une plus grande partie du dépôt était convertie
+pour correspondre à ses propres règles.
+
+L'estimation de départ était d'environ un mois. C'est sorti en quelques jours. Et le code
+qui en est sorti est le code qu'on voulait. Au lieu que chaque composant devine la forme
+d'un paramètre de query, chaque recherche lit un codec typé :
+
+```ts
+// The search params for a page, described once:
+const SearchPageCodec = z.object({
+  page: z.number().default(1),
+  q: z.string().optional(),
+})
+
+// Before: each component guessed the shape, inline.
+const page = queryParam('page', ssp.number(1))
+
+// After: one typed read, validated on the way in and out.
+const params = searchParams(SearchPageCodec)
+```
+
+## Le compagnon, pas l'auteur
+
+Le mot qui revenait était compagnon. L'agent a changé ce à quoi le développeur passait sa
+journée, de taper chaque fichier vers décrire à quoi ressemblait la correction, attraper
+les manques, et piloter plusieurs agents à la fois.
+
+C'est l'une des deux façons de travailler avec ces outils, et la plus manuelle des deux.
+L'autre est la façon entièrement automatisée, un agent laissé tourner seul en CI, que j'ai
+racontée dans la [série Renovate](/fr/blog/renovate-automatiser-la-gestion-des-dependances).
+Celle-là parle du peu qu'une personne peut être dans la boucle. Celle-ci parle de tout ce
+qu'une personne doit encore y être. Les deux atterrissent au même endroit : une pipeline,
+ou un relecteur, qui décide si le travail est bon, parce que l'agent ne peut pas être celui
+qui se certifie lui-même.

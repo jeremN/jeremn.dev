@@ -1,0 +1,250 @@
+---
+title: 'Dix mois de Svelte 5'
+summary: "Des feuilles vers la racine, avec Svelte 4 et Svelte 5 côte à côte tout du long, pendant que le produit continuait de livrer. Presque rien n'a fait mal. Voici la partie qui a fait mal."
+publishedAt: 2026-07-17
+tags: [Svelte, Migration]
+draft: false
+lang: 'fr'
+translationKey: 'ten-months-of-svelte-5'
+---
+
+## Les feuilles d'abord
+
+On a migré une grosse app SvelteKit vers Svelte 5 en dix mois et une vingtaine de
+merge requests, de mars au mois de janvier suivant. La dernière s'appelait « Svelte 5
+migration final steps ». Rien n'a été fait d'un bloc, et c'était le principe.
+
+On est partis des feuilles. Les atomes en mars. Le design system pendant tout avril :
+alertes, switches, inputs, selects, sliders, toasts, les composants skeleton. Puis les
+composants outils. Puis en mai, le gros conteneur avec état et tous ses enfants,
+quatre-vingts fichiers dans une seule merge request. Puis les fragments de données, les
+widgets tiers, les composants de liste et de filtre, et enfin les pages, groupe par
+groupe, pendant l'automne.
+
+Pendant ces dix mois, des composants Svelte 4 et des composants Svelte 5 ont tourné côte
+à côte en production. Le guide promet qu'on peut mélanger les composants en nouvelle
+syntaxe avec ceux en ancienne syntaxe, et on a appuyé tout notre plan sur cette phrase.
+Elle a tenu. La migration n'a pas eu le dépôt pour elle non plus. Sur cette période, le
+dépôt a reçu environ onze cents autres commits, parce que le produit ne s'arrête pas le
+temps que tu le réécrives.
+
+Aujourd'hui l'app a 412 composants. 291 prennent `$props()`. Un seul garde encore un
+`export let`, et j'ai fait la paix avec ça.
+
+## Le codemod est plus prudent que moi
+
+Le script de migration officiel a fait l'écrasante majorité du travail. Les props sont
+devenues `$props()`, les variables locales sont devenues `$state()`, les handlers
+d'événements ont perdu leurs deux-points. La plupart des composants sont passés dedans
+et en sont ressortis fonctionnels.
+
+Il a aussi fait quelque chose que je n'ai pas su apprécier sur le moment. Quand le
+script rencontre un `$:` qu'il lit comme un effet de bord plutôt que comme une
+dérivation, il ne te donne pas `$effect`. Il te donne `run()`, importé de
+`svelte/legacy`, et le guide de migration donne la raison sans détour :
+
+> since `$:` statements also ran on the server but `$effect` does not, it isn't safe to
+> transform it as such. Instead, `run` is used as a stopgap solution.
+
+C'est du tooling prudent. Il sait que l'échange est risqué et il refuse de le faire. La
+plupart de nos `$:` étaient de toute façon des dérivations, et celles-là sont devenues
+`$derived`, ce que le guide annonce lui-même : 90 % du temps, tu veux `$derived`. La
+merge request de mai en a livré 38.
+
+## Le troisième mois
+
+Les feuilles étaient passées sans bruit. Les atomes et les composants de design system
+ne portent en général pas d'état digne de discussion, et ceux qui en portent le gardent
+peu de temps. Le conteneur a été la première chose qu'on ait migrée qui portait un vrai
+état, et il a cassé d'une façon qui n'avait rien à voir avec la syntaxe.
+
+On a corrigé. On a noté les correctifs dans une note de migration, une ligne chacun,
+comme on le fait quand la branche a trois jours et que l'objectif est de la livrer.
+
+On n'a jamais noté les causes.
+
+J'y suis retourné récemment et j'ai reproduit les cas de cette note contre Svelte 4.2.20
+et Svelte 5.56.6, côte à côte, même logique, console capturée. La note enregistrait des
+interventions plutôt que des explications, et deux des trois explications notées ne
+survivent pas à une reproduction. Celle qui survit est celle qui mérite un article, et
+c'est la raison pour laquelle les sept mois suivants se sont passés comme ils se sont
+passés.
+
+Le symptôme, une fois les spécificités effacées, c'est qu'un effet arrête de se
+déclencher.
+
+Il n'y a pas d'erreur, pas de warning, pas de hydration mismatch, rien sur quoi poser un
+breakpoint avec confiance. Une valeur change, le code censé y réagir ne tourne pas, et
+l'interface garde une réponse périmée. Le build est vert et le compilateur n'a rien à
+dire là-dessus.
+
+## « Mimics most of the characteristics »
+
+La formule est celle du guide, et c'est celle sur laquelle je reviens toujours. `run`
+imite *la plupart* des caractéristiques de `$:`, et le guide ne dit jamais lesquelles
+tombent en dehors de « la plupart ». C'est une chose raisonnable à laisser de côté dans
+un guide de migration. C'est aussi ce que tu veux savoir quand tu tiens un dépôt plein
+d'appels à `run()`.
+
+Alors je l'ai mesuré. Trois bacs à sable avec la même logique : Svelte 4 avec `$:`,
+Svelte 5 avec `run()`, Svelte 5 avec `$effect`. J'ai testé deux axes, une forme chacun.
+
+Les dépendances, avec un ternaire qui ne lit jamais qu'une seule de ses deux branches :
+
+```svelte
+<script>
+  let cond = $state(true)
+  let a = $state(1)
+  let b = $state(2)
+  run(() => {
+    console.log(`[deps] run() ran -> ${cond ? a : b}`)
+  })
+</script>
+```
+
+Le timing, avec une valeur qui alimente un nœud du DOM, relue depuis le nœud lui-même :
+
+```svelte
+<script>
+  let text = $state('initial')
+  let el
+  run(() => {
+    text
+    console.log(`[timing] run() sees DOM as: "${el?.textContent}"`)
+  })
+</script>
+
+<p bind:this={el}>{text}</p>
+```
+
+On met `b = 99` pendant que `cond` vaut encore `true`, puis `text = 'updated'`. Ce que
+`run()` affiche :
+
+```
+[deps]   run() ran -> 1
+[timing] run() sees DOM as: "undefined"
+--- change b (cond is true, so the ternary never reads b) ---
+                                          (nothing)
+--- change text to "updated" ---
+[timing] run() sees DOM as: "initial"
+--- DONE ---
+```
+
+Rien au changement de `b`. `"initial"` au changement de `text`, donc il a tourné avant
+que le DOM soit mis à jour. On met les trois côte à côte et « lesquelles des
+caractéristiques » a une réponse :
+
+|                                   | `$:`  | `run()` | `$effect` |
+| --------------------------------- | ----- | ------- | --------- |
+| re-tourne quand `b` change        | oui   | non     | non       |
+| voit le DOM                       | avant | avant   | après     |
+
+`run()` coupe la poire en deux, exactement au milieu. Il restitue le timing d'avant le
+DOM et la passe serveur, mais pas la liste de dépendances.
+
+## Pourquoi le shim ne peut rien pour toi ici
+
+`$:` est une construction de compilation. Le compilateur Svelte 4 lit le source de
+l'instruction, collecte chaque variable réactive qu'elle référence sans lui affecter de
+valeur, et les enregistre toutes. Il se moque que le ternaire ne puisse atteindre qu'un
+seul de `a` et `b` à chaque exécution. Il voit `cond`, `a` et `b` dans le texte, donc la
+liste de dépendances est `cond`, `a` et `b`, fixée avant que ton code ait tourné une
+seule fois.
+
+`$effect` est une construction d'exécution. Il enregistre ce que la fonction a
+réellement lu pendant sa dernière exécution. À cette dernière exécution, `cond` valait
+`true`, donc il a lu `cond` et `a`. Il n'a jamais touché `b`, parce que `b` se trouve
+dans une branche qui ne s'est pas exécutée. `b` n'est donc pas une dépendance, et écrire
+dedans n'est pas un événement dont l'effet ait la moindre raison d'entendre parler.
+
+`run()` devient `$effect.pre` côté client, et `$effect.pre` traque à l'exécution
+exactement comme `$effect`. C'est toute la raison pour laquelle le shim ne peut pas
+transporter les dépendances statiques : aucune construction du runes mode ne les a, donc
+il n'y avait rien dont `run()` puisse être le shim.
+
+Les deux axes finissent à des places très différentes. Le timing est récupérable.
+`run()` le garde, `$effect.pre` le garde, et tu ne le perds qu'en suivant le conseil que
+le guide donne lui-même à la fin de ce même paragraphe : *most likely you want to use
+`$effect` instead*. Le conseil est juste, et il se choisit. Les dépendances ne sont
+récupérables par aucun chemin, en runes mode. On a pris celle-là au moment même où on
+est entrés en runes mode, et aucun choix fait ensuite n'aurait pu l'éviter.
+
+Le ternaire est une compression. La forme que tu rencontres vraiment, c'est un bloc qui
+lit un champ sur le chemin nominal et un autre dans une branche. Un mois plus tard,
+quelqu'un change le champ dans la branche et le bloc reste muet. La doc de `$effect`
+fait la même démonstration avec un `if` et un appel à des confettis.
+
+## Ce qu'on en a fait
+
+La réponse a été le `watch` de `runed`, qui prend un getter explicite pour ses
+dépendances et lance le callback quand elles changent :
+
+```js
+watch(
+  () => [cond, a, b],
+  () => {
+    console.log(`ran -> ${cond ? a : b}`)
+  }
+)
+```
+
+`b` est dans la liste de dépendances parce que tu l'y as mis. C'est ce que `$:` te
+donnait gratuitement, restitué volontairement.
+
+C'est pour ça que j'y suis retourné. `"runed": "^0.25.0"` a été ajouté au projet par la
+merge request de mai elle-même, pas par un suivi ou un patch deux sprints plus tard. La
+merge request qui a migré le conteneur a aussi apporté ce que le codemod ne pouvait pas
+faire à notre place. Elle est partie avec 38 `$derived`, 7 `$effect(`, 1 `$effect.pre(`
+et 2 `watch(` déjà en place.
+
+Ces deux appels à `watch(` sont arrivés avec sept mois de migration encore devant eux,
+et le timing est toute l'histoire. Aujourd'hui le dépôt tient 36 `watch(` contre 47
+`$effect(`. Ces 36 sont une convention, pas 36 bugs, et ils ont eu toutes les merge
+requests restantes pour se diffuser.
+
+Ça s'est diffusé parce que la liste de dépendances est écrite, et qu'une chose écrite
+survit à la code review. Un relecteur voit que `b` manque dans `() => [cond, a]`.
+Personne ne voit que `b` manque dans un `$effect`, parce que la liste de dépendances
+d'un effet n'a pas de texte à lire. C'est une propriété de la dernière exécution, et la
+dernière exécution n'est pas sur la page que tu as sous les yeux. Ça compte surtout pour
+la personne arrivée le plus récemment, et sur dix mois beaucoup de gens ont touché ce
+code sans avoir été dans la pièce en mai. Éviter le piège autrement suppose de savoir
+que les dépendances sont traquées à l'exécution, et qu'une branche non prise n'est pas
+une dépendance. C'est une base fragile pour faire reposer une correction.
+
+L'équipe avait donc la bonne réponse au troisième mois, et n'a jamais eu l'explication.
+On a pris `watch` parce que `$effect` ne faisait pas ce qu'on attendait et que `watch`
+le faisait. C'est une justification d'ingénierie complète quand la branche doit partir.
+Ce n'est pas une explication. Je n'ai compris pourquoi c'était la bonne réponse qu'un an
+plus tard, avec trois projets jetables et un script Playwright.
+
+Une réserve honnête sur tout ça. Les reproductions sont simplifiées. Ce n'est pas la
+vraie app, elles n'ont ni son arbre de composants, ni ses stores, ni ses données. Quand
+l'une d'elles ne reproduit pas un bug de la note, ça prouve que la forme qu'on a notée
+ne suffit pas à le causer. Ça ne prouve pas que le bug était imaginaire. Quelqu'un l'a
+rencontré, quelqu'un l'a corrigé, et le correctif est parti en production. Ce que la
+reproduction établit, c'est que la note n'est pas la cause. C'est une affirmation plus
+petite qu'elle n'en a l'air. Pour l'un des cas, une boucle infinie qu'on avait notée
+comme un problème de store, la vraie cause reste inconnue. Je ne vais pas la deviner
+ici.
+
+## Ce qu'il faut en retenir
+
+`$effect` n'est pas un `$:` en moins bien. C'est un autre outil, avec un autre modèle de
+dépendances, et il est très bon pour ce à quoi il sert : se synchroniser avec quelque
+chose d'extérieur au graphe réactif, une fois le DOM stabilisé. Les dépendances à
+l'exécution sont une vraie amélioration. Elles sont précises, et elles ne relancent rien
+sur des valeurs que tu n'as jamais lues. C'est ce sur quoi la plupart des
+implémentations de signaux se sont arrêtées, pour de bonnes raisons.
+
+La doc nous disait la vérité. Le guide de migration liste l'analyse statique des
+dépendances parmi les pièges de `$:`, note que déterminer les dépendances à l'exécution
+rend `$effect` insensible aux refactorings, et renvoie depuis l'instruction de
+conversion de `$:` droit vers la section qui contient l'exemple des confettis. Lire que
+les dépendances sont déterminées à l'exécution et comprendre que ton bloc arrête de se
+déclencher quand quelqu'un déplace un champ dans une branche sont deux actes différents.
+La doc a fait le premier. On n'a fait le second qu'un an plus tard, avec un console log.
+
+Donc si ton bloc réactif a besoin d'une liste de dépendances qui ne change pas quand le
+code se ramifie, dis-le à voix haute. `watch` le dit à voix haute. `$effect` n'allait
+jamais le faire.
