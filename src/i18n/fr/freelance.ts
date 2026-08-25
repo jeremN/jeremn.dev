@@ -8,7 +8,7 @@ const copy: typeof en = {
   headlineEmphasis: 'votre équipe.',
   leadTail: '. Je construis et reconstruis des applications web, et le tooling autour.',
   availabilityStatus: 'Disponible pour une mission freelance',
-  ctaLabel: 'Discutons-en',
+  ctaLabel: 'Parlons-en',
   whatIDoHeading: 'Ce que je fais',
   howIWorkHeading: 'Ma façon de travailler',
   getInTouchHeading: 'Me contacter',
