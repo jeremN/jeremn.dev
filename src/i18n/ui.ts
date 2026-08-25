@@ -1,6 +1,11 @@
 // Chrome strings shared by every page: header nav, footer, CTA.
 // The nav hrefs are English routes; Layout maps them through ROUTE_MAP for /fr/.
 const en = {
+  // Five primary destinations, matching the comp minus Stack (dropped: no page
+  // backs it). Services now has its own route (the comp's header carries a
+  // link for it), so it joins the nav. /freelance predates it and covers
+  // overlapping ground; Contact covers the same intent, so /freelance stays
+  // reachable only by direct URL rather than through nav or footer.
   nav: [
     { href: '/blog', label: 'Writing' },
     { href: '/about', label: 'About' },
