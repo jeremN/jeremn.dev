@@ -7,7 +7,7 @@ import PostRow from '../site/PostRow.astro'
 import { getProfile } from '../../lib/cv'
 import { getServices } from '../../lib/services'
 import { withBase } from '../../lib/base'
-import { getCopy, type Locale } from '../../i18n'
+import { getCopy, ROUTE_MAP, type Locale } from '../../i18n'
 
 interface Props { lang: Locale }
 const { lang } = Astro.props
@@ -22,9 +22,13 @@ const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3)
 
-// The index this section's "all notes" link points at. The rows derive their
-// own prefix from `lang` inside PostRow; this is the section header's link.
-const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
+// Every in-page link, read from ROUTE_MAP so the French routes keep one source
+// of truth. The rows derive their own prefix from `lang` inside PostRow; these
+// three are the section header's link and the two CTAs.
+const href = (route: string) => (lang === 'fr' ? (ROUTE_MAP[route] ?? route) : route)
+const blogIndex = href('/blog')
+const contact = href('/contact')
+const about = href('/about')
 
 // The validated design pairs each homepage teaser row with one of the three
 // Xiaohei article marks in a fixed code/lock/cubes sequence, not by tag: the
@@ -62,7 +66,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
               </span>
               <a
                 data-hero-cta
-                href={withBase('/contact')}
+                href={withBase(contact)}
                 class="inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
               >
                 {t.cta}
@@ -137,7 +141,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
             <Doodle name="xiaohei-about" class="h-20 w-20 shrink-0 text-ink sm:h-24 sm:w-24" />
           </div>
           <a
-            href={withBase('/about')}
+            href={withBase(about)}
             class="mt-6 inline-block font-mono text-[11px] uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70"
           >
             {t.aboutLink}
@@ -152,7 +156,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
                 {t.contactBlurb}
               </p>
               <a
-                href={withBase('/contact')}
+                href={withBase(contact)}
                 class="mt-6 inline-flex items-center gap-3 rounded-sm bg-ink px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ground no-underline transition-opacity hover:opacity-85"
               >
                 {t.cta}
