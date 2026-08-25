@@ -71,11 +71,6 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
         ))}
       </ul>
     )}
-
-    {/* The validated mobile design ends the page at "Older notes" — no
-        closing illustration below lg, matching the desktop-only footer mark
-        on Home. */}
-    <Doodle name="xiaohei-writing-footer" class="mt-20 hidden aspect-[992/339] w-full text-ink lg:block" />
   </main>
 </Layout>
 

@@ -149,3 +149,17 @@ test.describe('French home page lead', () => {
     await expect(lead).not.toContainText('Senior fullstack')
   })
 })
+
+test.describe('writing page closing illustration', () => {
+  test('is gone, and the list is the last thing before the footer', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('[data-doodle="xiaohei-writing-footer"]')).toHaveCount(0)
+  })
+
+  test('the hero illustration stays', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('[data-doodle="xiaohei-writing-header"]')).toBeAttached()
+  })
+})
