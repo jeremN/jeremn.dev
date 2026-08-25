@@ -160,6 +160,6 @@ test.describe('writing page closing illustration', () => {
   test('the hero illustration stays', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(`${BASE}/blog`)
-    await expect(page.locator('[data-doodle="xiaohei-writing-header"]')).toBeAttached()
+    await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
   })
 })
