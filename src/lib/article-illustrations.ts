@@ -7,7 +7,7 @@ import type { DoodleName } from '../components/site/Doodle.astro'
 // `translationKey` rather than the slug, so an article and its translation
 // share one drawing instead of duplicating the asset. Every English article's
 // key equals its own slug, so the English lookups are the same lookups.
-const BY_SLUG: Record<string, DoodleName> = {
+const BY_KEY: Record<string, DoodleName> = {
   'ten-months-of-svelte-5': 'xiaohei-article-ten-months-of-svelte-5',
   'two-years-of-renovate-part-one': 'xiaohei-article-renovate-part-one',
   'two-years-of-renovate-part-two': 'xiaohei-article-renovate-part-two',
@@ -26,8 +26,8 @@ const BY_SLUG: Record<string, DoodleName> = {
  * without an illustration yet should render without one, not borrow a
  * stranger's artwork.
  */
-export function illustrationForSlug(slug: string): DoodleName | undefined {
-  return BY_SLUG[slug]
+export function illustrationForKey(key: string): DoodleName | undefined {
+  return BY_KEY[key]
 }
 
 // Each illustration's own tight ink bounding box (each SVG's viewBox is
@@ -40,7 +40,7 @@ export function illustrationForSlug(slug: string): DoodleName | undefined {
 // the sparser compositions, still leave dead vertical space around the
 // subject) is what removes both problems at once.
 // Keyed on `translationKey` too, for the same reason as the table above.
-const ASPECT_BY_SLUG: Record<string, string> = {
+const ASPECT_BY_KEY: Record<string, string> = {
   'ten-months-of-svelte-5': '919.91 / 260.05',
   'two-years-of-renovate-part-one': '553.83 / 477.66',
   'two-years-of-renovate-part-two': '918.47 / 540.75',
@@ -54,6 +54,6 @@ const ASPECT_BY_SLUG: Record<string, string> = {
 
 /** CSS `aspect-ratio` value for a post's illustration, looked up by
  *  `translationKey`, or `undefined` if it has none. */
-export function articleAspectForSlug(slug: string): string | undefined {
-  return ASPECT_BY_SLUG[slug]
+export function articleAspectForKey(key: string): string | undefined {
+  return ASPECT_BY_KEY[key]
 }

@@ -5,7 +5,7 @@ import { readingTime } from '../../lib/reading-time'
 import { withBase } from '../../lib/base'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
-import { illustrationForSlug, articleAspectForSlug } from '../../lib/article-illustrations'
+import { illustrationForKey, articleAspectForKey } from '../../lib/article-illustrations'
 import { getCopy, type Locale } from '../../i18n'
 
 interface Props {
@@ -18,7 +18,10 @@ const t = getCopy(lang, 'article')
 const { Content, headings } = await render(post)
 // The pair, derived from the collection. ROUTE_MAP cannot hold it: it is a
 // static table and these routes only exist once the collection is read.
-const twin = (await getCollection('blog')).find(
+// The draft filter is the same one both routes apply, and it has to be here
+// too: an unfiltered lookup pairs a published article with a draft twin, and
+// then advertises a URL the production build never writes.
+const twin = (await getCollection('blog', ({ data }) => !data.draft || import.meta.env.DEV)).find(
   (p) => p.data.translationKey === post.data.translationKey && p.data.lang !== post.data.lang,
 )
 const alternates = twin
@@ -41,10 +44,10 @@ const showToc = toc.length >= 2
 // there is no reasonable fallback for the ones that don't (see the lib for why).
 // Keyed on `translationKey`, so a translated article reuses its twin's drawing
 // instead of duplicating the asset.
-const illustration = illustrationForSlug(post.data.translationKey)
+const illustration = illustrationForKey(post.data.translationKey)
 // Each illustration keeps its own tight aspect ratio rather than a shared
 // one — see the lib for why.
-const illustrationAspect = articleAspectForSlug(post.data.translationKey)
+const illustrationAspect = articleAspectForKey(post.data.translationKey)
 const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
 ---
 <Layout lang={lang} alternates={alternates} title={`${post.data.title} · jeremn.dev`} description={post.data.summary} hideFooterCta>
