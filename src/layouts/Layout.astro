@@ -4,7 +4,15 @@ import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
 import { localeOf, alternatesFor, ROUTE_MAP, type Locale } from '../i18n'
 import { getUi } from '../i18n/ui'
 import LangSwitch from '../components/site/LangSwitch.astro'
-interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean; lang?: Locale }
+interface Props {
+  title?: string
+  description?: string
+  noindex?: boolean
+  hideFooterCta?: boolean
+  lang?: Locale
+  /** Overrides the route map. `null` means "this page has no twin". */
+  alternates?: { en: string; fr: string } | null
+}
 const {
   title = 'Jérémie Néhlil',
   description = 'Jérémie Néhlil, freelance software engineer. CV, writing, and a WebGL galaxy.',
@@ -23,7 +31,11 @@ const lang: Locale = Astro.props.lang ?? localeOf(route)
 const ui = getUi(lang)
 // Nav hrefs are English routes. Under /fr/, swap each one for its twin.
 const nav = ui.nav.map((n) => ({ ...n, href: lang === 'fr' ? (ROUTE_MAP[n.href] ?? n.href) : n.href }))
-const alternates = alternatesFor(route)
+// An explicit prop wins. Articles pass their pair, which ROUTE_MAP cannot hold
+// because it is derived from the collection at build time. The test is against
+// `undefined`, not falsiness: an article with no twin passes `null` on purpose
+// and must not fall back to the route map.
+const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates : alternatesFor(route)
 const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).href : withBase(path))
 ---
 <!doctype html>

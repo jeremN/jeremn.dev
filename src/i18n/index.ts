@@ -13,6 +13,8 @@ import enFreelance from './en/freelance'
 import frFreelance from './fr/freelance'
 import enBlog from './en/blog'
 import frBlog from './fr/blog'
+import enArticle from './en/article'
+import frArticle from './fr/article'
 
 export const LOCALES = ['en', 'fr'] as const
 export type Locale = (typeof LOCALES)[number]
@@ -46,8 +48,8 @@ export const alternatesFor = (route: string): { en: string; fr: string } | null 
   BY_EN.get(strip(route)) ?? BY_FR.get(strip(route)) ?? null
 
 const COPY = {
-  en: { home: enHome, services: enServices, about: enAbout, contact: enContact, freelance: enFreelance, blog: enBlog },
-  fr: { home: frHome, services: frServices, about: frAbout, contact: frContact, freelance: frFreelance, blog: frBlog },
+  en: { home: enHome, services: enServices, about: enAbout, contact: enContact, freelance: enFreelance, blog: enBlog, article: enArticle },
+  fr: { home: frHome, services: frServices, about: frAbout, contact: frContact, freelance: frFreelance, blog: frBlog, article: frArticle },
 } as const
 
 export type Page = keyof (typeof COPY)['en']

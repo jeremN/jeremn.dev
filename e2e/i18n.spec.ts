@@ -225,3 +225,84 @@ test.describe('bilingual blog index', () => {
     await expect(page.locator('[data-writing] a[href*="/blog/"]:not([href*="/fr/blog/"])')).toHaveCount(0)
   })
 })
+
+test.describe('article routes', () => {
+  const EN = '/blog/stryker-on-a-svelte-monorepo'
+  const FR = '/fr/blog/faire-tourner-stryker-sur-un-monorepo-svelte'
+
+  test('the French article renders at its French slug', async ({ page }) => {
+    await page.goto(`${BASE}${FR}`)
+    await expect(page.locator('h1')).toContainText('Faire tourner Stryker sur un monorepo Svelte')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
+  })
+
+  test('the pair carries reciprocal hreflang on both sides', async ({ page }) => {
+    for (const path of [EN, FR]) {
+      await page.goto(`${BASE}${path}`)
+      await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', new RegExp(`${EN}$`))
+      await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', new RegExp(`${FR}$`))
+    }
+  })
+
+  test('the switcher crosses between the two articles', async ({ page }) => {
+    await page.goto(`${BASE}${EN}`)
+    await expect(page.locator('[data-lang-switch]')).toHaveAttribute('href', `${BASE}${FR}`)
+    await page.goto(`${BASE}${FR}`)
+    await expect(page.locator('[data-lang-switch]')).toHaveAttribute('href', `${BASE}${EN}`)
+  })
+
+  test('the French article reuses the English illustration rather than a copy', async ({ page }) => {
+    await page.goto(`${BASE}${FR}`)
+    // Two instances, the desktop one and the full-bleed mobile one, the same
+    // pair every English article renders (see article.spec.ts). The count is
+    // what proves the lookup went through `translationKey`: keyed on the slug
+    // it would find nothing and render zero.
+    await expect(page.locator('[data-doodle="xiaohei-article-stryker-on-a-svelte-monorepo"]')).toHaveCount(2)
+  })
+
+  test('an article with no twin emits no hreflang and hides the switcher', async ({ page }) => {
+    await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
+    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
+    await expect(page.locator('[data-lang-switch]')).toHaveCount(0)
+  })
+
+  test('the English article keeps its illustration and its highlighted code', async ({ page }) => {
+    await page.goto(`${BASE}${EN}`)
+    await expect(page.locator('article pre span[style*="color"]').first()).toBeVisible()
+  })
+
+  // The article shell is not in the MDX, so translating the article never
+  // reaches it. Without these, a French reader meets an English frame around
+  // French prose and every assertion above still passes.
+  test('the French article frames the prose in French, not in English', async ({ page }) => {
+    await page.goto(`${BASE}${FR}`)
+    await expect(page.locator('[data-back]')).toContainText('Tous les articles')
+    await expect(page.locator('[data-back]')).not.toContainText('All notes')
+    await expect(page.locator('main aside nav')).toHaveAttribute('aria-label', 'Sur cette page')
+    await expect(page.locator('main aside nav span').first()).toContainText('Sur cette page')
+    await expect(page.locator('main')).toContainText('min de lecture')
+    await expect(page.locator('main')).not.toContainText('min read')
+    await expect(page.locator('main')).toContainText('17 août 2026')
+  })
+
+  test('the English article keeps its own English shell', async ({ page }) => {
+    await page.goto(`${BASE}${EN}`)
+    await expect(page.locator('[data-back]')).toContainText('← All notes')
+    await expect(page.locator('main aside nav')).toHaveAttribute('aria-label', 'On this page')
+    await expect(page.locator('main')).toContainText('min read')
+    await expect(page.locator('main')).toContainText('Aug 17, 2026')
+  })
+
+  // The copy button is built by a client script, which cannot import the Astro
+  // dictionary. This is the assertion that the strings actually cross that
+  // boundary instead of staying English on the French page.
+  test('the code-block chrome is localised across the client-script boundary', async ({ page }) => {
+    await page.goto(`${BASE}${EN}`)
+    await expect(page.locator('.code-block__copy').first()).toHaveText('Copy')
+    await expect(page.locator('article .heading-anchor').first()).toHaveAttribute('aria-label', 'Link to this section')
+
+    await page.goto(`${BASE}${FR}`)
+    await expect(page.locator('.code-block__copy').first()).toHaveText('Copier')
+    await expect(page.locator('article .heading-anchor').first()).toHaveAttribute('aria-label', 'Lien vers cette section')
+  })
+})

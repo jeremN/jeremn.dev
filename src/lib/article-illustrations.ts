@@ -1,10 +1,12 @@
 import type { DoodleName } from '../components/site/Doodle.astro'
 
-// Which Xiaohei illustration heads an Article page. Keyed by post slug (the
-// MDX filename without its extension) rather than by tag: each illustration
-// was drawn for one specific post, so there is no reasonable fallback the
-// way `markForTags` has one for Writing's row marks. A slug with no entry
-// here renders no illustration at all.
+// Which Xiaohei illustration heads an Article page. Keyed by `translationKey`
+// rather than by tag: each illustration was drawn for one specific post, so
+// there is no reasonable fallback the way `markForTags` has one for Writing's
+// row marks. A key with no entry here renders no illustration at all.
+// `translationKey` rather than the slug, so an article and its translation
+// share one drawing instead of duplicating the asset. Every English article's
+// key equals its own slug, so the English lookups are the same lookups.
 const BY_SLUG: Record<string, DoodleName> = {
   'ten-months-of-svelte-5': 'xiaohei-article-ten-months-of-svelte-5',
   'two-years-of-renovate-part-one': 'xiaohei-article-renovate-part-one',
@@ -18,9 +20,9 @@ const BY_SLUG: Record<string, DoodleName> = {
 }
 
 /**
- * Pick an Article page's illustration from its post slug.
+ * Pick an Article page's illustration from its `translationKey`.
  *
- * Returns `undefined` for any slug not in the map, on purpose: a new post
+ * Returns `undefined` for any key not in the map, on purpose: a new post
  * without an illustration yet should render without one, not borrow a
  * stranger's artwork.
  */
@@ -37,6 +39,7 @@ export function illustrationForSlug(slug: string): DoodleName | undefined {
 // a shared crop window, which used to slice most of the width off and, for
 // the sparser compositions, still leave dead vertical space around the
 // subject) is what removes both problems at once.
+// Keyed on `translationKey` too, for the same reason as the table above.
 const ASPECT_BY_SLUG: Record<string, string> = {
   'ten-months-of-svelte-5': '919.91 / 260.05',
   'two-years-of-renovate-part-one': '553.83 / 477.66',
@@ -49,7 +52,8 @@ const ASPECT_BY_SLUG: Record<string, string> = {
   'contract-tests-without-the-stack': '662.30 / 429.60',
 }
 
-/** CSS `aspect-ratio` value for a post's illustration, or `undefined` if it has none. */
+/** CSS `aspect-ratio` value for a post's illustration, looked up by
+ *  `translationKey`, or `undefined` if it has none. */
 export function articleAspectForSlug(slug: string): string | undefined {
   return ASPECT_BY_SLUG[slug]
 }
