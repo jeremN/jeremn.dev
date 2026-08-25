@@ -14,10 +14,6 @@ const posts = (
   await getCollection('blog', ({ data }) => data.lang === lang && (!data.draft || import.meta.env.DEV))
 ).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
 
-// Each locale lists only its own articles, so each index links into its own
-// tree. Article ids stay flat in the collection; the prefix is what differs.
-const blogBase = lang === 'fr' ? '/fr/blog' : '/blog'
-
 // Tags actually in use, alphabetical. Deriving them from the collection means
 // a new tag appears in the filter the moment a post uses it.
 const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b))
@@ -73,7 +69,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
       <ul class="mt-0">
         {posts.map((p) => (
           <li data-tags={p.data.tags.join(' ')}>
-            <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} lang={lang} blogBase={blogBase} />
+            <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} lang={lang} />
           </li>
         ))}
       </ul>

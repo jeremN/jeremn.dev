@@ -216,9 +216,12 @@ test.describe('bilingual blog index', () => {
   test('the homepage writing teaser stays in the page language', async ({ page }) => {
     await page.goto(`${BASE}/fr/`)
     await expect(page.getByRole('link', { name: /Ten months of Svelte 5/ })).toHaveCount(0)
-    // The title above is the fourth-newest post and the teaser shows three, so
-    // that assertion cannot fail. This one can: it catches any teaser row that
-    // links into the English tree, and it stays true once French articles land.
+    // The title above is the oldest of the nine and the teaser shows three, so
+    // that assertion cannot fail. These two can, and they catch different
+    // regressions: the title fires when the locale filter drops (the newest
+    // English post is what a broken filter surfaces first), the href fires when
+    // the row prefix drops. Both stay true once French articles land.
+    await expect(page.locator('[data-writing]')).not.toContainText('Contract tests without the stack')
     await expect(page.locator('[data-writing] a[href*="/blog/"]:not([href*="/fr/blog/"])')).toHaveCount(0)
   })
 })

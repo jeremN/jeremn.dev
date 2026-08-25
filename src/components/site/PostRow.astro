@@ -13,13 +13,12 @@ interface Props {
   publishedAt: Date
   body?: string
   variant?: 'index' | 'teaser'
-  /** The page's language. Drives the date locale and the reading-time noun,
-   * both of which used to be pinned to English. Defaults to 'en' so every
-   * caller that predates the French tree keeps rendering unchanged. */
+  /** The page's language. Drives the date locale, the reading-time noun and
+   * the href prefix, all three of which used to be pinned to English. The
+   * prefix is derived here rather than passed in: a separate prop could
+   * disagree with `lang` and silently mix a French date into an English link.
+   * Defaults to 'en' so a caller that predates the French tree still renders. */
   lang?: 'en' | 'fr'
-  /** Route prefix for the row's href. The French index links into /fr/blog,
-   * the English one into /blog. Defaults to the English tree. */
-  blogBase?: string
   /** Overrides the tag-derived mark. Only the 'teaser' variant (the homepage's
    * three-row preview) renders a mark at all, using this to show the three
    * Xiaohei article marks in the validated design's fixed code/lock/cubes
@@ -37,9 +36,10 @@ const {
   body,
   variant = 'index',
   lang = 'en',
-  blogBase = '/blog',
   mark: markOverride,
 } = Astro.props
+
+const blogBase = lang === 'fr' ? '/fr/blog' : '/blog'
 
 // The comps stack the date over three lines: day, month, year.
 // `.toUpperCase()` stays: the row's date is uppercase by design. 'fr-FR'

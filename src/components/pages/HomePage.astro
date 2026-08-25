@@ -19,9 +19,9 @@ const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3)
 
-// The teaser lists the page's own language, so it links into that language's
-// tree. Without this, /fr/ would send readers to the English articles.
-const blogBase = lang === 'fr' ? '/fr/blog' : '/blog'
+// The index this section's "all notes" link points at. The rows derive their
+// own prefix from `lang` inside PostRow; this is the section header's link.
+const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
 
 // The validated design pairs each homepage teaser row with one of the three
 // Xiaohei article marks in a fixed code/lock/cubes sequence, not by tag: the
@@ -94,7 +94,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
     <section data-writing class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
       <div class="flex items-baseline justify-between gap-6 border-t border-line pt-8">
         <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.writingHeading}</h2>
-        <a href={withBase(blogBase)} class="font-mono text-[11px] uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
+        <a href={withBase(blogIndex)} class="font-mono text-[11px] uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
           {t.writingAllNotes}
         </a>
       </div>
@@ -115,7 +115,6 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
                 body={p.body}
                 variant="teaser"
                 lang={lang}
-                blogBase={blogBase}
                 mark={HOME_NOTE_MARKS[i]}
               />
             </li>
