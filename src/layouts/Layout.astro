@@ -1,24 +1,15 @@
 ---
 import '../styles.css'
 import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
-interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean }
+import { localeOf, alternatesFor, ROUTE_MAP, type Locale } from '../i18n'
+import { getUi } from '../i18n/ui'
+interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean; lang?: Locale }
 const {
   title = 'Jérémie Néhlil',
   description = 'Jérémie Néhlil, freelance software engineer. CV, writing, and a WebGL galaxy.',
   noindex = false,
   hideFooterCta = false,
 } = Astro.props
-// Five primary destinations, matching the comp minus Stack (dropped: no page
-// backs it). Services now has its own route (the comp's header carries a
-// link for it), so it joins the nav. /freelance predates it and covers
-// overlapping ground; Contact covers the same intent, so /freelance stays
-// reachable only by direct URL rather than through nav or footer.
-const nav = [
-  { href: '/blog', label: 'Writing' },
-  { href: '/about', label: 'About' },
-  { href: '/services', label: 'Services' },
-  { href: '/contact', label: 'Contact' },
-]
 const year = new Date().getFullYear()
 
 // `route` is base-independent, so nav matching works under either deploy target.
@@ -26,9 +17,16 @@ const route = toRoute(Astro.url.pathname)
 const isActive = (href: string) => route === href || route.startsWith(href + '/')
 const canonical = Astro.site ? new URL(withBase(route), Astro.site).href : withBase(route)
 const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href : withBase('/og-cover.jpg')
+
+const lang: Locale = Astro.props.lang ?? localeOf(route)
+const ui = getUi(lang)
+// Nav hrefs are English routes. Under /fr/, swap each one for its twin.
+const nav = ui.nav.map((n) => ({ ...n, href: lang === 'fr' ? (ROUTE_MAP[n.href] ?? n.href) : n.href }))
+const alternates = alternatesFor(route)
+const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).href : withBase(path))
 ---
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -44,6 +42,13 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
     <meta name="description" content={description} />
     <meta name="theme-color" id="theme-color" content="#faf8f3" />
     <link rel="canonical" href={canonical} />
+    {alternates && !isSubpathDeploy && (
+      <>
+        <link rel="alternate" hreflang="en" href={abs(alternates.en)} />
+        <link rel="alternate" hreflang="fr" href={abs(alternates.fr)} />
+        <link rel="alternate" hreflang="x-default" href={abs(alternates.en)} />
+      </>
+    )}
     <link rel="icon" href={withBase('/favicon.ico')} sizes="any" />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
@@ -102,10 +107,10 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
       <div class="mx-auto max-w-[1440px] px-6">
         {!hideFooterCta && (
           <div class="py-20 sm:py-28">
-            <span class="font-mono text-[11px] uppercase tracking-wider text-accent">Get in touch</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{ui.getInTouch}</span>
             <a href={withBase('/contact')} class="mt-3 block no-underline">
               <h2 class="font-display text-5xl font-semibold leading-none tracking-tight text-ink transition-colors hover:text-accent sm:text-7xl">
-                Work with me
+                {ui.footerCta}
               </h2>
             </a>
           </div>
@@ -117,8 +122,8 @@ const ogImage = Astro.site ? new URL(withBase('/og-cover.jpg'), Astro.site).href
           ]}
         >
           <span>© {year} jeremn.dev</span>
-          <span>Based in France</span>
-          <span>Remote friendly</span>
+          <span>{ui.basedIn}</span>
+          <span>{ui.remote}</span>
         </div>
       </div>
     </footer>

@@ -21,3 +21,32 @@ test.describe('French home page', () => {
     }
   })
 })
+
+test.describe('head and chrome per locale', () => {
+  test('stamps the route locale on <html lang>', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
+  })
+
+  test('each variant carries the full reciprocal hreflang set', async ({ page }) => {
+    for (const path of ['/', '/fr/']) {
+      await page.goto(`${BASE}${path}`)
+      await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/$/)
+      await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', /\/fr\/$/)
+      await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', /\/$/)
+    }
+  })
+
+  test('canonical points at the page itself, never at the other language', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/fr\/$/)
+  })
+
+  test('translates the nav labels', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    const labels = await page.locator('header nav a').allTextContents()
+    expect(labels.map((l) => l.trim())).toEqual(['Articles', 'À propos', 'Services', 'Contact'])
+  })
+})

@@ -25,7 +25,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 // task report for the full comparison.
 const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark-cubes'] as const
 ---
-<Layout hideFooterCta>
+<Layout lang={lang} title={t.title} description={t.description} hideFooterCta>
   <main class="relative z-10">
     <section data-hero class="mx-auto max-w-[1000px] px-6 pt-16 sm:pt-24">
       <div class="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
