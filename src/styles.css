@@ -40,6 +40,17 @@
      different dark-mode value. */
   --color-xiaohei-sky: light-dark(#5087af, #7fc3f1);
 
+  /* The reworked "best model still needs rules" illustration draws a bundle of
+     tangled cables, five colours in play. Every pair below was read off the
+     light frame and its dark twin in the comp, not chosen here. Illustration
+     only: the light teal and amber sit near 3:1 on the light ground, so they
+     would fail AA as text. */
+  --color-xiaohei-red: light-dark(#c63d2b, #ff735c);
+  --color-xiaohei-teal: light-dark(#007d6e, #53d7bb);
+  --color-xiaohei-amber: light-dark(#a66300, #f5bd55);
+  --color-xiaohei-blue: light-dark(#1f5fbf, #73a7ff);
+  --color-xiaohei-violet: light-dark(#6845c7, #b99cff);
+
   /* Illustration stroke width. Light strokes on a dark ground optically bloom
      and read heavier at the same width, so dark draws them thinner. This is
      the only place where dark needs different geometry rather than a
