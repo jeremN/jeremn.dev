@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
-import { BASE } from '../site.config.mjs'
+import { BASE, SITE } from '../site.config.mjs'
 import { readArticles, routeOf } from '../scripts/articles.mjs'
 import { serialiseLd } from '../src/lib/structured-data'
 
@@ -276,6 +276,57 @@ test.describe('internal links inside articles', () => {
           key && frenchKeys.has(key),
           `${article.slug} links to the English ${link}, which now has a French twin`,
         ).toBeFalsy()
+      }
+    }
+  })
+})
+
+// Every page names itself in three places: `rel=canonical`, its own `hreflang`
+// entry, and the structured data. Astro writes each page as `<route>/index.html`,
+// so the directory form is the URL that answers directly and the slash-free form
+// answers with a redirect. All three must name the same one, or a search engine
+// takes an extra hop to pair the two languages and to tie a block to its page.
+//
+// The assertion is on the shape, not on a request. The preview server this suite
+// runs against serves both forms with a 200, so a test that fetched the slash-free
+// URL would pass here and catch nothing: only the production host redirects.
+// Comparing the declared strings is the part that is checkable where the test runs.
+test.describe('the URL a page names for itself', () => {
+  const SAMPLE = [...Object.keys(TYPED), '/contact', '/fr/contact', ...ARTICLES.map(routeOf)]
+  // /contact carries no structured data, so the block sweep skips it.
+  const WITH_BLOCKS = [...Object.keys(TYPED), ...ARTICLES.map(routeOf)]
+
+  /** Every in-site URL anywhere in a block, however deeply nested. */
+  const siteUrls = (value: unknown, found: string[] = []): string[] => {
+    if (typeof value === 'string') {
+      if (value.startsWith(SITE)) found.push(value)
+    } else if (Array.isArray(value)) value.forEach((v) => siteUrls(v, found))
+    else if (value && typeof value === 'object') Object.values(value).forEach((v) => siteUrls(v, found))
+    return found
+  }
+
+  test('its canonical and its own hreflang are the same string', async ({ page }) => {
+    expect(SAMPLE.length, 'the sweep found no routes to sweep').toBeGreaterThan(0)
+    for (const route of SAMPLE) {
+      await page.goto(`${BASE}${route}`)
+      const lang = await page.locator('html').getAttribute('lang')
+      const canonical = await page.locator('link[rel="canonical"]').getAttribute('href')
+      const self = await page.locator(`link[rel="alternate"][hreflang="${lang}"]`).getAttribute('href')
+      expect(canonical, route).toBeTruthy()
+      expect(self, `${route} names itself twice, and the two disagree`).toBe(canonical)
+    }
+  })
+
+  // A page URL takes the trailing slash; a file never does. Splitting on the
+  // extension keeps the social card, which is a real file, out of the rule.
+  test('every page URL its structured data names carries the trailing slash', async ({ page }) => {
+    for (const route of WITH_BLOCKS) {
+      await page.goto(`${BASE}${route}`)
+      const blocks = await page.locator('script[type="application/ld+json"]').allTextContents()
+      expect(blocks.length, `${route} carries no block, so this checked nothing`).toBeGreaterThan(0)
+      for (const url of siteUrls(blocks.map((b) => JSON.parse(b)))) {
+        if (/\.[a-z0-9]+$/i.test(new URL(url).pathname)) continue
+        expect(url, `${route} structured data`).toMatch(/\/$/)
       }
     }
   })

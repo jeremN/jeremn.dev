@@ -6,7 +6,7 @@ import Doodle from '../site/Doodle.astro'
 import PostRow from '../site/PostRow.astro'
 import { getProfile } from '../../lib/cv'
 import { getServices } from '../../lib/services'
-import { withBase, absolute } from '../../lib/base'
+import { withBase, pageUrl } from '../../lib/base'
 import { getCopy, ROUTE_MAP, type Locale } from '../../i18n'
 import { websiteLd } from '../../lib/structured-data'
 
@@ -39,7 +39,7 @@ const about = href('/about')
 // task report for the full comparison.
 const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark-cubes'] as const
 ---
-<Layout lang={lang} title={t.title} description={t.description} jsonLd={websiteLd(lang, absolute, t.description)} hideFooterCta>
+<Layout lang={lang} title={t.title} description={t.description} jsonLd={websiteLd(lang, pageUrl, t.description)} hideFooterCta>
   <main class="relative z-10">
     <section data-hero class="mx-auto max-w-[1000px] px-6 pt-16 sm:pt-24">
       <div class="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">

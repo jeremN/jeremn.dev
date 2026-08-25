@@ -22,3 +22,13 @@ export const isSubpathDeploy = BASE !== ''
  *  truth rather than a second hardcoded origin. */
 export const absolute = (route: string): string =>
   import.meta.env.SITE ? new URL(withBase(route), import.meta.env.SITE).href : withBase(route)
+
+/** Absolute URL of an in-site PAGE, in the directory form the server serves.
+ *  Astro writes every page as `<route>/index.html`, so `/about` answers with a
+ *  redirect and `/about/` answers directly. The canonical link, the hreflang
+ *  pair and the structured data must all name the same URL, and it has to be
+ *  the one that answers: an annotation pointing at a redirect costs a search
+ *  engine an extra hop to pair the two languages. Use `absolute` for a file,
+ *  which never takes a trailing slash. */
+export const pageUrl = (route: string): string =>
+  absolute(route.endsWith('/') ? route : `${route}/`)

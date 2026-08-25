@@ -130,8 +130,8 @@ test.describe('French services page', () => {
 
   test('pairs with the English page through hreflang', async ({ page }) => {
     await page.goto(`${BASE}/fr/services`)
-    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/services$/)
-    await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', /\/fr\/services$/)
+    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/services\/$/)
+    await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', /\/fr\/services\/$/)
   })
 
   test('lists the same number of offerings in both languages', async ({ page }) => {
@@ -177,8 +177,8 @@ test.describe('French about page', () => {
 
   test('pairs with the English page through hreflang', async ({ page }) => {
     await page.goto(`${BASE}/fr/a-propos`)
-    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/about$/)
-    await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', /\/fr\/a-propos$/)
+    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/about\/$/)
+    await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', /\/fr\/a-propos\/$/)
   })
 })
 
@@ -280,8 +280,8 @@ test.describe('article routes', () => {
   test('the pair carries reciprocal hreflang on both sides', async ({ page }) => {
     for (const path of [EN, FR]) {
       await page.goto(`${BASE}${path}`)
-      await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', new RegExp(`${EN}$`))
-      await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', new RegExp(`${FR}$`))
+      await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', new RegExp(`${EN}/$`))
+      await expect(page.locator('link[rel="alternate"][hreflang="fr"]')).toHaveAttribute('href', new RegExp(`${FR}/$`))
     }
   })
 

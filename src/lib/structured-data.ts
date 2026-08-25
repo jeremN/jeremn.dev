@@ -25,7 +25,9 @@ export type JsonLdObject = Record<string, unknown>
 export const serialiseLd = (data: JsonLdObject): string =>
   JSON.stringify(data).replace(/</g, '\\u003c')
 
-/** Turns an in-site route into an absolute URL. */
+/** Turns an in-site route into an absolute page URL. The pages pass `pageUrl`,
+ *  which writes the directory form, so every URL a block names is the same
+ *  string the page's own canonical link names. */
 export type Abs = (route: string) => string
 
 const homeRoute = (lang: Locale) => (lang === 'fr' ? '/fr/' : '/')

@@ -1,6 +1,6 @@
 ---
 import '../styles.css'
-import { withBase, toRoute, isSubpathDeploy, absolute } from '../lib/base'
+import { withBase, toRoute, isSubpathDeploy, absolute, pageUrl } from '../lib/base'
 import { localeOf, alternatesFor, ROUTE_MAP, type Locale } from '../i18n'
 import { getUi } from '../i18n/ui'
 import LangSwitch from '../components/site/LangSwitch.astro'
@@ -35,7 +35,7 @@ const year = new Date().getFullYear()
 // `route` is base-independent, so nav matching works under either deploy target.
 const route = toRoute(Astro.url.pathname)
 const isActive = (href: string) => route === href || route.startsWith(href + '/')
-const canonical = Astro.site ? new URL(withBase(route), Astro.site).href : withBase(route)
+const canonical = pageUrl(route)
 
 const lang: Locale = Astro.props.lang ?? localeOf(route)
 const ui = getUi(lang)
@@ -50,7 +50,6 @@ const nav = ui.nav.map((n) => ({ ...n, href: lang === 'fr' ? (ROUTE_MAP[n.href] 
 // `undefined`, not falsiness: an article with no twin passes `null` on purpose
 // and must not fall back to the route map.
 const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates : alternatesFor(route)
-const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).href : withBase(path))
 ---
 <!doctype html>
 <html lang={lang}>
@@ -71,9 +70,9 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
     <link rel="canonical" href={canonical} />
     {alternates && !isSubpathDeploy && (
       <>
-        <link rel="alternate" hreflang="en" href={abs(alternates.en)} />
-        <link rel="alternate" hreflang="fr" href={abs(alternates.fr)} />
-        <link rel="alternate" hreflang="x-default" href={abs(alternates.en)} />
+        <link rel="alternate" hreflang="en" href={pageUrl(alternates.en)} />
+        <link rel="alternate" hreflang="fr" href={pageUrl(alternates.fr)} />
+        <link rel="alternate" hreflang="x-default" href={pageUrl(alternates.en)} />
       </>
     )}
     <link rel="icon" href={withBase('/favicon.ico')} sizes="any" />

@@ -2,7 +2,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
 import { readingTime } from '../../lib/reading-time'
-import { withBase, absolute } from '../../lib/base'
+import { withBase, absolute, pageUrl } from '../../lib/base'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import { illustrationForKey, articleAspectForKey } from '../../lib/article-illustrations'
@@ -75,7 +75,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
   article={{ publishedAt: post.data.publishedAt }}
   jsonLd={articleLd({
     lang,
-    abs: absolute,
+    abs: pageUrl,
     route,
     headline: post.data.title,
     description: post.data.summary,
