@@ -156,22 +156,12 @@ test.describe('the retired Living Canvas stays gone', () => {
   })
 })
 
-test.describe('the galaxy left the front door', () => {
+test.describe('no page runs WebGL', () => {
   test('the homepage runs no WebGL canvas', async ({ page }) => {
     await page.goto(`${BASE}/`)
     // The galaxy left in step 5; the Living Canvas's own 2D <canvas> was
-    // retired in step 1. Both are gone now, so this is a plain count, not a
-    // name-by-name exclusion.
+    // retired in step 1. The lab routes that kept the galaxy runnable are gone
+    // too, and `three` with them, so no page in the repo can render one.
     await expect(page.locator('canvas')).toHaveCount(0)
-  })
-
-  test('the galaxy still runs on its lab route', async ({ page }) => {
-    await page.goto(`${BASE}/hero-lab/galaxy`)
-    await expect(page.locator('canvas#galaxy')).toBeAttached()
-  })
-
-  test('the lab route stays out of the index', async ({ page }) => {
-    await page.goto(`${BASE}/hero-lab/galaxy`)
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
   })
 })

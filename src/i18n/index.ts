@@ -43,7 +43,7 @@ export const localeOf = (route: string): Locale => {
 }
 
 /** The pair a route belongs to, or null when the route has no twin
- *  (/hero-lab, /cv-print, and any article published in one language only). */
+ *  (/cv-print, its French twin, and any article published in one language only). */
 export const alternatesFor = (route: string): { en: string; fr: string } | null =>
   BY_EN.get(strip(route)) ?? BY_FR.get(strip(route)) ?? null
 

@@ -18,8 +18,6 @@ const en = {
   // hardcoded in Layout.astro and stayed English under /fr/.
   navLabel: 'Main',
   themeToggleLabel: 'Switch between light and dark theme',
-  getInTouch: 'Get in touch',
-  footerCta: 'Work with me',
   basedIn: 'Based in France',
   remote: 'Remote friendly',
   switchLabel: 'Read this page in French',
@@ -34,8 +32,6 @@ const fr: typeof en = {
   ],
   navLabel: 'Principale',
   themeToggleLabel: 'Basculer entre le thème clair et le thème sombre',
-  getInTouch: 'Me contacter',
-  footerCta: 'Travaillons ensemble',
   basedIn: 'Basé en France',
   remote: 'Travail à distance',
   switchLabel: 'Lire cette page en anglais',

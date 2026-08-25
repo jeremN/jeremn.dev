@@ -26,10 +26,10 @@ const sanitizeSchema = {
 // Private routes, excluded under every locale prefix. All carry `noindex`,
 // so listing them would invite a crawler to pages we then tell it to ignore.
 // Matched by path SEGMENT, not by substring: a future article slug that merely
-// contains "hero-lab" would drop out of the sitemap silently.
+// contains "cv-print" would drop out of the sitemap silently.
 // `/og` holds the social cards' source pages, which exist only to be
 // screenshotted by `npm run og`.
-const PRIVATE = ['/hero-lab', '/cv-print', '/og']
+const PRIVATE = ['/cv-print', '/og']
 
 // Article route -> publication date, for the sitemap's `lastmod`. Read off the
 // frontmatter here because the sitemap integration runs outside the content

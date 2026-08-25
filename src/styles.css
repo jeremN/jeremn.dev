@@ -103,21 +103,6 @@
   stroke-width: calc(var(--doodle-stroke) * 0.7);
 }
 
-/* The galaxy hero is opaque-dark in any theme, so its band pins the dark
-   tokens. Text and accents stay readable over the WebGL background in the
-   light theme too. The values are the v2 dark palette, written as literals
-   because light-dark() would resolve to the light half here.
-   The galaxy left the homepage in step 5. This block went with it. Two places
-   use it now: /hero-lab/galaxy, and the tile overlay on /hero-lab, whose canvas
-   is opaque black in either theme. */
-.hero-dark {
-  --color-ground: #14120e;
-  --color-surface: #1e1b16;
-  --color-ink: #f1ece1;
-  --color-muted: #a69c89;
-  --color-accent: #759fff;
-  --color-line: #2b2721;
-}
 
 body {
   background-color: var(--color-ground);
