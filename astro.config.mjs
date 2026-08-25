@@ -26,6 +26,11 @@ export default defineConfig({
   site: SITE,
   base: BASE || '/',
   output: 'static',
+  i18n: {
+    locales: ['en', 'fr'],
+    defaultLocale: 'en',
+    routing: { prefixDefaultLocale: false },
+  },
   // `/hero-lab` and `/cv-print` both carry `noindex` — keep them out of the
   // sitemap too, so we never invite a crawler to pages we then tell it to ignore.
   integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/hero-lab') && !page.includes('/cv-print') })],
