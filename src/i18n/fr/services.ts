@@ -17,7 +17,7 @@ const copy: typeof en = {
     { icon: 'svc-icon-performance', title: 'Performance & audits', copy: 'Des preuves, des risques et les prochaines étapes.' },
     {
       icon: 'svc-icon-automation',
-      title: 'Automatisation & outillage',
+      title: 'Automatisation & tooling',
       copy: "Des scripts, de l'intégration continue et des outils internes.",
     },
     { icon: 'svc-icon-ai-integration', title: 'Intégration IA', copy: 'Des fonctionnalités utiles, avec des garde-fous.' },

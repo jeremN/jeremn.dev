@@ -69,16 +69,16 @@ const fr: Service[] = [
   {
     icon: 'svc-performance',
     title: 'Refontes de performance',
-    blurb: 'La refactorisation de sites à fort trafic pour la vitesse et les Core Web Vitals.',
+    blurb: 'Le refactoring de sites à fort trafic pour la vitesse et les Core Web Vitals.',
   },
   {
     icon: 'svc-automation',
-    title: 'Outillage et DX',
+    title: 'Tooling et DX',
     blurb: 'CI/CD, tests, design systems et outils internes.',
   },
   {
     icon: 'svc-ai',
-    title: 'Outillage LLM et agents',
+    title: 'Tooling LLM et agents',
     blurb: "Des harnais d'agents, des serveurs MCP, de la recherche documentaire et des évaluations.",
     detail: 'La plomberie qui rend les fonctionnalités LLM fiables.',
   },

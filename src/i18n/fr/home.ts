@@ -6,7 +6,7 @@ const copy: typeof en = {
   eyebrow: '01 / Développeur freelance',
   headlineBefore: 'Je construis des applications web pour le ',
   headlineEmphasis: 'monde réel.',
-  leadTail: ". Je construis et reconstruis des applications web, et l'outillage autour.",
+  leadTail: '. Je construis et reconstruis des applications web, et le tooling autour.',
   availability: 'Disponible pour des missions freelance',
   cta: 'Parlons-en',
   servicesHeading: 'Ce que je fais',

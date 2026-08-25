@@ -18,7 +18,7 @@ const copy: typeof en = {
     { title: 'Apprendre en continu', body: 'Rester curieux. Continuer à apprendre.' },
   ],
   currently: [
-    { label: 'Construction', body: 'Mon agentOS personnel, et une agence web IA à part entière.' },
+    { label: 'Développement', body: 'Mon agentOS personnel, et une agence web IA à part entière.' },
     { label: 'Apprentissage', body: 'Les processus DevOps.' },
     { label: 'Expérimentation', body: 'Les outils IA et la productivité des développeurs.' },
   ],
