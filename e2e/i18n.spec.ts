@@ -1,6 +1,45 @@
+import { readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { BASE } from '../site.config.mjs'
 import { ROUTE_MAP } from '../src/i18n'
+
+// The blog collection, read off disk rather than listed here by hand. Every
+// sweep below that needs "the French articles" derives them from this, so an
+// article added by a later translation task joins the sweeps without an edit.
+const BLOG_DIR = fileURLToPath(new URL('../src/content/blog', import.meta.url))
+
+type Article = { slug: string; lang: string; translationKey: string; body: string }
+
+const ARTICLES: Article[] = readdirSync(BLOG_DIR)
+  .filter((file) => file.endsWith('.mdx'))
+  .map((file) => {
+    // Split on the frontmatter fences. `parts[1]` is the frontmatter; the rest
+    // is the body, rejoined because `---` is also a valid horizontal rule.
+    const parts = readFileSync(`${BLOG_DIR}/${file}`, 'utf8').split(/^---$/m)
+    const front = parts[1] ?? ''
+    const field = (name: string) =>
+      front.match(new RegExp(`^${name}:\\s*['"]?([^'"\\n]+?)['"]?\\s*$`, 'm'))?.[1] ?? ''
+    return {
+      slug: file.replace(/\.mdx$/, ''),
+      lang: field('lang'),
+      translationKey: field('translationKey'),
+      body: parts.slice(2).join('---'),
+    }
+  })
+
+const FRENCH_ARTICLES = ARTICLES.filter((a) => a.lang === 'fr')
+
+test.describe('the article fixture the sweeps read', () => {
+  // Without this, a broken path or a changed frontmatter shape would empty
+  // every derived list above and turn three sweeps green by having nothing
+  // left to check.
+  test('parses the collection and finds French articles in it', () => {
+    expect(ARTICLES.length).toBeGreaterThan(1)
+    expect(ARTICLES.every((a) => a.lang !== '' && a.translationKey !== '')).toBe(true)
+    expect(FRENCH_ARTICLES.length).toBeGreaterThan(0)
+  })
+})
 
 test.describe('French home page', () => {
   test('renders the French headline at /fr/', async ({ page }) => {
@@ -361,11 +400,13 @@ test.describe('no English survives on the French side', () => {
     'Remote friendly',
   ]
 
-  // The page pairs, plus the one French article. `ROUTE_MAP` stays page-pairs-only
-  // (articles pair through `translationKey`, not through it), so the article's
-  // path is added to this list instead. Without it, `On this page` and
-  // `Keep reading` are asserted only on pages that never render either one.
-  const FRENCH_PATHS = [...Object.values(ROUTE_MAP), '/fr/blog/faire-tourner-stryker-sur-un-monorepo-svelte']
+  // The page pairs, plus every French article. `ROUTE_MAP` stays page-pairs-only
+  // (articles pair through `translationKey`, not through it), so the article
+  // paths are derived from the collection instead. Without them, `On this page`
+  // and `Keep reading` are asserted only on pages that never render either one.
+  // Derived rather than listed: a hardcoded path covers the article it names and
+  // lets every article translated afterwards out of the sweep.
+  const FRENCH_PATHS = [...Object.values(ROUTE_MAP), ...FRENCH_ARTICLES.map((a) => `/fr/blog/${a.slug}`)]
 
   for (const fr of FRENCH_PATHS) {
     test(`${fr} carries no English chrome`, async ({ page }) => {
@@ -416,5 +457,60 @@ test.describe('landmark labels per locale', () => {
     await page.goto(`${BASE}/`)
     await expect(page.locator('header nav')).toHaveAttribute('aria-label', 'Main')
     await expect(page.locator('#theme-toggle')).toHaveAttribute('aria-label', 'Switch between light and dark theme')
+  })
+})
+
+test.describe('the French tree links to itself', () => {
+  // Three English hrefs shipped on /fr/ before this: both `Parlons-en` CTAs and
+  // `En savoir plus`, all hardwired in HomePage.astro. Fixing those three does
+  // not stop a fourth from being added, so the sweep is over every link on
+  // every French page rather than over the three that were wrong.
+  //
+  // A path with an extension is a file, not a page: `/cv.pdf` is one document
+  // served to both languages, so linking to it from a French page is correct.
+  // The rule is "a file, not a page", which needs no allowlist to stay current
+  // when the next locale-invariant file is added.
+  const IS_FILE = /\.[a-z0-9]+$/i
+
+  for (const [en, fr] of Object.entries(ROUTE_MAP)) {
+    test(`${fr} keeps its links in the French tree`, async ({ page }) => {
+      await page.goto(`${BASE}${fr}`)
+      // `main` and `footer`, not the header: the language switcher lives in the
+      // header and points at the English twin on purpose. The footer is in
+      // scope because its CTA was hardwired to /contact too, latent behind
+      // `hideFooterCta` on every page today and live the day one page drops it.
+      const selector = `a[href^="${BASE}/"]:not([href^="${BASE}/fr/"])`
+      const inSite = await page
+        .locator(`main ${selector}, footer ${selector}`)
+        .evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''))
+      expect(inSite.filter((href) => !IS_FILE.test(href)), `${fr} links into ${en}'s tree`).toEqual([])
+    })
+  }
+
+  // The sweep above reads `main` only, and the logo sits in the header.
+  test('the header logo leads to the home page of the language on screen', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.getByRole('link', { name: 'jeremn.dev' })).toHaveAttribute('href', `${BASE}/fr/`)
+    await page.goto(`${BASE}/`)
+    await expect(page.getByRole('link', { name: 'jeremn.dev' })).toHaveAttribute('href', `${BASE}/`)
+  })
+})
+
+test.describe('article body links across the language split', () => {
+  // The French article links to `/blog/who-checks-the-agents-tests` un-prefixed,
+  // which is correct today: that article has no French version, and a `/fr/`
+  // prefix would ship a 404. It stops being correct the day the twin lands, and
+  // nothing about translating that twin touches this link. This test is what
+  // turns red on that day.
+  test('no French article links to an English article that now has a French twin', () => {
+    const translated = new Set(FRENCH_ARTICLES.map((a) => a.translationKey))
+    for (const article of FRENCH_ARTICLES) {
+      for (const [, slug] of article.body.matchAll(/\]\(\/blog\/([a-z0-9-]+)\)/g)) {
+        expect(
+          translated.has(slug),
+          `${article.slug}.mdx links to /blog/${slug}, which now has a French version — prefix the link`,
+        ).toBe(false)
+      }
+    }
   })
 })
