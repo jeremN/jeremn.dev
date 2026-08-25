@@ -1,9 +1,9 @@
 import type en from '../en/blog'
 
 const copy: typeof en = {
-  title: 'Articles · jeremn.dev',
+  title: "Articles sur l'ingénierie web, les tests et les agents · jeremn.dev",
   description:
-    'Les articles et les notes de Jérémie Néhlil sur le développement web, la performance et le tooling associé.',
+    "Des articles sur l'ingénierie web, les tests et les agents. Par Jérémie Néhlil, développeur freelance fullstack JavaScript en SvelteKit et Node.",
   eyebrow: "02 / Notes de l'établi",
   headlineBefore: "Notes de l'",
   headlineEmphasis: 'établi.',

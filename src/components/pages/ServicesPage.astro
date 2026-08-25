@@ -4,14 +4,23 @@ import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import { profile } from '../../lib/cv'
 import { getCopy, type Locale } from '../../i18n'
+import { absolute } from '../../lib/base'
+import { servicesLd } from '../../lib/structured-data'
 
 interface Props { lang: Locale }
 const { lang } = Astro.props
 const t = getCopy(lang, 'services')
 
 const quoteHref = `mailto:${profile.email}?subject=${encodeURIComponent(t.quoteSubject)}`
+const route = lang === 'fr' ? '/fr/services' : '/services'
 ---
-<Layout hideFooterCta lang={lang} title={t.title} description={t.description}>
+<Layout
+  hideFooterCta
+  lang={lang}
+  title={t.title}
+  description={t.description}
+  jsonLd={servicesLd(lang, absolute, route, t.description)}
+>
   <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
     <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
       <div class="min-w-0">

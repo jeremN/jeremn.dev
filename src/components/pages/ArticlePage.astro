@@ -2,12 +2,13 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
 import { readingTime } from '../../lib/reading-time'
-import { withBase } from '../../lib/base'
+import { withBase, absolute } from '../../lib/base'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import { illustrationForKey, articleAspectForKey } from '../../lib/article-illustrations'
 import { isVisible } from '../../lib/posts'
 import { getCopy, type Locale } from '../../i18n'
+import { articleLd } from '../../lib/structured-data'
 
 interface Props {
   post: CollectionEntry<'blog'>
@@ -45,6 +46,11 @@ const date = post.data.publishedAt.toLocaleDateString(
     ? { year: 'numeric', month: 'long', day: 'numeric' }
     : { year: 'numeric', month: 'short', day: 'numeric' },
 )
+// The article's own route, and the social card `npm run og` renders for it.
+// Keyed on the slug rather than on `translationKey`, unlike the illustration:
+// the card prints the article's own title, so a translation needs its own.
+const route = lang === 'fr' ? `/fr/blog/${post.id}` : `/blog/${post.id}`
+const ogImage = absolute(`/og/${post.id}.jpg`)
 const category = post.data.tags.join(' / ').toUpperCase()
 const readTime = readingTime(post.body, lang)
 // "On this page" rail — only worth showing once a post has real structure.
@@ -60,7 +66,24 @@ const illustration = illustrationForKey(post.data.translationKey)
 const illustrationAspect = articleAspectForKey(post.data.translationKey)
 const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
 ---
-<Layout lang={lang} alternates={alternates} title={`${post.data.title} · jeremn.dev`} description={post.data.summary} hideFooterCta>
+<Layout
+  lang={lang}
+  alternates={alternates}
+  title={`${post.data.title} · jeremn.dev`}
+  description={post.data.summary}
+  ogImage={ogImage}
+  article={{ publishedAt: post.data.publishedAt }}
+  jsonLd={articleLd({
+    lang,
+    abs: absolute,
+    route,
+    headline: post.data.title,
+    description: post.data.summary,
+    publishedAt: post.data.publishedAt,
+    image: ogImage,
+  })}
+  hideFooterCta
+>
   <main
     class:list={[
       'relative z-10 mx-auto px-6 pb-24 pt-2',

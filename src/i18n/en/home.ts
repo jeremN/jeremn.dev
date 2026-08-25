@@ -1,6 +1,7 @@
 export default {
-  title: 'Jérémie Néhlil',
-  description: 'Jérémie Néhlil, freelance software engineer. CV, writing, and a WebGL galaxy.',
+  title: 'Freelance fullstack JavaScript engineer · Jérémie Néhlil',
+  description:
+    'Jérémie Néhlil, freelance fullstack JavaScript engineer. SvelteKit, Next.js, React and Node. Available for product teams and agencies.',
   eyebrow: '01 / Freelance software engineer',
   headlineBefore: 'I build web apps for the ',
   headlineEmphasis: 'real world.',

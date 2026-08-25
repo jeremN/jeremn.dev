@@ -15,3 +15,10 @@ export const toRoute = (pathname: string): string =>
 /** True when serving from a subpath — i.e. the temporary github.io deploy,
  *  which must not be indexed and compete with the real domain. */
 export const isSubpathDeploy = BASE !== ''
+
+/** Absolute URL for an in-site route, for canonical, Open Graph and JSON-LD.
+ *  `import.meta.env.SITE` is Astro's own copy of the `site` config value, which
+ *  astro.config.mjs reads from site.config.mjs — so this stays one source of
+ *  truth rather than a second hardcoded origin. */
+export const absolute = (route: string): string =>
+  import.meta.env.SITE ? new URL(withBase(route), import.meta.env.SITE).href : withBase(route)

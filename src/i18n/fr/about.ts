@@ -2,7 +2,8 @@ import type en from '../en/about'
 
 const copy: typeof en = {
   title: 'À propos · Jérémie Néhlil, développeur freelance',
-  description: "Jérémie Néhlil, développeur fullstack JavaScript senior basé en France. Ma façon de travailler et ce qui compte pour moi.",
+  description:
+    'Jérémie Néhlil, développeur freelance fullstack JavaScript près de Paris. SvelteKit, React et Node. Ma façon de travailler et ce que je prends.',
   eyebrow: '03 / À propos',
   headlineBefore: "J'aime les logiciels qui ont ",
   headlineEmphasis: 'du sens.',

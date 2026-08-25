@@ -1,8 +1,9 @@
 import type en from '../en/freelance'
 
 const copy: typeof en = {
-  title: 'Freelance · jeremn.dev',
-  description: "Faites appel à Jérémie Néhlil, développeur JavaScript senior disponible pour vos applications web.",
+  title: 'Développeur freelance fullstack JavaScript · jeremn.dev',
+  description:
+    'Jérémie Néhlil, développeur freelance fullstack JavaScript. SvelteKit, React et Node. Disponible pour vos applications web.',
   eyebrow: '05 / Freelance',
   headlineBefore: 'Disponible pour ',
   headlineEmphasis: 'votre équipe.',

@@ -1,6 +1,7 @@
 export default {
-  title: 'Contact · jeremn.dev',
-  description: 'Get in touch with Jérémie Néhlil, senior fullstack JavaScript engineer available for freelance work.',
+  title: 'Hire a freelance fullstack engineer · jeremn.dev',
+  description:
+    'Hire Jérémie Néhlil, freelance fullstack JavaScript engineer. SvelteKit, React and Node. Available for freelance work.',
   eyebrow: "04 / Let's talk",
   headlineBefore: 'Have something in ',
   headlineEmphasis: 'mind?',
