@@ -70,7 +70,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
   lang={lang}
   alternates={alternates}
   title={`${post.data.title} · jeremn.dev`}
-  description={post.data.summary}
+  description={post.data.description}
   ogImage={ogImage}
   article={{ publishedAt: post.data.publishedAt }}
   jsonLd={articleLd({
@@ -78,7 +78,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
     abs: pageUrl,
     route,
     headline: post.data.title,
-    description: post.data.summary,
+    description: post.data.description,
     publishedAt: post.data.publishedAt,
     image: ogImage,
   })}

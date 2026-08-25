@@ -116,7 +116,19 @@ test.describe('Open Graph', () => {
 })
 
 test.describe('titles and descriptions', () => {
-  const ROUTES = [...Object.keys(TYPED), '/contact', '/fr/contact', '/blog', '/fr/blog', '/freelance', '/fr/freelance']
+  // Articles are in the sweep: their `<meta name="description">` comes from the
+  // frontmatter `description`, which the schema bounds. `summary` is the card
+  // blurb and is free to run long, so the two must not be the same field.
+  const ROUTES = [
+    ...Object.keys(TYPED),
+    '/contact',
+    '/fr/contact',
+    '/blog',
+    '/fr/blog',
+    '/freelance',
+    '/fr/freelance',
+    ...ARTICLES.map(routeOf),
+  ]
 
   // Google truncates a description near 160 characters. Past that the tail is
   // written for nobody. The floor catches the opposite failure: a page that
