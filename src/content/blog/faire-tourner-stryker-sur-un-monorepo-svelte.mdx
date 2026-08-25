@@ -1,0 +1,213 @@
+---
+title: 'Faire tourner Stryker sur un monorepo Svelte'
+summary: "La moitié pratique : comment on découpe les configs, ce qu'un mutant survivant raconte vraiment, les quatre correctifs qui en couvrent la plupart et les détails qui coûtent du temps quand tout doit tourner sur chaque merge request."
+publishedAt: 2026-08-17
+tags: [Testing, Svelte, CI]
+draft: false
+lang: 'fr'
+translationKey: 'stryker-on-a-svelte-monorepo'
+---
+
+[L'article précédent](/blog/who-checks-the-agents-tests) parlait de l'endroit où
+un check a sa place et de ce qu'il doit prouver avant d'avoir le droit de
+bloquer quoi que ce soit. Celui-ci est la moitié pratique. Comment Stryker
+s'installe sur un monorepo Svelte, ce qu'un mutant survivant raconte vraiment et
+ce qu'il faut pour faire tourner tout ça sur chaque merge request sans qu'il
+mente en douce.
+
+## Quatre configs, un seul runner
+
+Le mutation testing n'a pas de fichiers de test à lui. Il prend les sources qui
+existent déjà, les modifie et relance la suite. Il n'y a donc que deux choses à
+configurer : les sources qu'il a le droit de toucher et le setup Vitest qui
+tourne dessus.
+
+Ici, ça se découpe en quatre : le TypeScript de l'app web, ses composants
+Svelte, le BFF et la librairie métier partagée. Chacun a sa config, parce que
+chacun a un setup de test runner différent derrière.
+
+Les exclusions comptent plus que les inclusions. Le code généré est l'évidence :
+le muter produit des survivants sur lesquels personne ne peut agir. Les fichiers
+de types purs et les barrel exports sont l'autre cas. Il n'y a aucun
+comportement à casser dedans, donc chaque mutant est soit équivalent, soit du
+bruit.
+
+```jsonc
+{
+  "mutate": [
+    "src/**/*.ts",
+    "src/**/*.svelte",
+    "!src/**/*.test.ts",
+    "!src/**/*.stories.svelte",
+    "!src/**/types.ts"
+  ],
+  "thresholds": { "high": 80, "low": 60, "break": null },
+  "incremental": true,
+  "concurrency": "50%"
+}
+```
+
+Le ciblage en ligne de commande, c'est ce qu'on utilise vraiment au quotidien.
+Un package entier prend dix minutes ou plus. Un seul fichier prend une à trois
+minutes.
+
+```sh
+pnpm exec stryker run --mutate "src/lib/utils/distance.ts"
+```
+
+Viser le plus étroit possible. Le score d'un package est un chiffre pour un
+rapport. Le score du fichier dont on vient d'écrire le test, c'est quelque chose
+sur quoi on peut agir dans la minute.
+
+## Lire un survivant
+
+La sortie donne la mutation, l'endroit et les tests qui ont tourné sans
+broncher.
+
+```
+[Survived] ConditionalExpression
+src/lib/utils/file.ts:42:7
+-   if (value > 0) {
++   if (true) {
+Tests ran:
+    should handle positive values
+```
+
+Cinq statuts, et deux seulement sont de notre ressort. Killed veut dire qu'un
+test a échoué, c'est le bon cas. Survived veut dire que tous les tests sont
+passés alors que le code était cassé. NoCoverage veut dire que rien n'exécute
+cette ligne. RuntimeError et Timeout comptent tous les deux comme killed, parce
+que le mutant ne s'en est pas tiré.
+
+Quatre patterns couvrent la plupart des survivants.
+
+**ConditionalExpression**, où `if (x)` devient `if (true)`. On a testé la
+branche qui marche, jamais celle qui fait un early return. Écrire le second
+test.
+
+**EqualityOperator**, où `>` devient `>=`. La borne n'est pas testée. Les cas se
+placent de part et d'autre, jamais dessus.
+
+```ts
+it('returns false when length equals index', () => {
+  expect(fn(exactBoundary)).toBe(expected)
+})
+```
+
+**LogicalOperator**, où `&&` devient `||`. Dans les tests, les deux opérandes
+sont toujours dans le même état, donc rien ne distingue les deux opérateurs. Le
+correctif, c'est un cas où exactement un côté est vrai.
+
+```ts
+// Avant : les deux dates sont undefined, donc && et || sont d'accord
+it('returns Off when no dates', () => { ... })
+
+// Après : une date est présente, donc seul && donne Off
+it('returns Off when only checkin provided', () => { ... })
+```
+
+**StringLiteral**, où `'foo'` devient `''`. On a vérifié la forme, pas la
+valeur.
+
+```ts
+// Avant
+expect(typeof result).toBe('string')
+
+// Après
+expect(result).toBe('expected-value')
+```
+
+Pris ensemble, ces quatre patterns disent la même chose. Presque tous les
+mutants survivants viennent d'une assertion qui vérifie une catégorie là où elle
+pouvait vérifier une valeur, ou d'une suite de tests qui ne fait jamais varier
+une entrée indépendamment d'une autre.
+
+## Les survivants qu'on ne peut pas tuer
+
+Certains mutants ne changent rien d'observable. Un guard `typeof` qui n'existe
+que pour le narrowing TypeScript d'une union, alors que l'appel derrière gère
+déjà l'autre cas. Un replace de string sur un token que le template ne contient
+jamais. Un check de null dans un handler, là où la valeur est la cible de
+l'événement et ne peut pas être null.
+
+Si on casse l'un de ces trois cas, le programme se comporte pareil, donc aucune
+assertion ne sépare les deux versions. Stryker les signale comme des trous, et
+ce n'en sont pas. Le seul geste possible, c'est de les désactiver dans la
+source, en écrivant la raison.
+
+```ts
+// Stryker disable next-line ConditionalExpression: guard typeof pour le narrowing TS
+return typeof value === 'string' && SUPPORTED_PLATFORMS.includes(value)
+```
+
+La raison, c'est tout l'intérêt du commentaire. Sans elle, il reste une ligne
+qui coupe un garde-fou sans motif écrit, et dans six mois personne n'y touchera,
+parce que personne ne saura ce qu'elle protégeait.
+
+## Le mode incrémental
+
+Un run complet de package prend des minutes. C'est presque entièrement du
+travail refait, parce que la plus grande partie du fichier n'a pas bougé depuis
+la fois d'avant.
+
+Avec `incremental` activé, Stryker écrit son analyse dans un fichier et la relit
+au run suivant, pour ne rejouer que les mutants touchés par le changement. Des
+secondes au lieu de minutes, c'est la différence entre un outil qu'on lance en
+travaillant et un outil qu'on lance quand on y pense.
+
+Deux choses à savoir. Le cache est indexé sur l'analyse, pas sur le rapport,
+donc ces fichiers sont deux sujets distincts. Et quand on veut le vrai chiffre
+plutôt que le chiffre rapide, chaque script a une variante full qui ignore le
+cache.
+
+## Le faire tourner dans la CI
+
+Le job calcule quels fichiers la merge request a touchés, ne mute que ceux-là et
+poste les survivants dans un commentaire. Trois détails coûtent du temps à
+régler.
+
+**Il tourne en série, pas en matrice parallèle.** Toutes les unités écrivent
+dans la même section du même commentaire, et c'est une lecture, puis une
+modification, puis une écriture, sans aucun lock. Lancées en parallèle, elles
+s'écrasent les unes les autres. Un job, un seul writer.
+
+**Le cache garde le fichier d'analyse, pas le dossier de rapport.** Mettre le
+rapport en cache est le réflexe évident, et c'est un piège. Quand un run plante,
+le rapport du pipeline précédent est encore sur le disque, et il part dans le
+commentaire comme s'il était celui du run en cours. Le job supprime le rapport
+juste avant chaque run, donc il ne peut trouver que celui qu'il a produit
+lui-même.
+
+**Les tests de composants restent en dehors.** Le browser mode de Vitest casse
+l'optimisation related-tests de Stryker, parce que le module graph qu'elle
+consulte vit du côté Node. Sans cette optimisation, un run de composants exige
+que toute la suite de composants passe sous le dry run de Stryker. Aucun autre
+job ne vérifie cette condition, donc l'étape casserait sur n'importe quel test
+de composant sans rapport, et la panne ressemblerait à un problème de mutation.
+Les composants restent un run local, et c'est un choix.
+
+## Petits pièges
+
+Le chemin de la config est un argument positionnel. Il n'y a pas de flag
+`--configFile` et la CLI le rejette sans discuter.
+
+```sh
+# Ça marche
+pnpm exec stryker run stryker.component.config.json --mutate "..."
+```
+
+Sous l'isolation stricte de pnpm, l'autoloader de plugins ne trouve rien, donc
+chaque config doit nommer son runner explicitement dans un tableau `plugins`. Et
+passer `--mutate` à travers un script de package avec `--` n'arrive jamais
+jusqu'à Stryker. Appeler le binaire directement pour cibler un fichier.
+
+## Ce que ça vaut
+
+Le setup n'a pas été gratuit. L'essentiel du temps est parti dans les parties
+que personne ne montre en démo : décider ce qu'il ne faut pas muter, garder un
+seul writer sur le commentaire, vérifier qu'un run planté ne peut pas faire
+passer un vieux chiffre pour un neuf.
+
+En échange, une seule chose, et c'est celle dont parlait l'article précédent.
+Tous les autres signaux de la suite disent qu'un bout de code a tourné. Celui-ci
+est le seul qui dit que si ce code était faux, quelqu'un s'en apercevrait.
