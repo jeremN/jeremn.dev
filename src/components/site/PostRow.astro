@@ -13,6 +13,13 @@ interface Props {
   publishedAt: Date
   body?: string
   variant?: 'index' | 'teaser'
+  /** The page's language. Drives the date locale and the reading-time noun,
+   * both of which used to be pinned to English. Defaults to 'en' so every
+   * caller that predates the French tree keeps rendering unchanged. */
+  lang?: 'en' | 'fr'
+  /** Route prefix for the row's href. The French index links into /fr/blog,
+   * the English one into /blog. Defaults to the English tree. */
+  blogBase?: string
   /** Overrides the tag-derived mark. Only the 'teaser' variant (the homepage's
    * three-row preview) renders a mark at all, using this to show the three
    * Xiaohei article marks in the validated design's fixed code/lock/cubes
@@ -29,12 +36,17 @@ const {
   publishedAt,
   body,
   variant = 'index',
+  lang = 'en',
+  blogBase = '/blog',
   mark: markOverride,
 } = Astro.props
 
 // The comps stack the date over three lines: day, month, year.
-const day = publishedAt.toLocaleDateString('en-US', { day: '2-digit' })
-const month = publishedAt.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+// `.toUpperCase()` stays: the row's date is uppercase by design. 'fr-FR'
+// returns 'août', which uppercases to 'AOÛT'.
+const dateLocale = lang === 'fr' ? 'fr-FR' : 'en-US'
+const day = publishedAt.toLocaleDateString(dateLocale, { day: '2-digit' })
+const month = publishedAt.toLocaleDateString(dateLocale, { month: 'short' }).toUpperCase()
 const year = publishedAt.getFullYear()
 const category = tags.join(' / ').toUpperCase()
 const mark = markOverride ?? markForTags(tags)
@@ -42,7 +54,7 @@ const mark = markOverride ?? markForTags(tags)
 <a
   data-post-row
   data-variant={variant}
-  href={withBase(`/blog/${slug}`)}
+  href={withBase(`${blogBase}/${slug}`)}
   class:list={[
     'group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:gap-x-10',
     variant === 'teaser' ? 'sm:grid-cols-[4.5rem_1fr_auto_2.75rem]' : 'sm:grid-cols-[4.5rem_1fr_auto]',
@@ -68,7 +80,7 @@ const mark = markOverride ?? markForTags(tags)
 
   <span data-meta class="col-start-2 mt-3 block font-mono text-[10px] uppercase tracking-wider text-muted sm:col-start-3 sm:mt-1 sm:text-right">
     {category && <span class="block">{category}</span>}
-    <span class="mt-1 block">{readingTime(body)}</span>
+    <span class="mt-1 block">{readingTime(body, lang)}</span>
   </span>
 
   {/* The mark is decorative and repeats the category. Only the homepage

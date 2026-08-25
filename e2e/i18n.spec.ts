@@ -195,3 +195,30 @@ test.describe('French freelance page', () => {
     }
   })
 })
+
+test.describe('bilingual blog index', () => {
+  test('renders at /fr/blog with the French headline', async ({ page }) => {
+    await page.goto(`${BASE}/fr/blog`)
+    await expect(page.locator('h1')).toContainText("Notes de l'")
+    await expect(page.locator('h1')).toContainText('établi.')
+  })
+
+  test('the English index still lists the nine English articles', async ({ page }) => {
+    await page.goto(`${BASE}/blog`)
+    await expect(page.locator('main a[href*="/blog/"]')).toHaveCount(9)
+  })
+
+  test('the French index lists no English article', async ({ page }) => {
+    await page.goto(`${BASE}/fr/blog`)
+    await expect(page.getByRole('link', { name: /Ten months of Svelte 5/ })).toHaveCount(0)
+  })
+
+  test('the homepage writing teaser stays in the page language', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.getByRole('link', { name: /Ten months of Svelte 5/ })).toHaveCount(0)
+    // The title above is the fourth-newest post and the teaser shows three, so
+    // that assertion cannot fail. This one can: it catches any teaser row that
+    // links into the English tree, and it stays true once French articles land.
+    await expect(page.locator('[data-writing] a[href*="/blog/"]:not([href*="/fr/blog/"])')).toHaveCount(0)
+  })
+})

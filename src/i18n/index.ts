@@ -11,6 +11,8 @@ import enContact from './en/contact'
 import frContact from './fr/contact'
 import enFreelance from './en/freelance'
 import frFreelance from './fr/freelance'
+import enBlog from './en/blog'
+import frBlog from './fr/blog'
 
 export const LOCALES = ['en', 'fr'] as const
 export type Locale = (typeof LOCALES)[number]
@@ -23,6 +25,7 @@ export const ROUTE_MAP: Record<string, string> = {
   '/about': '/fr/a-propos',
   '/contact': '/fr/contact',
   '/freelance': '/fr/freelance',
+  '/blog': '/fr/blog',
 }
 
 /** Drop a trailing slash so '/fr' and '/fr/' resolve to the same entry.
@@ -43,8 +46,8 @@ export const alternatesFor = (route: string): { en: string; fr: string } | null 
   BY_EN.get(strip(route)) ?? BY_FR.get(strip(route)) ?? null
 
 const COPY = {
-  en: { home: enHome, services: enServices, about: enAbout, contact: enContact, freelance: enFreelance },
-  fr: { home: frHome, services: frServices, about: frAbout, contact: frContact, freelance: frFreelance },
+  en: { home: enHome, services: enServices, about: enAbout, contact: enContact, freelance: enFreelance, blog: enBlog },
+  fr: { home: frHome, services: frServices, about: frAbout, contact: frContact, freelance: frFreelance, blog: frBlog },
 } as const
 
 export type Page = keyof (typeof COPY)['en']
