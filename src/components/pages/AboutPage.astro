@@ -38,9 +38,13 @@ const route = lang === 'fr' ? '/fr/a-propos' : '/about'
             CV a recruiter may share is the wrong place to publish it. The PDF
             download is the one action, same rule the old standalone /cv page
             followed before this page absorbed it. */}
+        {/* The French sheet is its own PDF, not the English one. A recruiter
+            reading this page in French must not open an English CV. Both files
+            sit at the root: a PDF is a file, not a route, so neither takes the
+            /fr/ prefix. */}
         <div class="mt-8">
           <a
-            href={withBase('/cv.pdf')}
+            href={withBase(lang === 'fr' ? '/cv-fr.pdf' : '/cv.pdf')}
             class="inline-flex items-center gap-2 rounded-sm border border-line px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-muted no-underline transition-colors hover:border-accent hover:text-accent"
           >
             {t.downloadCv}

@@ -423,8 +423,8 @@ test.describe('the article meta date reads as prose in each language', () => {
 })
 
 test.describe('untranslated routes', () => {
-  test('/cv-print emits no hreflang and no switcher', async ({ page }) => {
-    for (const path of ['/cv-print']) {
+  test('the CV sheets emit no hreflang and no switcher', async ({ page }) => {
+    for (const path of ['/cv-print', '/fr/cv-print']) {
       await page.goto(`${BASE}${path}`)
       await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
       await expect(page.locator('[data-lang-switch]')).toHaveCount(0)
@@ -432,7 +432,7 @@ test.describe('untranslated routes', () => {
   })
 
   test('they stay noindex', async ({ page }) => {
-    for (const path of ['/cv-print']) {
+    for (const path of ['/cv-print', '/fr/cv-print']) {
       await page.goto(`${BASE}${path}`)
       await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1)
     }
@@ -510,7 +510,7 @@ test.describe('sitemap', () => {
     for (const path of ['/services', '/fr/services', '/about', '/fr/a-propos', '/blog', '/fr/blog']) {
       expect(xml, path).toContain(`jeremn.dev${path}`)
     }
-    for (const path of ['/cv-print']) {
+    for (const path of ['/cv-print', '/fr/cv-print']) {
       expect(xml, path).not.toContain(`jeremn.dev${path}`)
     }
   })
@@ -541,10 +541,10 @@ test.describe('the French tree links to itself', () => {
   // not stop a fourth from being added, so the sweep is over every link on
   // every French page rather than over the three that were wrong.
   //
-  // A path with an extension is a file, not a page: `/cv.pdf` is one document
-  // served to both languages, so linking to it from a French page is correct.
+  // A path with an extension is a file, not a page. The French About page links
+  // `/cv-fr.pdf`, which does not sit under /fr/ because a PDF is not a route.
   // The rule is "a file, not a page", which needs no allowlist to stay current
-  // when the next locale-invariant file is added.
+  // when the next file is added.
   const IS_FILE = /\.[a-z0-9]+$/i
 
   for (const [en, fr] of Object.entries(ROUTE_MAP)) {
