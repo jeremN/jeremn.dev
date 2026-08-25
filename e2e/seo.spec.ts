@@ -1,7 +1,7 @@
-import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { BASE } from '../site.config.mjs'
+import { readArticles, routeOf } from '../scripts/articles.mjs'
 import { serialiseLd } from '../src/lib/structured-data'
 
 // Every route that carries a structured-data block, with the type it must
@@ -17,18 +17,7 @@ const TYPED: Record<string, string> = {
 }
 
 const BLOG_DIR = fileURLToPath(new URL('../src/content/blog', import.meta.url))
-const ARTICLES = readdirSync(BLOG_DIR)
-  .filter((f) => f.endsWith('.mdx'))
-  .map((file) => {
-    const front = readFileSync(`${BLOG_DIR}/${file}`, 'utf8').split(/^---$/m)[1] ?? ''
-    const field = (name: string) =>
-      front.match(new RegExp(`^${name}:\\s*['"]?([^'"\\n]+?)['"]?\\s*$`, 'm'))?.[1] ?? ''
-    return { slug: file.replace(/\.mdx$/, ''), lang: field('lang'), draft: field('draft') === 'true' }
-  })
-  .filter((a) => !a.draft)
-
-const routeOf = (a: { slug: string; lang: string }) =>
-  a.lang === 'fr' ? `/fr/blog/${a.slug}` : `/blog/${a.slug}`
+const ARTICLES = readArticles(BLOG_DIR).filter((a) => !a.draft)
 
 test.describe('the JSON-LD serialiser', () => {
   // The one guard between an author-written headline and an injected tag.
@@ -155,6 +144,97 @@ test.describe('titles and descriptions', () => {
       expect(title, route).not.toBe('Jérémie Néhlil')
       expect(seen.has(title), `${route} reuses another page's title`).toBe(false)
       seen.add(title)
+    }
+  })
+})
+
+test.describe('feeds', () => {
+  const FEEDS: Record<string, { lang: string; prefix: string }> = {
+    '/rss.xml': { lang: 'en', prefix: `${BASE}/blog/` },
+    '/fr/rss.xml': { lang: 'fr', prefix: `${BASE}/fr/blog/` },
+  }
+
+  for (const [path, { lang, prefix }] of Object.entries(FEEDS)) {
+    test(`${path} lists ${lang} articles and nothing else`, async ({ request }) => {
+      const res = await request.get(`${BASE}${path}`)
+      expect(res.status()).toBe(200)
+      const xml = await res.text()
+      expect(xml).toContain(`<language>${lang}</language>`)
+
+      const links = [...xml.matchAll(/<link>(.*?)<\/link>/g)].map((m) => m[1])
+      // The first <link> is the channel's own, which points at this locale's
+      // tree rather than at the shared root. The rest are the items.
+      const [channel, ...items] = links
+      expect(channel).toContain(prefix.replace('/blog/', '/'))
+      expect(items.length, `${path} lists no article`).toBeGreaterThan(0)
+
+      const expected = ARTICLES.filter((a) => a.lang === lang).length
+      expect(items).toHaveLength(expected)
+      for (const item of items) {
+        expect(item, `${path} links outside its own tree`).toContain(prefix)
+      }
+    })
+  }
+
+  test('every page advertises both feeds', async ({ page }) => {
+    for (const route of ['/', '/fr/', '/blog', '/fr/blog']) {
+      await page.goto(`${BASE}${route}`)
+      const feeds = page.locator('link[rel="alternate"][type="application/rss+xml"]')
+      await expect(feeds, route).toHaveCount(2)
+      expect(await feeds.nth(0).getAttribute('href')).toBe(`${BASE}/rss.xml`)
+      expect(await feeds.nth(1).getAttribute('href')).toBe(`${BASE}/fr/rss.xml`)
+    }
+  })
+})
+
+test.describe('sitemap', () => {
+  const load = async (request: import('@playwright/test').APIRequestContext) => {
+    const res = await request.get(`${BASE}/sitemap-0.xml`)
+    expect(res.status()).toBe(200)
+    const xml = await res.text()
+    return [...xml.matchAll(/<url>[\s\S]*?<\/url>/g)].map((m) => ({
+      loc: m[0].match(/<loc>(.*?)<\/loc>/)![1],
+      lastmod: m[0].match(/<lastmod>(.*?)<\/lastmod>/)?.[1] ?? null,
+    }))
+  }
+
+  test('every article carries the lastmod its frontmatter declares', async ({ request }) => {
+    const urls = await load(request)
+    expect(ARTICLES.length).toBeGreaterThan(0)
+    for (const article of ARTICLES) {
+      const entry = urls.find((u) => new URL(u.loc).pathname === `${routeOf(article)}/`)
+      expect(entry, `${routeOf(article)} is missing from the sitemap`).toBeDefined()
+      expect(entry!.lastmod, routeOf(article)).toBe(new Date(article.publishedAt).toISOString())
+    }
+  })
+
+  // A `lastmod` the build invents on every deploy tells a crawler the page
+  // changed when it did not, which is worse than saying nothing.
+  test('no page other than an article claims a lastmod', async ({ request }) => {
+    const articleRoutes = new Set(ARTICLES.map((a) => `${routeOf(a)}/`))
+    for (const url of await load(request)) {
+      const path = new URL(url.loc).pathname
+      if (articleRoutes.has(path)) continue
+      expect(url.lastmod, `${path} claims a lastmod`).toBeNull()
+    }
+  })
+
+  test('the card source pages stay out of the sitemap and stay noindex', async ({ request, page }) => {
+    for (const url of await load(request)) {
+      expect(new URL(url.loc).pathname, 'a card source page is listed').not.toContain('/og/')
+    }
+    await page.goto(`${BASE}/og/site`)
+    await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1)
+  })
+
+  test('every article social card resolves', async ({ request }) => {
+    expect(ARTICLES.length).toBeGreaterThan(0)
+    for (const article of ARTICLES) {
+      const res = await request.get(`${BASE}/og/${article.slug}.jpg`)
+      expect(res.status(), `/og/${article.slug}.jpg`).toBe(200)
+    }
+    for (const card of ['site', 'site-fr']) {
+      expect((await request.get(`${BASE}/og/${card}.jpg`)).status(), card).toBe(200)
     }
   })
 })

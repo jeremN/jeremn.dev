@@ -80,6 +80,10 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
     <link rel="manifest" href={withBase('/manifest.json')} />
+    {/* Both feeds are advertised on every page, each titled in its own
+        language, so a reader subscribing from either tree can pick. */}
+    <link rel="alternate" type="application/rss+xml" title="jeremn.dev · Writing" href={withBase('/rss.xml')} />
+    <link rel="alternate" type="application/rss+xml" title="jeremn.dev · Articles" href={withBase('/fr/rss.xml')} />
     {(noindex || isSubpathDeploy) && <meta name="robots" content="noindex" />}
 
     <meta property="og:type" content={article ? 'article' : 'website'} />
