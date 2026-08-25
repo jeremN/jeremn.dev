@@ -361,7 +361,13 @@ test.describe('no English survives on the French side', () => {
     'Remote friendly',
   ]
 
-  for (const fr of Object.values(ROUTE_MAP)) {
+  // The page pairs, plus the one French article. `ROUTE_MAP` stays page-pairs-only
+  // (articles pair through `translationKey`, not through it), so the article's
+  // path is added to this list instead. Without it, `On this page` and
+  // `Keep reading` are asserted only on pages that never render either one.
+  const FRENCH_PATHS = [...Object.values(ROUTE_MAP), '/fr/blog/faire-tourner-stryker-sur-un-monorepo-svelte']
+
+  for (const fr of FRENCH_PATHS) {
     test(`${fr} carries no English chrome`, async ({ page }) => {
       await page.goto(`${BASE}${fr}`)
       // Case-folded, and that is load-bearing rather than defensive. `innerText`

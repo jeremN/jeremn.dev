@@ -35,13 +35,17 @@ const alternates = twin
 // same `month: 'short'`, so it takes the same trailing-period trim: 'fr-FR'
 // gives 'sept.' for eight months and 'mars' for four, and the mixed set reads
 // as ragged. 'en-US' never emits one, so English articles are untouched.
+// Anchored, like `PostRow`'s `/\.$/`, but on a boundary rather than on the end
+// of the string: 'fr-FR' puts the month mid-string ('17 sept. 2026'), so the
+// period this trims is followed by a space, never final. The `|$` arm keeps it
+// correct for a pattern that ends on the month.
 const date = post.data.publishedAt
   .toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
-  .replace('.', '')
+  .replace(/\.(?=\s|$)/, '')
 const category = post.data.tags.join(' / ').toUpperCase()
 const readTime = readingTime(post.body, lang)
 // "On this page" rail — only worth showing once a post has real structure.
