@@ -163,3 +163,19 @@ test.describe('writing page closing illustration', () => {
     await expect(page.locator('[data-doodle="xiaohei-writing-header"]').first()).toBeAttached()
   })
 })
+
+test.describe('French contact page', () => {
+  test('renders at /fr/contact with the French headline', async ({ page }) => {
+    await page.goto(`${BASE}/fr/contact`)
+    await expect(page.locator('h1')).toContainText('Vous avez un projet en')
+    await expect(page.locator('h1')).toContainText('tête ?')
+  })
+
+  test('never prints the email address, in either language', async ({ page }) => {
+    for (const path of ['/contact', '/fr/contact']) {
+      await page.goto(`${BASE}${path}`)
+      await expect(page.locator('body')).not.toContainText('jeremie.nehlil.freelance@proton.me')
+      await expect(page.locator('a[href^="mailto:"]')).toHaveCount(1)
+    }
+  })
+})
