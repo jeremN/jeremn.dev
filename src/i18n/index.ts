@@ -3,6 +3,8 @@
 // Every task that ships a French page adds its pair to ROUTE_MAP.
 import enHome from './en/home'
 import frHome from './fr/home'
+import enServices from './en/services'
+import frServices from './fr/services'
 
 export const LOCALES = ['en', 'fr'] as const
 export type Locale = (typeof LOCALES)[number]
@@ -11,6 +13,7 @@ export const DEFAULT_LOCALE: Locale = 'en'
 /** English route -> French route. Values are the exact hrefs to emit. */
 export const ROUTE_MAP: Record<string, string> = {
   '/': '/fr/',
+  '/services': '/fr/services',
 }
 
 /** Drop a trailing slash so '/fr' and '/fr/' resolve to the same entry.
@@ -31,8 +34,8 @@ export const alternatesFor = (route: string): { en: string; fr: string } | null 
   BY_EN.get(strip(route)) ?? BY_FR.get(strip(route)) ?? null
 
 const COPY = {
-  en: { home: enHome },
-  fr: { home: frHome },
+  en: { home: enHome, services: enServices },
+  fr: { home: frHome, services: frServices },
 } as const
 
 export type Page = keyof (typeof COPY)['en']

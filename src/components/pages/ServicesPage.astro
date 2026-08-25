@@ -1,0 +1,98 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Underline from '../site/Underline.astro'
+import Doodle from '../site/Doodle.astro'
+import { profile } from '../../lib/cv'
+import { getCopy, type Locale } from '../../i18n'
+
+interface Props { lang: Locale }
+const { lang } = Astro.props
+const t = getCopy(lang, 'services')
+
+const quoteHref = `mailto:${profile.email}?subject=${encodeURIComponent('Project quote')}`
+---
+<Layout hideFooterCta lang={lang} title={t.title} description={t.description}>
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
+    <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+      <div class="min-w-0">
+        <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.eyebrow}</span>
+
+        <h1 class="mt-6 max-w-[15ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
+          {t.headlineBefore}<span class="relative inline-block">
+            <em class="italic">{t.headlineEmphasis}</em>
+            <Underline class="absolute -bottom-1 left-0 w-full text-accent" />
+          </span>
+        </h1>
+
+        <p class="mt-8 max-w-[46ch] font-sans text-base leading-relaxed text-muted">
+          {t.lead}
+        </p>
+      </div>
+
+      <Doodle name="xiaohei-services-hero" class="hidden shrink-0 text-ink lg:block lg:h-[12.4rem] lg:w-[22rem]" />
+    </div>
+
+    <Doodle name="xiaohei-services-hero" class="mx-auto mt-10 aspect-[360/203] w-full max-w-[360px] text-ink lg:hidden" />
+
+    <section class="mt-16 border-t border-line pt-8 sm:mt-20">
+      <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.developmentHeading}</h2>
+      <h3 class="mt-4 max-w-[26ch] font-display text-2xl font-medium leading-snug text-ink sm:text-3xl">
+        {t.developmentTitle}
+      </h3>
+      <p class="mt-3 max-w-[50ch] font-sans text-sm leading-relaxed text-muted">
+        {t.developmentSubtitle}
+      </p>
+
+      <ul class="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
+        {t.development.map((s) => (
+          <li class="border-t border-line pt-5">
+            <Doodle name={s.icon} class="h-8 aspect-[49/34] text-ink" />
+            <h4 class="mt-3 font-sans text-base font-medium text-ink">{s.title}</h4>
+            <p class="mt-2 font-sans text-sm leading-relaxed text-muted">{s.copy}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="mt-20 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-16">
+      <div>
+        <h2 class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.aiHeading}</h2>
+        <h3 class="mt-4 max-w-[24ch] font-display text-2xl font-medium leading-snug text-ink sm:text-3xl">
+          {t.aiTitle}
+        </h3>
+        <p class="mt-3 max-w-[42ch] font-sans text-sm leading-relaxed text-muted">
+          {t.aiSubtitle}
+        </p>
+      </div>
+
+      <ul class="border-t border-line">
+        {t.ai.map((item) => (
+          <li class="grid grid-cols-[2.9rem_1fr] items-center gap-x-5 border-b border-line py-5">
+            <Doodle name={item.icon} class="h-8 aspect-[49/34] text-ink" />
+            <div>
+              <h4 class="font-sans text-base font-medium text-ink">{item.title}</h4>
+              <p class="mt-1 font-sans text-sm leading-relaxed text-muted">{item.copy}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <div class="mt-20 flex flex-col gap-8 rounded-sm bg-ink px-8 py-10 sm:flex-row sm:items-center sm:justify-between sm:gap-12 sm:px-12">
+      <div class="max-w-[36ch]">
+        <span class="font-mono text-[11px] uppercase tracking-wider text-ground/70">{t.ctaEyebrow}</span>
+        <p class="mt-3 font-display text-2xl font-medium leading-snug text-ground sm:text-3xl">
+          {t.ctaHeadline}
+        </p>
+      </div>
+      <a
+        data-quote-cta
+        href={quoteHref}
+        class="inline-flex shrink-0 items-center gap-3 rounded-sm bg-ground px-7 py-4 font-mono text-[11px] uppercase tracking-wider text-ink no-underline transition-opacity hover:opacity-85"
+      >
+        {t.ctaLabel}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </main>
+</Layout>

@@ -16,7 +16,7 @@ export type Service = {
   detail?: string
 }
 
-export const services: Service[] = [
+const en: Service[] = [
   {
     icon: 'svc-frontend',
     title: 'Frontend web apps',
@@ -49,6 +49,46 @@ export const services: Service[] = [
     detail: 'The plumbing that makes LLM features hold up.',
   },
 ]
+
+const fr: Service[] = [
+  {
+    icon: 'svc-frontend',
+    title: 'Applications web frontend',
+    blurb: 'SvelteKit, Next.js, React et TypeScript. Des interfaces accessibles qui restent maintenables après la mise en ligne.',
+  },
+  {
+    icon: 'svc-fullstack',
+    title: 'Fonctionnalités fullstack',
+    blurb: "Une livraison de bout en bout, de l'interface jusqu'aux données qu'elle lit.",
+  },
+  {
+    icon: 'svc-backend',
+    title: 'APIs et backends',
+    blurb: 'Des services Node et Fastify, en GraphQL et en REST.',
+  },
+  {
+    icon: 'svc-performance',
+    title: 'Refontes de performance',
+    blurb: 'La refactorisation de sites à fort trafic pour la vitesse et les Core Web Vitals.',
+  },
+  {
+    icon: 'svc-automation',
+    title: 'Outillage et DX',
+    blurb: 'CI/CD, tests, design systems et outils internes.',
+  },
+  {
+    icon: 'svc-ai',
+    title: 'Outillage LLM et agents',
+    blurb: "Des harnais d'agents, des serveurs MCP, de la recherche documentaire et des évaluations.",
+    detail: 'La plomberie qui rend les fonctionnalités LLM fiables.',
+  },
+]
+
+/** English array, kept for the freelance page: it has no French twin yet, so
+ *  it still reads the language-neutral name rather than getServices('en'). */
+export const services = en
+
+export const getServices = (lang: 'en' | 'fr'): Service[] => (lang === 'fr' ? fr : en)
 
 // How I work, from the v1 /freelance page. Kept verbatim.
 export const howIWork = [

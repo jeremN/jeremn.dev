@@ -5,13 +5,14 @@ import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
 import PostRow from '../site/PostRow.astro'
 import { profile } from '../../lib/cv'
-import { services } from '../../lib/services'
+import { getServices } from '../../lib/services'
 import { withBase } from '../../lib/base'
 import { getCopy, type Locale } from '../../i18n'
 
 interface Props { lang: Locale }
 const { lang } = Astro.props
 const t = getCopy(lang, 'home')
+const services = getServices(lang)
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
