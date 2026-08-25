@@ -6,6 +6,7 @@
 // split its "Fullstack features" row, because the icon set gives the interface
 // and the service layer separate marks.
 import type { DoodleName } from '../components/site/Doodle.astro'
+import type { Locale } from '../i18n'
 
 export type Service = {
   icon: DoodleName
@@ -84,7 +85,7 @@ const fr: Service[] = [
   },
 ]
 
-export const getServices = (lang: 'en' | 'fr'): Service[] => (lang === 'fr' ? fr : en)
+export const getServices = (lang: Locale): Service[] => (lang === 'fr' ? fr : en)
 
 // How I work, from the v1 /freelance page. Kept verbatim.
 const howIWorkEn = [
@@ -101,4 +102,4 @@ const howIWorkFr: typeof howIWorkEn = [
   'Sur site près de Paris, ou entièrement à distance.',
 ]
 
-export const getHowIWork = (lang: 'en' | 'fr'): string[] => (lang === 'fr' ? howIWorkFr : howIWorkEn)
+export const getHowIWork = (lang: Locale): string[] => (lang === 'fr' ? howIWorkFr : howIWorkEn)

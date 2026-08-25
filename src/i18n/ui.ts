@@ -1,5 +1,7 @@
 // Chrome strings shared by every page: header nav, footer, CTA.
 // The nav hrefs are English routes; Layout maps them through ROUTE_MAP for /fr/.
+import type { Locale } from './index'
+
 const en = {
   // Five primary destinations, matching the comp minus Stack (dropped: no page
   // backs it). Services now has its own route (the comp's header carries a
@@ -39,4 +41,4 @@ const fr: typeof en = {
   switchLabel: 'Lire cette page en anglais',
 }
 
-export const getUi = (lang: 'en' | 'fr') => (lang === 'fr' ? fr : en)
+export const getUi = (lang: Locale) => (lang === 'fr' ? fr : en)

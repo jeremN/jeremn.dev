@@ -1,6 +1,7 @@
 // Single source of truth for the CV. Both /cv (web) and /cv-print (PDF source)
 // read from here. After editing this file, regenerate the downloadable PDF with
 // `npm run cv:pdf`. public/cv.pdf is a committed artifact and otherwise goes stale.
+import type { Locale } from '../i18n'
 
 export const profile = {
   name: 'Jérémie Néhlil',
@@ -23,7 +24,7 @@ const profileFr: typeof profile = {
   email: 'jeremie.nehlil.freelance@proton.me',
 }
 
-export const getProfile = (lang: 'en' | 'fr') => (lang === 'fr' ? profileFr : profile)
+export const getProfile = (lang: Locale) => (lang === 'fr' ? profileFr : profile)
 
 export type Mission = {
   client: string
