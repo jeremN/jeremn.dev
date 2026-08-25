@@ -108,4 +108,13 @@ test.describe('French services page', () => {
     await expect(section).not.toContainText('Fullstack features')
     await expect(section).toContainText('Applications web frontend')
   })
+
+  test('the quote mailto subject is localised, not English on the French page', async ({ page }) => {
+    await page.goto(`${BASE}/services`)
+    await expect(page.locator('a[href^="mailto:"]').first()).toHaveAttribute('href', /subject=Project%20quote/)
+    await page.goto(`${BASE}/fr/services`)
+    const fr = page.locator('a[href^="mailto:"]').first()
+    await expect(fr).not.toHaveAttribute('href', /subject=Project%20quote/)
+    await expect(fr).toHaveAttribute('href', /subject=Demande%20de%20devis/)
+  })
 })

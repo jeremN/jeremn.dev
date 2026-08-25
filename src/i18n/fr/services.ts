@@ -45,6 +45,7 @@ const copy: typeof en = {
   ctaEyebrow: "Prêt quand vous l'êtes",
   ctaHeadline: 'Apportez la contrainte. Je vous aide à définir le travail.',
   ctaLabel: 'Demander un devis',
+  quoteSubject: 'Demande de devis',
 }
 
 export default copy

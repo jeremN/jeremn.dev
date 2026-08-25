@@ -46,4 +46,5 @@ export default {
   ctaEyebrow: 'Ready when you are',
   ctaHeadline: 'Bring the constraint. I will help define the work.',
   ctaLabel: 'Request a quote',
+  quoteSubject: 'Project quote',
 }
