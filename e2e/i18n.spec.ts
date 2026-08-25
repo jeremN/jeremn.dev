@@ -50,3 +50,31 @@ test.describe('head and chrome per locale', () => {
     expect(labels.map((l) => l.trim())).toEqual(['Articles', 'À propos', 'Services', 'Contact'])
   })
 })
+
+test.describe('language switcher', () => {
+  test('leads to the twin of the current page, not to the other home', async ({ page }) => {
+    await page.goto(`${BASE}/`)
+    const toFr = page.locator('[data-lang-switch]')
+    await expect(toFr).toHaveAttribute('href', `${BASE}/fr/`)
+    await toFr.click()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
+    await expect(page.locator('[data-lang-switch]')).toHaveAttribute('href', `${BASE}/`)
+  })
+
+  test('sits outside the nav, so the four destinations stay four', async ({ page }) => {
+    await page.goto(`${BASE}/fr/`)
+    await expect(page.locator('header nav [data-lang-switch]')).toHaveCount(0)
+    await expect(page.locator('header [data-lang-switch]')).toHaveCount(1)
+  })
+
+  test('keeps the header on one line at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 })
+    for (const path of ['/', '/fr/']) {
+      await page.goto(`${BASE}${path}`)
+      const tops = await page
+        .locator('header nav a, header [data-lang-switch]')
+        .evaluateAll((els) => els.map((el) => (el as HTMLElement).getBoundingClientRect().top))
+      expect(new Set(tops.map((t) => Math.round(t))).size, path).toBe(1)
+    }
+  })
+})

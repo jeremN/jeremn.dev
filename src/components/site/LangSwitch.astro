@@ -1,0 +1,31 @@
+---
+import type { Locale } from '../../i18n'
+import { getUi } from '../../i18n/ui'
+import { withBase } from '../../lib/base'
+
+interface Props { alternates: { en: string; fr: string } | null; lang: Locale }
+const { alternates, lang } = Astro.props
+// A route with no twin (/hero-lab, /cv-print, a one-language article) renders
+// nothing rather than a dead link.
+const target = alternates ? (lang === 'fr' ? alternates.en : alternates.fr) : null
+const ui = getUi(lang)
+---
+{target && (
+  <a
+    data-lang-switch
+    href={withBase(target)}
+    hreflang={lang === 'fr' ? 'en' : 'fr'}
+    aria-label={ui.switchLabel}
+    class="whitespace-nowrap text-muted no-underline transition-colors hover:text-accent"
+  >
+    {/* Font sizing sits on the span, not the anchor, so the anchor keeps the
+        ambient (nav-item) font size for its line-box strut. That is what
+        holds this control's row height equal to the nav links'. Set the
+        smaller size on the anchor itself and the row misaligns at narrow
+        widths, where every pixel of the header row is spoken for. */}
+    {/* The label names the destination, not the current page: a reader
+        already knows what language they are on, and a control labelled
+        with its own current state reads as a no-op rather than a link. */}
+    <span class="font-mono text-[11px] uppercase tracking-wider">{lang === 'fr' ? 'EN' : 'FR'}</span>
+  </a>
+)}

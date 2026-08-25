@@ -3,6 +3,7 @@ import '../styles.css'
 import { withBase, toRoute, isSubpathDeploy } from '../lib/base'
 import { localeOf, alternatesFor, ROUTE_MAP, type Locale } from '../i18n'
 import { getUi } from '../i18n/ui'
+import LangSwitch from '../components/site/LangSwitch.astro'
 interface Props { title?: string; description?: string; noindex?: boolean; hideFooterCta?: boolean; lang?: Locale }
 const {
   title = 'Jérémie Néhlil',
@@ -86,6 +87,7 @@ const abs = (path: string) => (Astro.site ? new URL(withBase(path), Astro.site).
               </a>
             ))}
           </nav>
+          <LangSwitch alternates={alternates} lang={lang} />
           <button
             id="theme-toggle"
             type="button"
