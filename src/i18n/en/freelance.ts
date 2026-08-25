@@ -1,0 +1,15 @@
+export default {
+  title: 'Freelance · jeremn.dev',
+  description: 'Hire Jérémie Néhlil, senior JavaScript engineer available for freelance web app work.',
+  eyebrow: '05 / Freelance',
+  headlineBefore: 'Available for ',
+  headlineEmphasis: 'your team.',
+  leadTail: '. I build and rebuild web apps, and the tooling around them.',
+  availabilityStatus: 'Available for freelance work',
+  ctaLabel: "Let's talk",
+  whatIDoHeading: 'What I do',
+  howIWorkHeading: 'How I work',
+  getInTouchHeading: 'Get in touch',
+  emailLabel: 'Email',
+  remoteFriendly: 'Remote friendly',
+}

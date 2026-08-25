@@ -179,3 +179,19 @@ test.describe('French contact page', () => {
     }
   })
 })
+
+test.describe('French freelance page', () => {
+  test('renders at /fr/freelance with the French headline', async ({ page }) => {
+    await page.goto(`${BASE}/fr/freelance`)
+    await expect(page.locator('h1')).toContainText('Disponible pour')
+    await expect(page.locator('h1')).toContainText('votre équipe.')
+  })
+
+  test('stays out of the nav and the footer in both languages', async ({ page }) => {
+    for (const path of ['/', '/fr/']) {
+      await page.goto(`${BASE}${path}`)
+      await expect(page.locator('header nav a[href$="/freelance"]')).toHaveCount(0)
+      await expect(page.locator('footer a[href$="/freelance"]')).toHaveCount(0)
+    }
+  })
+})

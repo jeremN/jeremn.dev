@@ -84,16 +84,21 @@ const fr: Service[] = [
   },
 ]
 
-/** English array, kept for the freelance page: it has no French twin yet, so
- *  it still reads the language-neutral name rather than getServices('en'). */
-export const services = en
-
 export const getServices = (lang: 'en' | 'fr'): Service[] => (lang === 'fr' ? fr : en)
 
 // How I work, from the v1 /freelance page. Kept verbatim.
-export const howIWork = [
+const howIWorkEn = [
   'Embed in your team. Years of régie and consulting experience, most recently a 14-person team at ViaMichelin.',
   'Senior and autonomous. Agile delivery.',
   'French and English.',
   'On-site near Paris, or fully remote.',
 ]
+
+const howIWorkFr: typeof howIWorkEn = [
+  "Intégré à votre équipe. Plusieurs années d'expérience en régie et en conseil, dont récemment une équipe de 14 personnes chez ViaMichelin.",
+  'Senior et autonome. Livraison agile.',
+  'Français et anglais.',
+  'Sur site près de Paris, ou entièrement à distance.',
+]
+
+export const getHowIWork = (lang: 'en' | 'fr'): string[] => (lang === 'fr' ? howIWorkFr : howIWorkEn)
