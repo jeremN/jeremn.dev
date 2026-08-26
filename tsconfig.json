@@ -1,8 +1,8 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  // `public/` is copied verbatim and never type-checked. It also holds the
-  // vendored Sveltia bundle (~1.8 MB), which `include: **/*` would otherwise
-  // pull into the TS program — enough to OOM `astro check`.
+  // `public/` is copied verbatim and never type-checked. It also holds large
+  // binary artifacts (the CV PDFs, the social cards), which `include: **/*`
+  // would otherwise pull into the TS program.
   "exclude": ["dist", "public"]
 }

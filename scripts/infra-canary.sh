@@ -10,10 +10,6 @@
 #     TLS cert fails to renew ~90 days later, long after anyone remembers
 #     touching DNS. A Cloudflare-issued cert is the earliest visible symptom.
 #
-#   * Redeploying the OAuth relay Worker from a clean checkout drops its
-#     `[vars]`, wiping ALLOWED_DOMAINS. The CMS keeps working perfectly; the
-#     Worker just quietly becomes an open OAuth relay for anyone's site.
-#
 #   * security.txt carries a mandatory RFC 9116 `Expires` field and is invalid
 #     once past it. Nothing breaks, nothing warns — the file just stops counting.
 #
@@ -25,8 +21,6 @@ set -uo pipefail
 # Overridable so the failure paths can actually be exercised — a canary that has
 # only ever been seen passing is decorative. See scripts/infra-canary.test.sh.
 SITE="${CANARY_SITE:-jeremn.dev}"
-WORKER="${CANARY_WORKER:-https://sveltia-cms-auth.jeremn-code.workers.dev}"
-BAD_DOMAINS="${CANARY_BAD_DOMAINS:-evil.example notjeremn.dev $SITE.evil.com}"
 PAGES_IPS="185.199.108.153 185.199.109.153 185.199.110.153 185.199.111.153"
 
 fails=0
@@ -68,32 +62,7 @@ echo "== 4. sitemap is served =="
 code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://$SITE/sitemap-index.xml")
 if [ "$code" = "200" ]; then pass "sitemap-index.xml -> 200"; else fail "sitemap-index.xml -> $code"; fi
 
-echo "== 5. OAuth relay accepts the real site =="
-# Cache-bust: Cloudflare's edge caches this 302, and a stale hit would make the
-# check pass (or fail) without the Worker ever running.
-cb=$RANDOM$RANDOM
-loc=$(curl -s -D - -o /dev/null --max-time 20 \
-  "$WORKER/auth?provider=github&site_id=$SITE&cb=$cb" | grep -i '^location:' || true)
-if echo "$loc" | grep -q 'github.com/login/oauth/authorize'; then
-  pass "site_id=$SITE -> redirected to GitHub OAuth"
-else
-  fail "site_id=$SITE did not reach GitHub OAuth (relay may be misconfigured)"
-fi
-
-echo "== 6. OAuth relay REJECTS everyone else (not an open relay) =="
-for bad in $BAD_DOMAINS; do
-  cb=$RANDOM$RANDOM
-  body=$(curl -s --max-time 20 "$WORKER/auth?provider=github&site_id=$bad&cb=$cb")
-  if echo "$body" | grep -q 'UNSUPPORTED_DOMAIN'; then
-    pass "site_id=$bad -> blocked"
-  else
-    fail "site_id=$bad was NOT blocked -> OPEN OAUTH RELAY"
-    fail "  ^ ALLOWED_DOMAINS is missing on the Worker. Almost certainly a"
-    fail "    'wrangler deploy' from a fresh clone, which has no [vars] block."
-  fi
-done
-
-echo "== 7. security.txt is served and not close to lapsing =="
+echo "== 5. security.txt is served and not close to lapsing =="
 # The third silent-decay mode, and the only one on a clock nobody sets: RFC 9116
 # makes `Expires` mandatory and an expired file INVALID, so this asset rots on
 # its own. Every deploy re-stamps it (src/pages/.well-known/security.txt.ts),
@@ -130,5 +99,5 @@ if [ "$fails" -eq 0 ]; then
   echo "All infra checks passed."
   exit 0
 fi
-echo "$fails check(s) FAILED — see docs/blog-authoring.md and the notes above."
+echo "$fails check(s) FAILED — see the notes above."
 exit 1
