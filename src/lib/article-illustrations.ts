@@ -43,10 +43,10 @@ export function illustrationForKey(key: string): DoodleName | undefined {
 const ASPECT_BY_KEY: Record<string, string> = {
   'ten-months-of-svelte-5': '919.91 / 260.05',
   'two-years-of-renovate-part-one': '549.83 / 473.66',
-  'two-years-of-renovate-part-two': '918.47 / 540.75',
+  'two-years-of-renovate-part-two': '840.36 / 516.73',
   'two-years-of-renovate-part-three': '903.42 / 368.02',
   'two-years-of-renovate-part-four': '485.88 / 378.00',
-  'best-model-still-needs-rules': '926.64 / 450.34',
+  'best-model-still-needs-rules': '906.63 / 430.22',
   'who-checks-the-agents-tests': '870.16 / 228.36',
   'stryker-on-a-svelte-monorepo': '801.51 / 411.07',
   'contract-tests-without-the-stack': '662.30 / 429.60',
