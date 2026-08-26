@@ -17,7 +17,7 @@ interface Props {
 }
 const { post, older, lang } = Astro.props
 const t = getCopy(lang, 'article')
-const { Content, headings } = await render(post)
+const { Content } = await render(post)
 // The pair, derived from the collection. ROUTE_MAP cannot hold it: it is a
 // static table and these routes only exist once the collection is read.
 // The draft filter is the same one both routes apply, and it has to be here
@@ -53,9 +53,6 @@ const route = lang === 'fr' ? `/fr/blog/${post.id}` : `/blog/${post.id}`
 const ogImage = absolute(`/og/${post.id}.jpg`)
 const category = post.data.tags.join(' / ').toUpperCase()
 const readTime = readingTime(post.body, lang)
-// "On this page" rail — only worth showing once a post has real structure.
-const toc = headings.filter((h) => h.depth === 2 || h.depth === 3)
-const showToc = toc.length >= 2
 // Curated, not exhaustive: only some posts have a drawn illustration yet, and
 // there is no reasonable fallback for the ones that don't (see the lib for why).
 // Keyed on `translationKey`, so a translated article reuses its twin's drawing
@@ -84,38 +81,13 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
   })}
  
 >
-  <main
-    class:list={[
-      'relative z-10 mx-auto px-6 pb-24 pt-2',
-      showToc
-        ? 'max-w-[68ch] lg:max-w-none lg:grid lg:grid-cols-[13rem_minmax(0,68ch)] lg:justify-center lg:gap-x-20'
-        : 'max-w-[68ch]',
-    ]}
-  >
-    {showToc && (
-      <aside class="hidden lg:block">
-        <nav class="sticky top-24" aria-label={t.toc}>
-          <span class="mb-3 block font-mono text-[11px] uppercase tracking-wider text-muted">{t.toc}</span>
-          <ul class="border-l border-line">
-            {toc.map((h) => (
-              <li>
-                <a
-                  href={`#${h.slug}`}
-                  data-toc={h.slug}
-                  class:list={[
-                    'toc-link -ml-px block border-l border-transparent py-1 font-mono text-xs leading-snug text-muted transition-colors hover:text-ink',
-                    h.depth === 3 ? 'pl-7' : 'pl-4',
-                  ]}
-                >
-                  {h.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </aside>
-    )}
-
+  {/* Same shell as Home's sections: `max-w-[1000px] px-6` leaves 952px of
+      content. The article used to top out at 68ch, which is the right measure
+      for PROSE and the wrong one for the header row: it capped the illustration
+      at a third of the size it was drawn at. The prose keeps 68ch below; only
+      the header row uses the full width; the prose and the onward link stay on
+      the reading measure, so their right edges line up. */}
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-2">
     <div>
       <a data-back href={withBase(blogIndex)} class="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70">
         {t.backToIndex}
@@ -141,17 +113,18 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
           <p class="mt-6 font-mono text-[11px] uppercase tracking-wider text-muted">{readTime}</p>
         </div>
 
-        {/* Smaller than Home's hero doodle on purpose: the article column
-            tops out at 68ch (this page's typographic measure), far narrower
-            than Home's 1440px section, so a hero-sized mark here would crush
-            the title column into single-word-per-line wrapping. Fixed box,
-            same for every post: each illustration's own aspect ratio now
-            varies a lot (see the lib), so letting width follow height here
-            the way mobile does would blow this box out to 500px+ for the
-            widest ones and crush the title column into vertical text. The
-            default xMidYMid-meet letterboxes instead — never crops. */}
+        {/* Width-anchored, exactly like the mobile variant below: the height
+            follows the drawing's own ratio, so no slot is part empty and no
+            drawing is shrunk to fit a box shared with eight others. The nine
+            ratios span 1.16 to 3.81, which is why one fixed box could never
+            suit them. 24rem leaves the title column ~520px, wider than the
+            404px it had before this row grew. */}
         {illustration && (
-          <Doodle name={illustration} class="hidden shrink-0 text-ink lg:block lg:h-[9.5rem] lg:w-[17.3rem]" />
+          <Doodle
+            name={illustration}
+            class="hidden shrink-0 text-ink lg:block lg:w-[24rem]"
+            style={`aspect-ratio: ${illustrationAspect}`}
+          />
         )}
 
         {/* Full-bleed on mobile: -mx-6 cancels the main's own px-6 so the
@@ -166,7 +139,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
         boundary it cannot import through. The script already reads this
         element, so it needs no second lookup and no second copy of the copy. */}
     <article
-      class="prose mt-10 max-w-none prose-pre:rounded-lg prose-pre:border prose-pre:border-line"
+      class="prose mt-10 max-w-[68ch] prose-pre:rounded-lg prose-pre:border prose-pre:border-line"
       data-copy={t.copy}
       data-copied={t.copied}
       data-copy-failed={t.copyFailed}
@@ -179,7 +152,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
         a reader who finished the newest post has nowhere newer to go, and
         offering `newer` on an older post sends them backwards through a series. */}
     {older && (
-      <nav data-keep-reading class="mt-24 border-t border-line pt-10">
+      <nav data-keep-reading class="mt-24 max-w-[68ch] border-t border-line pt-10">
         <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.keepReading}</span>
         <a href={withBase(`${blogIndex}/${older.id}`)} class="group mt-4 flex items-end justify-between gap-8 no-underline">
           <span class="max-w-[20ch] font-display text-3xl font-medium leading-tight text-ink transition-colors group-hover:text-accent sm:text-4xl">
@@ -252,33 +225,5 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
       anchor.textContent = '#'
       heading.append(anchor)
     })
-
-    // Table-of-contents scroll-spy: mark the section currently in view.
-    const tocLinks = new Map(
-      [...document.querySelectorAll<HTMLElement>('[data-toc]')].map((a) => [a.dataset.toc, a]),
-    )
-    if (tocLinks.size) {
-      const headings = [...article.querySelectorAll('h2[id], h3[id]')]
-      const visible = new Set<Element>()
-      let activeId: string | null = null
-      const setActive = (id: string) => {
-        if (id === activeId) return
-        if (activeId) tocLinks.get(activeId)?.classList.remove('is-active')
-        activeId = id
-        tocLinks.get(id)?.classList.add('is-active')
-      }
-      const spy = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) visible.add(e.target)
-            else visible.delete(e.target)
-          }
-          const top = headings.find((h) => visible.has(h))
-          if (top) setActive(top.id)
-        },
-        { rootMargin: '0px 0px -75% 0px' },
-      )
-      headings.forEach((h) => spy.observe(h))
-    }
   }
 </script>
