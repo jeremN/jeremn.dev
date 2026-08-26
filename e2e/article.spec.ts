@@ -150,3 +150,37 @@ test.describe('article illustration', () => {
     expect(errors).toEqual([])
   })
 })
+
+// `ASPECT_BY_KEY` in src/lib/article-illustrations.ts is a hand-copy of each
+// SVG's viewBox ratio, and the header slot is sized from it. When the two
+// drift -- a redrawn illustration, a mistyped digit -- nothing errors: the
+// drawing just letterboxes inside a slot of the wrong shape and renders
+// smaller than the space it was given. That is the failure the article
+// illustrations already shipped once. The browser is where the drift is
+// visible, so the ratio is read off the rendered box, not off the table.
+test('every article illustration fills its slot instead of letterboxing', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto(`${BASE}/blog`)
+  const hrefs = await page
+    .locator('a[href^="/blog/"]')
+    .evaluateAll((els) => [...new Set(els.map((el) => el.getAttribute('href')!))])
+  expect(hrefs.length, 'the article sweep found no articles to sweep').toBeGreaterThan(0)
+
+  let checked = 0
+  for (const href of hrefs) {
+    await page.goto(`${BASE}${href}`)
+    // The desktop instance comes first in source order; the mobile one is
+    // display:none at this width and would measure zero.
+    const mark = page.locator('[data-doodle^="xiaohei-article-"]').first()
+    if ((await mark.count()) === 0) continue
+    const { slot, drawing } = await mark.evaluate((el) => {
+      const box = el.getBoundingClientRect()
+      const vb = el.querySelector('svg')!.viewBox.baseVal
+      return { slot: box.width / box.height, drawing: vb.width / vb.height }
+    })
+    expect(drawing, `${href} has no viewBox`).toBeGreaterThan(0)
+    expect(Math.abs(slot / drawing - 1), `${href} letterboxes: slot ${slot}, drawing ${drawing}`).toBeLessThan(0.01)
+    checked++
+  }
+  expect(checked, 'no article carried an illustration').toBeGreaterThan(0)
+})
