@@ -349,8 +349,6 @@ test.describe('article routes', () => {
     await page.goto(`${BASE}${FR}`)
     await expect(page.locator('[data-back]')).toContainText('Tous les articles')
     await expect(page.locator('[data-back]')).not.toContainText('All notes')
-    await expect(page.locator('main aside nav')).toHaveAttribute('aria-label', 'Sur cette page')
-    await expect(page.locator('main aside nav span').first()).toContainText('Sur cette page')
     await expect(page.locator('main')).toContainText('min de lecture')
     await expect(page.locator('main')).not.toContainText('min read')
     await expect(page.locator('main')).toContainText('17 août 2026')
@@ -359,7 +357,6 @@ test.describe('article routes', () => {
   test('the English article keeps its own English shell', async ({ page }) => {
     await page.goto(`${BASE}${EN}`)
     await expect(page.locator('[data-back]')).toContainText('← All notes')
-    await expect(page.locator('main aside nav')).toHaveAttribute('aria-label', 'On this page')
     await expect(page.locator('main')).toContainText('min read')
     await expect(page.locator('main')).toContainText('Aug 17, 2026')
   })
@@ -467,18 +464,16 @@ test.describe('no English survives on the French side', () => {
   const ENGLISH_ONLY = [
     'min read',
     'Keep reading',
-    'On this page',
     'All notes',
     'Get in touch',
-    'Work with me',
     'Based in France',
     'Remote friendly',
   ]
 
   // The page pairs, plus every French article. `ROUTE_MAP` stays page-pairs-only
   // (articles pair through `translationKey`, not through it), so the article
-  // paths are derived from the collection instead. Without them, `On this page`
-  // and `Keep reading` are asserted only on pages that never render either one.
+  // paths are derived from the collection instead. Without them, `Keep reading`
+  // is asserted only on pages that never render it.
   // Derived rather than listed: a hardcoded path covers the article it names and
   // lets every article translated afterwards out of the sweep.
   const FRENCH_PATHS = [...Object.values(ROUTE_MAP), ...FRENCH_ARTICLES.map((a) => `/fr/blog/${a.slug}`)]

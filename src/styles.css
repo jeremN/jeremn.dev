@@ -197,7 +197,7 @@ p {
    they sit UNLAYERED on purpose: an unlayered normal declaration outranks every
    cascade layer (the plugin's prose styles and the utilities layer included).
    When these lived in @layer components they silently lost — backticks, link
-   underlines, blockquote italics, and the TOC active colour all came back. */
+   underlines and blockquote italics all came back. */
 
 /* Heading permalinks — a trailing # revealed on hover/keyboard focus. */
 .prose a.heading-anchor {
@@ -213,12 +213,6 @@ p {
 }
 .prose a.heading-anchor:hover {
   color: var(--color-accent);
-}
-
-/* TOC rail — active section lights its segment of the vertical rule gold. */
-.toc-link.is-active {
-  color: var(--color-ink);
-  border-left-color: var(--color-accent);
 }
 
 /* Article body colours follow the theme tokens, so the reading view works in
