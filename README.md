@@ -142,8 +142,13 @@ the certificate.
   the path `rehype-sanitize` cannot reach: it escapes `<` in every JSON-LD block, so
   an article headline holding `</script>` cannot close the tag early.
 - **Fonts** are self-hosted via `@fontsource-variable/*`. No external font requests.
-- **`scripts/infra-canary.sh`** checks the live DNS, certificate and headers, and has
-  its own test file next to it.
+- **`scripts/infra-canary.sh`** probes production for the regressions that are
+  dangerous because nothing looks broken when they happen: a TLS cert that stopped
+  being Let's Encrypt (the DNS got proxied, and renewal is already broken), A records
+  that drifted off GitHub Pages, and a `security.txt` past its mandatory RFC 9116
+  expiry. It runs daily and on every push. `scripts/infra-canary.test.sh` points it at
+  deliberately wrong targets and asserts it *fails*: a monitor only ever seen passing
+  is indistinguishable from one that can never fire.
 
 ## The CV
 

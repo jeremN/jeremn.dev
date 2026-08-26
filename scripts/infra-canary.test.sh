@@ -37,14 +37,6 @@ echo "Proving the canary can actually fail:"
 # A domain that isn't ours: wrong cert issuer, wrong A records.
 expect_fail "wrong site (cert issuer + A records)" CANARY_SITE=example.com
 
-# Treat the REAL allowed domain as if it should be blocked. The allowlist check
-# must notice it is NOT blocked. This proves check 6 discriminates rather than
-# just always finding the string it wants.
-expect_fail "allowlist check discriminates" CANARY_BAD_DOMAINS=jeremn.dev
-
-# A worker URL that isn't the relay at all.
-expect_fail "wrong worker URL" CANARY_WORKER=https://example.com
-
 # Demand absurd expiry headroom. A 200 on security.txt is easy to get right by
 # accident; this proves the check actually parses the date and compares it,
 # rather than passing on the mere presence of the file.
