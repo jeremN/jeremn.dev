@@ -17,6 +17,7 @@ const BY_KEY: Record<string, DoodleName> = {
   'who-checks-the-agents-tests': 'xiaohei-article-who-checks-the-agents-tests',
   'stryker-on-a-svelte-monorepo': 'xiaohei-article-stryker-on-a-svelte-monorepo',
   'contract-tests-without-the-stack': 'xiaohei-article-contract-tests-without-the-stack',
+  'diving-into-herdr': 'xiaohei-article-diving-into-herdr',
 }
 
 /**
@@ -50,6 +51,7 @@ const ASPECT_BY_KEY: Record<string, string> = {
   'who-checks-the-agents-tests': '870.16 / 228.36',
   'stryker-on-a-svelte-monorepo': '801.51 / 411.07',
   'contract-tests-without-the-stack': '662.30 / 429.60',
+  'diving-into-herdr': '520.75 / 400.45',
 }
 
 /** CSS `aspect-ratio` value for a post's illustration, looked up by

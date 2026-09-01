@@ -1,0 +1,378 @@
+---
+title: 'Plonger dans Herdr'
+summary: "Un gestionnaire d'espaces de travail dans le terminal qui reconnaît les agents de code lancés dans ses panes. Ce qu'il ajoute à tmux, comment le client et le serveur se partagent le travail, ce que veulent vraiment dire les cinq états d'un agent, et là où il arrête d'aider."
+description: "Herdr est un gestionnaire d'espaces de travail dans le terminal pour les agents de code. Les états d'agent, la coupure client / serveur, et les limites."
+publishedAt: 2026-09-01
+tags: [Agents, Tooling, Terminal]
+draft: false
+lang: 'fr'
+translationKey: 'diving-into-herdr'
+---
+
+Je lance plusieurs agents de code tous les jours. Un met à jour un site. Un
+corrige un bug pour un client. Un fait une passe de QA dans un navigateur et me
+dit ce qui casse.
+
+Les suivre, c'est ce que je faisais mal. J'ai déjà répondu à une demande
+d'autorisation dix minutes après que l'agent s'était arrêté dessus. La question
+attendait dans un onglet que je ne regardais pas.
+
+Herdr est un gestionnaire d'espaces de travail dans le terminal, pour les agents
+de code. Il donne un vrai terminal à chaque agent et il range ces terminaux en
+workspaces, tabs et panes. Une barre latérale montre quel agent travaille, lequel
+est bloqué, lequel a fini et lequel attend.
+
+La session continue de tourner quand je ferme le terminal. Je m'y rebranche
+depuis la même machine, en SSH, ou depuis mon téléphone en SSH. Et toute la
+session est scriptable.
+
+Un agent pilote Herdr comme moi. Avec la même CLI, un script ou un agent crée un
+workspace, coupe un pane en deux et démarre un autre agent.
+
+Herdr se pilote aussi à la souris, ce qui le rend utilisable avant d'avoir appris
+le moindre raccourci.
+
+## Le problème que Herdr résout
+
+Lancer un agent est facile. En lancer cinq, non.
+
+J'ai besoin de savoir quel agent travaille sur quelle tâche. J'ai besoin de
+savoir lequel a posé une question et m'attend. J'ai besoin de retrouver où est
+parti le résultat des tests.
+
+Les onglets du terminal répondent à la première question et s'arrêtent là. tmux
+ajoute les sessions persistantes, les panes et les layouts, donc il répond aux
+deux premières. Mais `claude` n'est qu'une commande de plus pour tmux. tmux ne
+sait pas distinguer un agent qui travaille d'un agent qui attend une autorisation
+depuis un quart d'heure.
+
+Herdr garde le vrai terminal et le serveur persistant. Par-dessus, il ajoute
+l'état des agents, la souris, l'accès distant, les notifications et
+l'automatisation.
+
+Ça tient dans un seul binaire Rust, sous licence Apache 2.0. Pas de compte, pas
+de dashboard, pas de service hébergé. Le code tourne là où je le lance.
+
+Herdr n'est pas l'outil qu'il faut à tout le monde. Il devient intéressant quand
+on veut la persistance, de vrais terminaux, la conscience des agents et
+l'automatisation en même temps.
+
+## Herdr à côté de tmux, Ghostty et cmux
+
+Les quatre outils occupent des étages différents, et trois d'entre eux tournent
+en même temps sur ma machine.
+
+Ghostty est un émulateur de terminal. Il dessine le terminal, et il le dessine
+vite. Ses onglets et ses splits appartiennent à la fenêtre. Sur macOS il sait
+restaurer la forme de vos fenêtres après une fermeture, mais il restaure des
+shells vides. Il n'y a pas de démon en arrière-plan, donc les processus sont
+partis. Herdr tourne dans Ghostty.
+
+tmux est la référence de l'étage que Herdr lui emprunte. Un serveur en
+arrière-plan possède les panes, le client s'attache et se détache, et les
+processus survivent à une connexion SSH qui tombe. Ce que tmux n'a pas, c'est la
+moindre idée de ce qui tourne dans un pane. Chaque pane est opaque. On a la
+persistance sans la conscience.
+
+cmux est le voisin le plus proche. C'est un terminal macOS natif bâti sur
+libghostty et pensé pour les agents de code, avec des onglets verticaux, des
+notifications et un navigateur intégré. Deux différences tranchent pour moi. Il
+est macOS seulement, et c'est une application graphique, donc je ne peux pas le
+faire remonter en SSH sur une machine sans écran. Et sa persistance est une
+restauration. Il ramène les fenêtres, les panes, les répertoires de travail et le
+scrollback après un relancement. Herdr, lui, n'arrête jamais les processus.
+
+Prenez Ghostty ou cmux pour la fenêtre. Prenez tmux si vous voulez la persistance
+et rien d'autre. Prenez Herdr quand les panes contiennent des agents et que vous
+voulez que l'outil le sache.
+
+## Les cinq concepts
+
+### Un workspace est un projet
+
+Le workspace est le conteneur du dessus. J'en prends un par dépôt, ou un par
+investigation.
+
+Mon site personnel est un workspace. Une app prototype en est un autre. Changer
+de workspace change tout le contexte du projet, au lieu de mélanger des terminaux
+sans rapport dans une longue barre d'onglets.
+
+Un workspace possède ses tabs et ses panes, et il remonte l'état des agents qu'il
+contient. Quand un agent d'un workspace en arrière-plan a besoin d'une décision,
+la barre latérale affiche ce workspace comme bloqué.
+
+### Un tab est une vue du projet
+
+Un tab est un layout dans un workspace. Les miens s'appellent en général
+`agents`, `dev`, `tests`, `logs` et `review`.
+
+Chaque tab contient un pane ou un layout découpé. Les tabs gardent ensemble des
+terminaux liés sans les afficher tous à la fois.
+
+### Un pane est un vrai terminal
+
+Un pane fait tourner un shell, un agent, un serveur de développement, un
+lanceur de tests en watch, une connexion SSH, ou n'importe quel autre programme
+du terminal.
+
+Herdr rend le vrai écran de terminal du programme et lui renvoie les entrées. Les
+interfaces plein écran continuent de marcher, parce que Herdr ne convertit pas
+leur sortie en messages de chat.
+
+Les panes survivent au détachement du client, parce que c'est le serveur Herdr en
+arrière-plan qui les possède.
+
+### Un agent est un processus reconnu dans un pane
+
+Un pane existe toujours en tant que terminal. Un agent existe quand Herdr
+reconnaît un processus d'agent de code dans ce pane.
+
+La distinction pèse lourd. Un lanceur de tests vit à l'étage du pane. Codex vit à
+l'étage du pane et à celui de l'agent. Herdr envoie des entrées brutes aux deux,
+mais seul l'étage agent comprend les états de cycle de vie comme working et
+blocked.
+
+Herdr embarque aujourd'hui des intégrations pour dix-sept agents, dont Claude
+Code, Codex, Cursor, opencode, Copilot et Grok. `herdr integration` affiche la
+liste que votre binaire connaît.
+
+### Une session est un espace de noms persistant du serveur
+
+La commande `herdr` toute seule démarre la session par défaut, ou s'y attache. La
+plupart des gens ont besoin d'une session et de plusieurs workspaces.
+
+Les sessions nommées servent quand il faut un état d'exécution complètement
+séparé :
+
+```bash
+herdr session attach work
+herdr session attach experiments
+```
+
+Chaque session nommée possède ses workspaces, ses tabs, ses panes, ses processus
+et sa socket.
+
+Commencez par les workspaces. N'ajoutez une session nommée que quand il vous faut
+un mur étanche entre deux groupes de travail.
+
+## Client et serveur
+
+Herdr se coupe en deux. Un serveur en arrière-plan fait tourner les terminaux. Un
+client les dessine.
+
+`herdr` démarre ce serveur, ou s'attache à celui qui tourne déjà. Le serveur
+possède les PTY des panes et leurs processus, le layout, les répertoires de
+travail, le focus, et l'identité et les métadonnées de chaque agent. Le client
+possède les pixels. Il dessine, il transmet vos entrées, et il annonce au serveur
+la taille de son terminal et son thème au moment de s'attacher.
+
+Détachez-vous avec `ctrl+b q`. Le client se ferme et le serveur garde en vie les
+panes, les agents, les lanceurs de tests et les serveurs de développement.
+Relancez `herdr` et vous retombez sur les mêmes processus vivants.
+
+Cette coupure est ce qui rend le distant peu cher. `herdr --remote workbox`
+s'attache en SSH à un serveur sur une autre machine. Les processus n'ont jamais
+été sur mon portable, donc rabattre l'écran ne change rien.
+
+Si le serveur lui-même redémarre, Herdr se dégrade par paliers au lieu de tout
+lâcher. Il restaure le layout depuis un instantané et rejoue l'historique des
+panes, donc les écrans reviennent avec leur contenu. Les conversations d'agent
+reprennent par l'identifiant de session natif de chaque intégration.
+
+La socket qui alimente l'interface est aussi celle qui porte la CLI. C'est pour
+ça qu'un agent peut réorganiser la session. La barre latérale et le script
+parlent au même serveur, par la même API.
+
+## Utilisation
+
+### Installer et mettre à jour
+
+L'installeur couvre macOS, Linux et Windows :
+
+```bash
+curl -fsSL https://herdr.dev/install.sh | sh
+```
+
+Homebrew, mise et Nix marchent aussi. J'utilise Homebrew :
+
+```bash
+brew install herdr
+```
+
+Pour une installation gérée par l'installeur, mettez à jour avec `herdr update`.
+Pour Homebrew, mise ou Nix, passez plutôt par le gestionnaire de paquets.
+`herdr channel set preview` bascule sur les builds de préversion, et
+`herdr channel set stable` revient en arrière.
+
+Le tableau complet est dans la [documentation d'installation](https://herdr.dev/docs/install/).
+
+### Premiers pas
+
+Herdr se pilote à la souris dès la première minute. Cliquez sur un pane pour lui
+donner le focus. Clic droit pour le couper ou pour créer un tab. Tirez la
+bordure entre deux panes pour les redimensionner. Cliquez sur un workspace ou sur
+un agent dans la barre latérale pour y sauter.
+
+Herdr a aussi une touche de préfixe, à la manière de tmux. Le préfixe par défaut
+est `ctrl+b`. Appuyez sur le préfixe, relâchez, puis appuyez sur la touche
+d'action.
+
+| Action | Touche |
+| --- | --- |
+| Couper à droite | `ctrl+b`, puis `v` |
+| Couper en bas | `ctrl+b`, puis `-` |
+| Nouveau tab | `ctrl+b`, puis `c` |
+| Tab suivant | `ctrl+b`, puis `n` |
+| Tab précédent | `ctrl+b`, puis `p` |
+| Sélecteur de workspace | `ctrl+b`, puis `w` |
+| Zoomer le pane actif | `ctrl+b`, puis `z` |
+| Afficher ou cacher la barre latérale | `ctrl+b`, puis `b` |
+| Se détacher | `ctrl+b`, puis `q` |
+| Voir les raccourcis actifs | `ctrl+b`, puis `?` |
+
+Le préfixe empêche Herdr de voler les frappes normales au shell, à l'éditeur ou à
+l'agent.
+
+Démarrez un agent normalement dans un pane :
+
+```bash
+claude
+```
+
+Herdr détecte le processus au premier plan. L'agent apparaît dans la barre
+latérale et son état suit le travail.
+
+Détachez-vous avec `ctrl+b q`, puis rattachez-vous avec `herdr`. Vous retrouvez
+les mêmes processus vivants.
+
+### L'état d'un agent
+
+La barre latérale a changé ma façon de travailler. Herdr suit cinq états.
+
+| État | Sens |
+| --- | --- |
+| `working` | L'agent travaille en ce moment |
+| `blocked` | L'agent attend une entrée, une autorisation ou une décision |
+| `done` | L'agent a fini en arrière-plan et je n'ai pas encore regardé |
+| `idle` | L'agent est prêt et j'ai vu son tab |
+| `unknown` | Herdr voit un agent mais n'arrive pas à le classer avec confiance |
+
+La façon dont Herdr calcule ces états décide de la confiance qu'on peut leur
+faire.
+
+L'état vient d'une de deux sources. Quand une intégration est installée et
+qu'elle remonte l'information pour le pane, ce sont ses hooks de cycle de vie qui
+font foi. Sinon, Herdr identifie le processus au premier plan, lit un instantané
+du bas de l'écran du terminal, et fait correspondre des manifestes TOML dessus.
+
+`blocked` est volontairement prudent. Herdr ne marque un agent bloqué que si
+l'instantané correspond à une interface connue d'autorisation, de question ou de
+permission. Une invite qu'il ne reconnaît pas est lue comme `idle`. Donc le badge
+bloqué est fiable quand il apparaît, mais son absence ne prouve pas que personne
+ne vous attend.
+
+`done` et `idle` sont le même état de fond, séparés par le fait que vous ayez
+regardé ou non. Donner le focus au tab, ou viser le pane avec une commande de
+focus, le marque comme vu. Lire le pane depuis la CLI ne le marque pas, et c'est
+ce qui laisse un script surveiller un agent sans vous voler la notification dont
+vous avez encore besoin.
+
+`unknown` n'est pas un synonyme de terminé. Ça veut dire que Herdr a trouvé un
+agent et a refusé de deviner. Prenez-le comme une invitation à aller voir, pas
+comme un signal de fin.
+
+Les états remontent. Un agent bloqué rend son pane, son tab et son workspace
+bloqués à l'écran. Un coup d'œil à la barre latérale me dit si quelque chose me
+veut, et je n'ouvre aucun tab pour le savoir.
+
+L'état est aussi une primitive de synchronisation, pas seulement une couleur :
+
+```bash
+herdr agent wait reviewer --until blocked --timeout 120000
+```
+
+### Laisser un agent construire l'espace de travail
+
+Vous pouvez laisser un agent poser lui-même la disposition du terminal. Ouvrez un
+workspace, démarrez un agent, et dites-lui de lire `herdr --skill` avant de
+couper quoi que ce soit. La commande affiche un fichier de skill qui documente le
+schéma des identifiants, les états de cycle de vie et les règles de sécurité.
+
+À partir de là, il arrête de demander et il arrange :
+
+```bash
+herdr pane split --current --direction right --cwd "$PWD" --no-focus
+herdr agent start reviewer --kind codex --pane <returned-pane-id>
+herdr agent prompt reviewer "Review the current diff. Report actionable findings only." --wait
+```
+
+Herdr injecte `HERDR_ENV`, `HERDR_WORKSPACE_ID`, `HERDR_TAB_ID` et
+`HERDR_PANE_ID` dans chaque pane qu'il gère, donc un agent sait où il se tient
+avant de toucher à quoi que ce soit. `--no-focus` laisse mon curseur là où je
+l'ai laissé pendant que le travail se fait à côté.
+
+### La CLI, l'API et les plugins
+
+Une API sur socket locale porte la CLI. Elle crée et inspecte le layout, lit les
+panes, envoie des entrées, contrôle les agents, s'abonne aux événements et attend
+les changements d'état.
+
+Commencez par la CLI. Elle gère les détails de la socket et renvoie du JSON
+structuré, ce qui la rend sûre à parser depuis un script. Passez à l'API brute
+quand vous construisez une intégration qui vit longtemps, ou qu'il vous faut les
+abonnements aux événements.
+
+Herdr accepte aussi des plugins. Un plugin est un paquet de workflow exécutable
+avec un manifeste `herdr-plugin.toml`. L'implémentation peut être en Bash, en
+JavaScript, en Lua, en Rust, ou dans n'importe quoi d'autre que la machine sait
+exécuter. Il n'y a pas de SDK de plugin à part, parce que les plugins utilisent
+la même CLI et la même API.
+
+Rien de tout ça ne demande un fork. Mes règles de notification, mes conventions
+de layout et mon script de dispatch sont posés sur la même API que celle de la
+barre latérale.
+
+Un avertissement avant d'installer quoi que ce soit. Un plugin lance des
+commandes locales avec vos droits. Lisez-le avant de lui faire confiance, comme
+n'importe quel autre exécutable que vous téléchargez.
+
+## Là où ça brille et là où ça ne brille pas
+
+Herdr devient convaincant quand le travail vit déjà dans des terminaux. Ça colle
+quand :
+
+- vous lancez plus d'un agent de code
+- vous passez d'un dépôt à l'autre
+- vous voulez de vraies interfaces de terminal, pas des transcriptions résumées
+- les serveurs de développement et les tests doivent vivre à côté des agents
+- vous travaillez en SSH
+- vous voulez que les processus survivent à une déconnexion
+- vous voulez qu'un agent ou qu'un script en coordonne un autre
+- vous utilisez plusieurs produits d'agent et vous voulez une vue commune
+- vous êtes prêt à automatiser
+
+Ça ne résout pas tous les problèmes du multi-agent :
+
+- Ça n'isole rien. `herdr worktree create` ouvre un workspace sur un worktree git
+  neuf, ce qui suffit à empêcher deux agents d'éditer le même fichier. Ce n'est
+  pas un conteneur, et rien n'empêche un agent de toucher au reste de la machine.
+- Ça ne donne pas de mémoire partagée aux agents. La coordination entre eux
+  reste à votre charge.
+- Ça ne remplace pas une plateforme d'agents. Pas de file hébergée, pas
+  d'historique d'exécutions, pas de vue d'équipe.
+- Plus d'agents veut toujours dire plus de coordination. Herdr rend la charge
+  visible. Il ne la rend pas plus petite.
+
+## Pourquoi j'aime bien
+
+Herdr ne remplace pas les outils que j'utilise déjà. Claude Code reste Claude
+Code, Ghostty reste Ghostty, et les tests, SSH et git restent des processus
+ordinaires. Herdr ajoute la couche qui manquait entre eux.
+
+Il donne une structure aux terminaux et un état visible aux agents. Il me laisse
+travailler à la souris ou au clavier, et il expose une CLI qu'un agent sait
+utiliser aussi bien que moi.
+
+Ce que j'en fais vraiment : je pilote le travail depuis un agent qui ouvre des
+tabs et des panes, envoie d'autres agents coder, relire et faire la QA, et me
+rend l'état final. J'ai arrêté de garder le troupeau dans ma tête.
