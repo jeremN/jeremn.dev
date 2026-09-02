@@ -1,0 +1,197 @@
+---
+title: 'Cloudflare Workers AI: everything the free tier decided'
+summary: 'I wanted to run open models without the hardware to run them, so I built a scanner on Cloudflare Workers AI and kept it inside the free tier. The free tier is why it existed, why it worked, and in the end why it died.'
+description: 'Running Cloudflare Workers AI inside the free tier: the tool-call envelope changes with the model, and a wrong cost constant can starve a pipeline in silence.'
+publishedAt: 2026-09-02
+tags: [Cloudflare, LLM, Tooling]
+draft: false
+lang: 'en'
+translationKey: 'workers-ai-what-the-free-tier-decided'
+---
+
+The digest looked fine. That was the problem.
+
+I had a scanner running on Cloudflare Workers that pulled freelance postings
+from a few job boards on a cron, asked a model to read each one, and mailed me
+the five best every morning. Five arrived every morning. The queue behind them
+held hundreds of unscored postings, and the scorer was getting through six a
+day. A shortlist of five out of six looks exactly like a shortlist of five out
+of six hundred. I read that email for days before I went looking.
+
+Every introduction to Workers AI ends at the same place, and it is an honest
+place to end: you add an `ai` binding, you call `env.AI.run()` with a model name
+and a prompt, and text comes back. It really is that easy. The two things below
+are what happened after, and both of them failed quietly, which is the part I
+did not expect.
+
+## Why I reached for it
+
+I wanted to run open models without running them on my laptop. Llama and Gemma
+are the sort of thing you are supposed to pull down and serve yourself, and my
+machine is not up to it. Workers AI puts those models on Cloudflare's GPUs
+behind a binding in your own Worker. No key to hold, no second vendor, no
+server, and the free tier hands you 10,000 Neurons a day.
+
+That last part is the whole reason the project existed. I was not going to pay
+to satisfy a curiosity. Everything downstream came out of that one decision to
+spend nothing: how many postings I could score, how large a batch could be, and,
+eventually, how long the thing survived.
+
+## The parser broke twice in two days
+
+I wanted typed fields back, not a paragraph to regex. So the scoring call bound
+one tool to a JSON schema and made the model answer through it. Function
+calling, the ordinary way.
+
+On 2 June I wrote the parser. Llama put the tool call at the top level of the
+response and handed me `arguments` as an object, already parsed:
+
+```ts
+res.tool_calls[0].name          // "extract_mission"
+res.tool_calls[0].arguments     // an object, ready to use
+```
+
+On 3 June I switched to Gemma 4, for output quality, and extraction stopped
+working. Gemma answers in the OpenAI chat completions envelope. The tool call
+sits one level down, and `arguments` is a JSON string:
+
+```ts
+res.choices[0].message.tool_calls[0].function.name       // "extract_mission"
+res.choices[0].message.tool_calls[0].function.arguments  // a JSON string
+```
+
+Two changes at once. The tool call moved, and the type of `arguments` changed
+under it. My parser read `res.tool_calls[0].arguments`, found `undefined`, and
+did what I had told it to do with a malformed answer: it gave up on that posting
+and moved on. No exception. No log line I was watching. The scanner simply
+stopped finding anything worth mailing, one day after I had convinced myself
+that part was finished.
+
+What I should have written the first time reads both shapes:
+
+```ts
+function extractToolArgs(res: AiResponse): unknown {
+  const tc = res.tool_calls?.[0] ?? res.choices?.[0]?.message?.tool_calls?.[0]
+  if (!tc) return null
+  const name = tc.name ?? tc.function?.name
+  if (name !== 'extract_mission') return null
+  return tc.arguments ?? tc.function?.arguments ?? null
+}
+```
+
+The caller then takes a string or an object as it comes, and keeps the raw
+response when parsing fails, because a diagnostic you did not save is a
+diagnostic you do not have.
+
+Here is the assumption I was wrong about. I had read the response shape as a
+property of Workers AI, because it arrives through one binding with one
+signature. It is a property of the model. The binding is a single door onto
+several model families and it does not flatten what they hand you. Picking a
+model id is not only a quality and price decision. It changes your response
+contract, and nothing in the types will tell you.
+
+That week I went through three models: Llama 3.1 8B, then Llama 3.3 70B, then
+Gemma 4. The last move was not only about quality. A scoring call costs
+somewhere between about 10 and 65 Neurons depending on which model answers it,
+so on a fixed daily allowance the model you pick is also a decision about how
+many postings you get to read. Each move fixed the thing I had changed it for
+and broke something else. One of them started regurgitating the posting back at
+me instead of judging it, which took a prompt rewrite to separate "is this real"
+from "is this a fit". Model swapping on Workers AI is one line of config and it
+is never one line of work.
+
+## The constant that throttled everything
+
+Workers AI meters in Neurons, its unit for the GPU compute a request needs. Free
+and Paid both include 10,000 a day at no charge, resetting at 00:00 UTC, and the
+[pricing page](https://developers.cloudflare.com/workers-ai/platform/pricing/)
+has the rest.
+
+For a side project that number is not a footnote. It is the design. It decides
+how many postings you get to look at before tomorrow.
+
+So the score tick asked what was left of the day before it did anything. It
+summed the neurons recorded since UTC midnight, subtracted, and sized its batch
+from the remainder:
+
+```ts
+const budget = await remainingBudget(env.DB, now)
+if (budget < NEURONS_PER_CALL_GUESS) return deferred()
+
+const batchSize = Math.min(MAX_BATCH, Math.floor(budget / NEURONS_PER_CALL_GUESS))
+```
+
+`MAX_BATCH` was 8, and that cap is not about money. A Worker on the free plan
+gets 50 subrequests per request and every model call spends one, so the batch had
+to stay clear of the ceiling with room for the fetches around it.
+
+`NEURONS_PER_CALL_GUESS` was 1500.
+
+I had put that number in early, from nothing, and never looked at it again. A
+scoring call on Gemma 4 A4B, roughly 2,000 tokens in and 150 out, actually costs
+about 22. I was over by a factor of thirty, and the wrong number was feeding a
+division. `floor(10000 / 1500)` is 6.
+
+Six postings a day, out of hundreds, and every run finished green. That is what
+was behind the digest that looked fine.
+
+I fixed it in the same commit that switched to Gemma, which tells you I only
+found it because I was already in there for another reason. The comment I left
+on the constant is still the clearest thing I wrote that week:
+
+> It was previously 1500, a ~30x over-estimate that silently throttled
+> throughput to a few candidates per day.
+
+A wrong constant in a budget calculation raises nothing. No error, no retry, no
+warning. The system reports success while doing almost none of the work you
+built it for, and the only symptom is that the output feels a bit thin, which is
+a feeling and not an alert. If a number gates your throughput, check it against
+the actual pricing table on the day you write it. And read `usage.neurons` off
+the response and store it, so your estimate only ever stands in for a model that
+does not report its own cost.
+
+The same arithmetic decides what a retry costs. Models return malformed tool
+calls sometimes, so mine retried once with a stricter system prompt and then
+gave up, to stop one bad posting stalling the queue. Both attempts get charged:
+
+```ts
+const second = await callOnce(ai, candidate, profile, true)
+const totalNeurons = neuronsOf(first.res) + neuronsOf(second.res)
+```
+
+Charging only the successful attempt would understate the day's spend on exactly
+the days when retries fire, which are the days the budget most needs to be
+right.
+
+## What actually killed it
+
+I tore the whole pipeline out on 25 August. Workers AI had nothing to do with
+it.
+
+The scanner kept its state in D1, and when Cloudflare began enforcing the free
+tier's daily row limits, the database became the thing that decided everything.
+I could have paid. But I had not been willing to pay for inference either, and a
+scanner I was unwilling to fund was a scanner with a ceiling wherever the free
+tier put one. The scoring, the digest and the schema went out together, and the
+Worker now serves a static page.
+
+Which is the honest shape of the whole thing. The tidy ending would be that the
+AI turned out to be the fragile part. It was not. The model calls were the
+cheapest and most predictable component in the system, once I stopped lying to
+it about what they cost. Everything that constrained this project, and the thing
+that finally ended it, came from the same decision I made on day one: that it
+had to run on nothing.
+
+## What I would keep
+
+A deterministic filter in front of the model. Plain string matching on skills
+and a few kill words costs nothing and never bills you, so the metered call only
+ever runs on a posting that already survived a free test.
+
+The budget as a value the code reads, not an assumption the author holds. It
+gets read before the pipeline decides how much to attempt and written after it
+spends.
+
+And a parser that accepts both envelopes from the first commit, with the raw
+response kept on failure. The tutorial is telling the truth about how easy the
+first call is. It just is not the call that wakes you up.
