@@ -244,9 +244,9 @@ test.describe('bilingual blog index', () => {
     await expect(page.locator('h1')).toContainText('établi.')
   })
 
-  test('the English index still lists the ten English articles', async ({ page }) => {
+  test('the English index still lists the eleven English articles', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
-    await expect(page.locator('main a[href*="/blog/"]')).toHaveCount(10)
+    await expect(page.locator('main a[href*="/blog/"]')).toHaveCount(11)
   })
 
   test('the French index lists no English article', async ({ page }) => {
@@ -257,7 +257,7 @@ test.describe('bilingual blog index', () => {
   test('the homepage writing teaser stays in the page language', async ({ page }) => {
     await page.goto(`${BASE}/fr/`)
     await expect(page.getByRole('link', { name: /Ten months of Svelte 5/ })).toHaveCount(0)
-    // The title above is the oldest of the ten and the teaser shows three, so
+    // The title above is the oldest of the eleven and the teaser shows three, so
     // that assertion cannot fail. These two can, and they catch different
     // regressions: the title fires when the locale filter drops (the newest
     // English post is what a broken filter surfaces first), the href fires when

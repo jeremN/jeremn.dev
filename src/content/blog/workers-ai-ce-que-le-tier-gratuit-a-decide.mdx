@@ -1,0 +1,206 @@
+---
+title: 'Cloudflare Workers AI : tout ce que le tier gratuit a décidé'
+summary: "Je voulais faire tourner des modèles ouverts sans la machine pour les faire tourner, alors j'ai construit un scanner sur Cloudflare Workers AI en restant dans le tier gratuit. Le tier gratuit explique pourquoi il a existé, pourquoi il marchait, et pour finir pourquoi il est mort."
+description: "Workers AI dans le tier gratuit : l'enveloppe de tool call change avec le modèle, et une constante de coût fausse peut affamer une pipeline en silence."
+publishedAt: 2026-09-02
+tags: [Cloudflare, LLM, Tooling]
+draft: false
+lang: 'fr'
+translationKey: 'workers-ai-what-the-free-tier-decided'
+---
+
+Le digest avait l'air normal. C'était bien ça, le problème.
+
+J'avais un scanner sur Cloudflare Workers qui récupérait des annonces de
+missions freelance sur quelques job boards via un cron, demandait à un modèle de
+lire chacune, et m'envoyait les cinq meilleures chaque matin. Cinq arrivaient
+chaque matin. Derrière, la file contenait des centaines d'annonces non notées,
+et le scorer en traitait six par jour. Une shortlist de cinq sur six ressemble
+exactement à une shortlist de cinq sur six cents. J'ai lu cet e-mail pendant des
+jours avant d'aller voir.
+
+Toutes les introductions à Workers AI s'arrêtent au même endroit, et c'est un
+endroit honnête : on ajoute un binding `ai`, on appelle `env.AI.run()` avec un
+nom de modèle et un prompt, et du texte revient. C'est vraiment aussi simple que
+ça. Les deux points ci-dessous sont ce qui est arrivé ensuite, et les deux ont
+échoué en silence. C'est la partie que je n'avais pas prévue.
+
+## Pourquoi j'y suis allé
+
+Je voulais faire tourner des modèles ouverts sans les faire tourner sur mon
+portable. Llama et Gemma sont le genre de choses qu'on est censé télécharger et
+servir soi-même, et ma machine n'en a pas les moyens. Workers AI pose ces
+modèles sur les GPU de Cloudflare, derrière un binding dans votre propre Worker.
+Pas de clé à garder, pas de second fournisseur, pas de serveur, et le tier
+gratuit vous donne 10 000 Neurones par jour.
+
+Cette dernière partie est toute la raison d'être du projet. Je n'allais pas
+payer pour satisfaire une curiosité. Tout le reste découle de cette seule
+décision de ne rien dépenser : combien d'annonces je pouvais noter, quelle
+taille un lot pouvait avoir, et, pour finir, combien de temps la chose a survécu.
+
+## Le parser a cassé deux fois en deux jours
+
+Je voulais des champs typés en retour, pas un paragraphe à passer à la regex.
+L'appel de scoring liait donc un outil unique à un schéma JSON et forçait le
+modèle à répondre par lui. Du function calling, tout ce qu'il y a de banal.
+
+Le 2 juin, j'ai écrit le parser. Llama posait le tool call au premier niveau de
+la réponse et me rendait `arguments` sous forme d'objet, déjà parsé :
+
+```ts
+res.tool_calls[0].name          // "extract_mission"
+res.tool_calls[0].arguments     // un objet, prêt à l'emploi
+```
+
+Le 3 juin, je suis passé à Gemma 4, pour la qualité de sortie, et l'extraction a
+cessé de marcher. Gemma répond dans l'enveloppe chat completions d'OpenAI. Le
+tool call se trouve un niveau plus bas, et `arguments` est une chaîne JSON :
+
+```ts
+res.choices[0].message.tool_calls[0].function.name       // "extract_mission"
+res.choices[0].message.tool_calls[0].function.arguments  // une chaîne JSON
+```
+
+Deux changements d'un coup. Le tool call a bougé, et le type d'`arguments` a
+changé dessous. Mon parser lisait `res.tool_calls[0].arguments`, trouvait
+`undefined`, et faisait ce que je lui avais demandé de faire d'une réponse
+malformée : il abandonnait l'annonce et passait à la suivante. Pas d'exception.
+Pas une ligne de log que je surveillais. Le scanner a juste arrêté de trouver
+quoi que ce soit à m'envoyer, le lendemain du jour où je m'étais convaincu que
+cette partie était finie.
+
+Ce que j'aurais dû écrire la première fois lit les deux formes :
+
+```ts
+function extractToolArgs(res: AiResponse): unknown {
+  const tc = res.tool_calls?.[0] ?? res.choices?.[0]?.message?.tool_calls?.[0]
+  if (!tc) return null
+  const name = tc.name ?? tc.function?.name
+  if (name !== 'extract_mission') return null
+  return tc.arguments ?? tc.function?.arguments ?? null
+}
+```
+
+L'appelant prend ensuite une chaîne ou un objet selon ce qui vient, et garde la
+réponse brute quand le parsing échoue, parce qu'un diagnostic qu'on n'a pas
+sauvegardé est un diagnostic qu'on n'a pas.
+
+Voilà l'hypothèse sur laquelle je me trompais. J'avais lu la forme de la réponse
+comme une propriété de Workers AI, parce qu'elle arrive par un seul binding avec
+une seule signature. C'est une propriété du modèle. Le binding est une porte
+unique ouverte sur plusieurs familles de modèles, et il n'aplatit pas ce qu'elles
+vous rendent. Choisir un identifiant de modèle n'est pas seulement une décision
+de qualité et de prix. Ça change votre contrat de réponse, et rien dans les
+types ne vous le dira.
+
+Cette semaine-là, je suis passé par trois modèles : Llama 3.1 8B, puis Llama 3.3
+70B, puis Gemma 4. Le dernier changement ne tenait pas qu'à la qualité. Un appel
+de scoring coûte entre 10 et 65 Neurones environ selon le modèle qui répond,
+donc sur une allocation quotidienne fixe, le modèle que vous choisissez décide
+aussi du nombre d'annonces que vous lirez. Chaque changement réglait ce pour
+quoi je l'avais fait et cassait autre chose. L'un d'eux s'est mis à me
+régurgiter l'annonce au lieu de la juger, ce qui a demandé de réécrire le prompt
+pour séparer « est-ce que c'est réel » de « est-ce que ça me va ». Changer de
+modèle sur Workers AI tient en une ligne de config, et ça ne tient jamais en une
+ligne de travail.
+
+## La constante qui étranglait tout
+
+Workers AI compte en Neurones, son unité pour la charge GPU qu'une requête
+demande. Le plan gratuit et le plan payant incluent tous les deux 10 000 par
+jour offerts, remis à zéro à 00:00 UTC, et la
+[page de tarification](https://developers.cloudflare.com/workers-ai/platform/pricing/)
+donne le reste.
+
+Pour un projet perso, ce chiffre n'est pas une note de bas de page. C'est la
+conception. Il décide du nombre d'annonces que vous regarderez avant demain.
+
+Le tick de score demandait donc ce qu'il restait de la journée avant de faire
+quoi que ce soit. Il additionnait les neurones enregistrés depuis minuit UTC,
+retranchait, et dimensionnait son lot sur le reste :
+
+```ts
+const budget = await remainingBudget(env.DB, now)
+if (budget < NEURONS_PER_CALL_GUESS) return deferred()
+
+const batchSize = Math.min(MAX_BATCH, Math.floor(budget / NEURONS_PER_CALL_GUESS))
+```
+
+`MAX_BATCH` valait 8, et ce plafond n'a rien à voir avec l'argent. Un Worker sur
+le plan gratuit a droit à 50 sous-requêtes par requête et chaque appel de modèle
+en consomme une, donc le lot devait rester loin du plafond, avec de la marge pour
+les fetchs autour.
+
+`NEURONS_PER_CALL_GUESS` valait 1500.
+
+J'avais posé ce nombre au début, sur rien du tout, et je n'y étais jamais revenu.
+Un appel de scoring sur Gemma 4 A4B, environ 2000 tokens en entrée et 150 en
+sortie, coûte en réalité autour de 22. Je me trompais d'un facteur trente, et le
+mauvais nombre alimentait une division. `floor(10000 / 1500)` fait 6.
+
+Six annonces par jour, sur des centaines, et chaque run finissait au vert. Voilà
+ce qu'il y avait derrière le digest qui avait l'air normal.
+
+J'ai corrigé ça dans le même commit que le passage à Gemma, ce qui vous dit que
+je ne l'ai trouvé que parce que j'étais déjà dedans pour une autre raison. Le
+commentaire que j'ai laissé sur la constante reste la chose la plus claire que
+j'aie écrite cette semaine-là :
+
+> It was previously 1500, a ~30x over-estimate that silently throttled
+> throughput to a few candidates per day.
+
+Une constante fausse dans un calcul de budget ne lève rien. Pas d'erreur, pas de
+retry, pas d'avertissement. Le système annonce un succès en ne faisant presque
+rien de ce pour quoi vous l'avez construit, et le seul symptôme, c'est que la
+sortie paraît un peu maigre, ce qui est une impression et pas une alerte. Si un
+nombre contrôle votre débit, confrontez-le à la vraie grille tarifaire le jour où
+vous l'écrivez. Et lisez `usage.neurons` sur la réponse pour le stocker, comme ça
+votre estimation ne remplace jamais que le coût d'un modèle qui ne remonte rien.
+
+La même arithmétique décide de ce que coûte un retry. Les modèles renvoient
+parfois des tool calls malformés, donc le mien réessayait une fois avec un prompt
+système plus strict, puis abandonnait, pour qu'une annonce pourrie ne bloque pas
+la file. Les deux tentatives sont facturées :
+
+```ts
+const second = await callOnce(ai, candidate, profile, true)
+const totalNeurons = neuronsOf(first.res) + neuronsOf(second.res)
+```
+
+Ne facturer que la tentative réussie sous-estimerait la dépense du jour
+précisément les jours où les retries partent, c'est-à-dire les jours où le budget
+a le plus besoin d'être juste.
+
+## Ce qui l'a vraiment tué
+
+J'ai arraché toute la pipeline le 25 août. Workers AI n'y est pour rien.
+
+Le scanner gardait son état dans D1, et quand Cloudflare s'est mis à appliquer
+les quotas de lignes quotidiens du plan gratuit, la base est devenue ce qui
+décidait de tout. J'aurais pu payer. Mais je n'avais pas voulu payer pour
+l'inférence non plus, et un scanner que je refusais de financer était un scanner
+dont le plafond serait là où le tier gratuit le posait. Le scoring, le digest et
+le schéma sont partis ensemble, et le Worker sert maintenant une page statique.
+
+C'est la forme honnête de toute l'histoire. La fin bien rangée, ce serait que
+l'IA s'est révélée la partie fragile. Elle ne l'était pas. Les appels de modèle
+étaient le composant le moins cher et le plus prévisible du système, une fois que
+j'ai arrêté de lui mentir sur ce qu'ils coûtaient. Tout ce qui a contraint ce
+projet, et ce qui a fini par l'arrêter, vient de la même décision prise au
+premier jour : que ça devait tourner sur rien.
+
+## Ce que je garderais
+
+Un filtre déterministe devant le modèle. De la correspondance de chaînes sur les
+compétences et quelques mots éliminatoires, ça ne coûte rien et ça ne vous
+facture jamais, donc l'appel payant ne part que sur une annonce qui a déjà
+survécu à un test gratuit.
+
+Le budget comme une valeur que le code lit, pas une hypothèse que l'auteur a en
+tête. On le lit avant de décider combien de travail tenter, on le réécrit après
+avoir dépensé.
+
+Et un parser qui accepte les deux enveloppes dès le premier commit, avec la
+réponse brute gardée en cas d'échec. Le tutoriel dit la vérité sur la facilité du
+premier appel. Ce n'est simplement pas l'appel qui vous réveillera la nuit.
