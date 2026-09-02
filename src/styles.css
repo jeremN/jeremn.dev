@@ -51,6 +51,11 @@
   --color-xiaohei-blue: light-dark(#1f5fbf, #73a7ff);
   --color-xiaohei-violet: light-dark(#6845c7, #b99cff);
 
+  /* The single accent of the "everything the free tier decided" illustration:
+     the ration line that threads the whole scene. Read off the light frame and
+     its dark twin in the comp, like the pairs above. */
+  --color-xiaohei-orange: light-dark(#e56a1c, #ff6a3d);
+
   /* Illustration stroke width. Light strokes on a dark ground optically bloom
      and read heavier at the same width, so dark draws them thinner. This is
      the only place where dark needs different geometry rather than a
