@@ -42,21 +42,10 @@ const {
 
 const blogBase = lang === 'fr' ? '/fr/blog' : '/blog'
 
-// The comps stack the date over three lines: day, month, year.
-// `.toUpperCase()` stays: the row's date is uppercase by design. 'fr-FR'
-// returns 'août', which uppercases to 'AOÛT'.
-// 'fr-FR' abbreviates eight months with a period (JANV., FÉVR., AVR., JUIL.,
-// SEPT., OCT., NOV., DÉC.) and leaves four bare (MARS, MAI, JUIN, AOÛT). In a
-// fixed decorative stack that mixed set reads as ragged, so the period goes.
-// This is a date stack, not running prose, so the bare abbreviation is ordinary
-// typography and cannot be misread as a word the way '17 SEPT 2026' can in a
-// sentence — which is why `ArticlePage` takes the long month instead and this
-// row does not. The column is 3.5rem wide here; 'SEPTEMBRE' does not fit.
-// 'en-US' never emits a trailing period, so English rows are untouched.
 const dateLocale = lang === 'fr' ? 'fr-FR' : 'en-US'
-const day = publishedAt.toLocaleDateString(dateLocale, { day: '2-digit' })
-const month = publishedAt.toLocaleDateString(dateLocale, { month: 'short' }).toUpperCase().replace(/\.$/, '')
-const year = publishedAt.getFullYear()
+const date = publishedAt.toLocaleDateString(dateLocale, {
+  day: '2-digit', month: 'short', year: 'numeric',
+}).toUpperCase()
 const category = tags.join(' / ').toUpperCase()
 const mark = markOverride ?? markForTags(tags)
 ---
@@ -64,41 +53,74 @@ const mark = markOverride ?? markForTags(tags)
   data-post-row
   data-variant={variant}
   href={withBase(`${blogBase}/${slug}`)}
-  class:list={[
-    'group grid grid-cols-[3.5rem_1fr] items-start gap-x-5 border-b border-line py-7 no-underline sm:gap-x-10',
-    variant === 'teaser' ? 'sm:grid-cols-[4.5rem_1fr_auto_2.75rem]' : 'sm:grid-cols-[4.5rem_1fr_auto]',
-  ]}
+  class="post-row group border-b border-line py-7 no-underline"
 >
-  {/* One colour, one weight, no coloured chip. The homepage teaser and the
-      full index render the date identically. */}
-  <span
-    data-date
-    class="block py-1.5 text-center font-mono text-[11px] font-normal leading-[1.5] tracking-wide text-muted"
-  >
-    <span class="block">{day}</span>
-    <span class="block">{month}</span>
-    <span class="block">{year}</span>
-  </span>
-
-  <span class="block">
-    <span data-title class="block max-w-[22ch] font-display text-xl font-medium leading-snug text-ink transition-colors duration-200 group-hover:text-accent sm:text-2xl">
+  <span class="post-content min-w-0">
+    <span data-title class:list={[
+      'block font-display font-medium leading-snug text-ink transition-colors duration-200 group-hover:text-accent',
+      variant === 'teaser' ? 'text-[21px]' : 'max-w-[22ch] text-[23px] lg:text-[28px]',
+    ]}>
       {title}
     </span>
     {variant === 'index' && summary && <span class="mt-2 block text-sm text-muted">{summary}</span>}
   </span>
 
-  <span data-meta class="col-start-2 mt-3 block font-mono text-[10px] uppercase tracking-wider text-muted sm:col-start-3 sm:mt-1 sm:text-right">
-    {category && <span class="block">{category}</span>}
-    <span class="mt-1 block">{readingTime(body, lang)}</span>
+  <span data-meta class="post-meta font-mono text-label uppercase tracking-wider text-muted">
+    {category && <span class="post-category">{category}</span>}
+    <span class="post-details">
+      <span class="post-reading">{readingTime(body, lang)}</span>
+      <span class="post-separator" aria-hidden="true"> · </span>
+      <time data-date datetime={publishedAt.toISOString()} class="post-date font-mono text-label font-normal text-muted">{date}</time>
+    </span>
   </span>
 
-  {/* The mark is decorative and repeats the category. Only the homepage
-      teaser keeps it: on /blog's full list it added nothing beside the
-      already-visible category and reading time. */}
   {variant === 'teaser' && (
     <Doodle
       name={mark}
-      class="col-start-4 row-start-1 hidden h-7 w-11 self-start text-muted transition-colors duration-200 group-hover:text-accent sm:block"
+      class="post-mark h-7 w-11 text-muted transition-colors duration-200 group-hover:text-accent"
     />
   )}
 </a>
+
+<style>
+  .post-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'date date' 'content mark' 'category category' 'reading reading';
+    gap: 0.5rem 1rem;
+    overflow-wrap: anywhere;
+  }
+  .post-content { grid-area: content; }
+  .post-meta, .post-details { display: contents; }
+  .post-date { grid-area: date; }
+  .post-category { grid-area: category; }
+  .post-reading { grid-area: reading; }
+  .post-separator { display: none; }
+  .post-row :global(.post-mark) { grid-area: mark; align-self: center; }
+  .post-row[data-variant='index'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: 'date category' 'content content' 'reading reading';
+  }
+  .post-row[data-variant='index'] .post-category { text-align: right; }
+
+  @media (min-width: 40rem) {
+    .post-row, .post-row[data-variant='index'] {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 15rem);
+      grid-template-areas: 'content meta';
+      align-items: center;
+      gap: 2rem;
+    }
+    .post-row[data-variant='teaser'] {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 15rem) 2.75rem;
+      grid-template-areas: 'content meta mark';
+    }
+    .post-meta { grid-area: meta; display: block; }
+    .post-category, .post-row[data-variant='index'] .post-category {
+      display: block;
+      text-align: left;
+      font-weight: 600;
+    }
+    .post-details { display: block; margin-top: 0.5rem; }
+    .post-separator { display: inline; }
+  }
+</style>

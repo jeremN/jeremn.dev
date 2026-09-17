@@ -27,10 +27,10 @@ const routes = [
 ]
 ---
 <Layout lang={lang} title={t.title} description={t.description}>
-  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-10 pt-16 sm:pt-24">
     <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
       <div class="min-w-0">
-        <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.eyebrow}</span>
+        <span class="font-mono text-label uppercase tracking-wider text-accent">{t.eyebrow}</span>
 
         <h1 class="mt-6 max-w-[12ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
           {t.headlineBefore}<span class="relative inline-block">
@@ -58,7 +58,7 @@ const routes = [
       </div>
     </div>
 
-    <ul data-routes class="mt-8 border-t border-line sm:mt-20">
+    <ul data-routes class="mt-8 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:gap-3">
       {routes.map((r) => (
         <li>
           <a
@@ -66,26 +66,29 @@ const routes = [
             target={r.external ? '_blank' : undefined}
             rel={r.external ? 'noopener noreferrer' : undefined}
             data-cta={r.label === t.emailLabel ? true : undefined}
-            class="group grid grid-cols-[1.25rem_1fr_auto] items-center gap-x-4 border-b border-line py-5 no-underline"
+            class:list={[
+              r.external ? 'button-secondary' : 'button-primary',
+              'w-full justify-start gap-x-4 text-left lg:w-auto',
+            ]}
           >
-            {r.icon && <Doodle name={r.icon} class="h-5 w-5 text-muted transition-colors group-hover:text-accent" />}
-            <span class="col-start-2 font-sans text-sm text-ink transition-colors group-hover:text-accent">{r.label}</span>
-            {r.external && <span aria-hidden="true" class="font-mono text-[11px] text-muted">↗</span>}
+            {r.icon && <Doodle name={r.icon} class="h-5 w-5 shrink-0" />}
+            <span class="flex-1">{r.label}</span>
+            {r.external && <span aria-hidden="true" class="font-mono text-label">↗</span>}
           </a>
         </li>
       ))}
     </ul>
 
-    <section class="mt-16">
+    <section class="mt-8 lg:mt-16">
       <ul class="border-t border-line">
         <li class="grid grid-cols-[1.25rem_1fr] items-start gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[1.25rem_10rem_1fr] sm:items-center sm:gap-y-0">
           <Doodle name="icon-map-pin" class="h-5 w-5 shrink-0 text-muted" />
-          <span class="col-start-2 font-mono text-[11px] uppercase tracking-wider text-muted">{t.basedInLabel}</span>
+          <span class="col-start-2 font-mono text-label uppercase tracking-wider text-muted">{t.basedInLabel}</span>
           <span class="col-start-2 font-sans text-sm text-ink sm:col-start-3">{profile.location}</span>
         </li>
         <li class="grid grid-cols-[1.25rem_1fr] items-start gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[1.25rem_10rem_1fr] sm:items-center sm:gap-y-0">
           <Doodle name="icon-radar" class="h-5 w-5 shrink-0 text-muted" />
-          <span class="col-start-2 font-mono text-[11px] uppercase tracking-wider text-muted">{t.workingLabel}</span>
+          <span class="col-start-2 font-mono text-label uppercase tracking-wider text-muted">{t.workingLabel}</span>
           <span class="col-start-2 font-sans text-sm text-ink sm:col-start-3">{t.workingValue}</span>
         </li>
       </ul>
@@ -93,8 +96,8 @@ const routes = [
 
     {/* Mobile-only per the comp: marketing prose, not sourced from cv.ts. */}
     <section class="mt-10 rounded-sm border border-line px-6 py-6 lg:hidden">
-      <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.availabilityLabel}</span>
-      <p class="mt-3 font-sans text-sm leading-relaxed text-ink">
+      <span class="font-mono text-label uppercase tracking-wider text-accent">{t.availabilityLabel}</span>
+      <p class="mt-3 font-sans text-base leading-relaxed text-ink">
         {t.availabilityBody}
       </p>
     </section>

@@ -7,6 +7,7 @@ export default {
   headlineEmphasis: 'workbench.',
   lead: 'Thoughts on software, AI, tools and things I learn along the way.',
   filterAll: 'All',
+  filterLabel: 'Filter notes by topic',
   // The empty state never renders while articles are published. It is
   // localised anyway: this task translates the page, it does not decide
   // whether the branch is worth keeping.

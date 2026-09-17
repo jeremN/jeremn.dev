@@ -26,6 +26,16 @@
   --color-accent: light-dark(#145bff, #759fff);
   --color-line: light-dark(#d9dce3, #2b2721);
 
+  /* Contact actions use a light accent fill in the dark theme. */
+  --color-action: light-dark(#071b46, #759fff);
+  --color-on-action: light-dark(#ffffff, #14120e);
+  --color-selected: light-dark(#071b46, #173e91);
+  --color-on-selected: #ffffff;
+
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.5;
+  --spacing-touch: 2.75rem;
+
   /* Illustration accents only. Never a button, never a text colour: lavender
      measures 3.09:1 on the dark ground and would fail AA. */
   --color-butter: light-dark(#f8dea0, #b08d3b);
@@ -141,6 +151,55 @@ p {
 }
 
 @layer components {
+  .site-nav-label {
+    font-size: var(--text-label);
+    line-height: 1.5;
+  }
+  @media (min-width: 40rem) {
+    .site-nav-label {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* These classes work on native links and buttons. */
+  .button-primary,
+  .button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-width: var(--spacing-touch);
+    min-height: 3rem;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .button-primary {
+    background-color: var(--color-action);
+    color: var(--color-on-action);
+  }
+  .button-secondary {
+    border-color: var(--color-muted);
+    background-color: transparent;
+    color: var(--color-ink);
+  }
+  .button-primary:hover,
+  .button-secondary:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .button-primary:active,
+  .button-secondary:active {
+    transform: translateY(1px);
+  }
+
   /* ── Article reading view ─────────────────────────────────────────────── */
 
   /* Code block: a mono header bar (language + copy) injected client-side,
@@ -166,14 +225,16 @@ p {
   }
   .code-block__lang {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: var(--text-label);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: #8b949e;
   }
   .code-block__copy {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: var(--text-label);
+    min-width: var(--spacing-touch);
+    min-height: var(--spacing-touch);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #8b949e;
@@ -279,30 +340,43 @@ p {
   color: var(--color-ink);
 }
 
-/* Writing index filter tabs. The comp draws every tab the same ink colour and
-   marks the active one by weight alone, with a trailing slash after each
-   label standing in for a separator. aria-pressed carries the state for
-   assistive technology; the class only paints it. */
-.filter-tab {
+/* The pressed state controls the filter fill and its text colour. */
+.filter-tab,
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--spacing-touch);
+  min-height: var(--spacing-touch);
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-surface);
   color: var(--color-ink);
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-weight: 500;
-  letter-spacing: 0.08em;
+  line-height: 1.5;
   text-transform: uppercase;
-  transition: color 0.2s ease;
+}
+.tag {
+  border-radius: 9999px;
+}
+.filter-tab {
   cursor: pointer;
 }
-.filter-tab::after {
-  /* The alt text after the second slash is empty on purpose: the slash is
-     decorative, so a screen reader must not announce it. */
-  content: '/' / '';
-  margin-left: 0.75em;
+@media (min-width: 40rem) {
+  .filter-tab {
+    padding-inline: 1rem;
+    background-color: transparent;
+  }
 }
 .filter-tab:hover {
-  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 .filter-tab[aria-pressed="true"] {
+  border-color: var(--color-selected);
+  background-color: var(--color-selected);
+  color: var(--color-on-selected);
   font-weight: 700;
 }
 
@@ -321,7 +395,7 @@ article.prose h2::before {
   top: 0.35em;
   left: -3.25rem;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   letter-spacing: 0.08em;
   color: var(--color-accent);
 }
@@ -346,7 +420,7 @@ article.prose h2::before {
 [data-principle]::before {
   content: counter(principle, decimal-leading-zero);
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   letter-spacing: 0.08em;
   color: var(--color-accent);
 }

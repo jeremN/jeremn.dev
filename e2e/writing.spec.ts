@@ -71,6 +71,59 @@ test.describe('writing index vignettes', () => {
 })
 
 test.describe('writing index filter', () => {
+  for (const path of ['/blog', '/fr/blog']) {
+    test(`keyboard filters expose the selection and restore all rows on ${path}`, async ({ page }) => {
+      await page.goto(`${BASE}${path}`)
+      const filters = page.locator('[data-filter]')
+      const all = filters.first()
+      await all.focus()
+      await page.keyboard.press('Tab')
+      const topic = filters.nth(1)
+      await expect(topic).toBeFocused()
+      await page.keyboard.press('Enter')
+      await expect(topic).toHaveAttribute('aria-pressed', 'true')
+      await expect(all).toHaveAttribute('aria-pressed', 'false')
+      await expect(page.locator('[data-filter][aria-pressed="true"]')).toHaveCount(1)
+
+      const tag = await topic.getAttribute('data-filter')
+      for (const row of await page.locator('li[data-tags]').all()) {
+        const matches = (await row.getAttribute('data-tags'))!.split(' ').includes(tag!)
+        if (matches) await expect(row).toBeVisible()
+        else await expect(row).toBeHidden()
+      }
+
+      await page.keyboard.press('Shift+Tab')
+      await expect(all).toBeFocused()
+      await page.keyboard.press('Space')
+      await expect(all).toHaveAttribute('aria-pressed', 'true')
+      await expect(topic).toHaveAttribute('aria-pressed', 'false')
+      await expect(page.locator('li[data-tags][hidden]')).toHaveCount(0)
+    })
+
+    test(`filters keep their target size and selected fill on ${path}`, async ({ page }) => {
+      await page.goto(`${BASE}${path}`)
+      for (const width of [390, 768, 1024]) {
+        await page.setViewportSize({ width, height: 900 })
+        for (const theme of ['light', 'dark']) {
+          await page.evaluate((value) => { document.documentElement.dataset.theme = value }, theme)
+          const filters = page.locator('[data-filter]')
+          for (const filter of await filters.all()) {
+            const box = await filter.boundingBox()
+            expect(box!.width).toBeGreaterThanOrEqual(44)
+            expect(box!.height).toBeGreaterThanOrEqual(44)
+            expect(box!.x + box!.width).toBeLessThanOrEqual(width)
+          }
+          await filters.first().click()
+          const fill = await filters.first().evaluate((el) => getComputedStyle(el).backgroundColor)
+          expect(fill).not.toBe('rgba(0, 0, 0, 0)')
+          await filters.nth(1).click()
+          expect(await filters.nth(1).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(fill)
+          expect(await filters.first().evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(fill)
+        }
+      }
+    })
+  }
+
   test('lists All plus every tag in use', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
     const filters = page.locator('[data-filter]')

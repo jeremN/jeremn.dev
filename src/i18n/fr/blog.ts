@@ -9,6 +9,7 @@ const copy: typeof en = {
   headlineEmphasis: 'établi.',
   lead: "Des notes sur le logiciel, l'IA, les outils et ce que j'apprends en chemin.",
   filterAll: 'Tout',
+  filterLabel: 'Filtrer les articles par sujet',
   emptyTitle: 'Aucun article publié pour le moment.',
   emptyBody: 'Le premier article est en cours.',
 }

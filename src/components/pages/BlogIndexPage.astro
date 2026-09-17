@@ -26,7 +26,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
   <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
     <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
       <div>
-        <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.eyebrow}</span>
+        <span class="font-mono text-label uppercase tracking-wider text-accent">{t.eyebrow}</span>
 
         <h1 class="mt-6 max-w-[14ch] font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl">
           {/* No newline between the two halves: the French headline joins them
@@ -51,7 +51,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
     </div>
 
     {tags.length > 0 && (
-      <div class="mt-8 flex flex-wrap gap-x-5 gap-y-3 border-b border-line pb-8 sm:mt-24">
+      <div role="group" aria-label={t.filterLabel} class="mt-8 flex flex-wrap gap-2 border-b border-line pb-8 sm:mt-24 sm:gap-3">
         <button type="button" data-filter="*" aria-pressed="true" class="filter-tab">{t.filterAll}</button>
         {tags.map((tag) => (
           <button type="button" data-filter={tag} aria-pressed="false" class="filter-tab">{tag}</button>
