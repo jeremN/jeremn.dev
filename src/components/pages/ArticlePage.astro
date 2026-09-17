@@ -89,13 +89,13 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
       the reading measure, so their right edges line up. */}
   <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-2">
     <div>
-      <a data-back href={withBase(blogIndex)} class="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70">
+      <a data-back href={withBase(blogIndex)} class="inline-flex min-h-touch min-w-touch items-center gap-2 font-mono text-label uppercase tracking-wider text-accent no-underline transition-opacity hover:opacity-70">
         {t.backToIndex}
       </a>
 
       <div class="mt-10 flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
         <div class="min-w-0">
-          <p data-article-meta class="font-mono text-[11px] uppercase tracking-wider text-muted">
+          <p data-article-meta class="font-mono text-label uppercase tracking-wider text-muted">
             {date}{category && ` · ${category}`}
           </p>
 
@@ -110,7 +110,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
             <p class="mt-8 max-w-[44ch] font-sans text-base leading-relaxed text-muted">{post.data.summary}</p>
           )}
 
-          <p class="mt-6 font-mono text-[11px] uppercase tracking-wider text-muted">{readTime}</p>
+          <p class="mt-6 font-mono text-label uppercase tracking-wider text-muted">{readTime}</p>
         </div>
 
         {/* Width-anchored, exactly like the mobile variant below: the height
@@ -139,7 +139,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
         boundary it cannot import through. The script already reads this
         element, so it needs no second lookup and no second copy of the copy. */}
     <article
-      class="prose mt-10 max-w-[68ch] prose-pre:rounded-lg prose-pre:border prose-pre:border-line"
+      class="prose mt-10 min-w-0 max-w-[68ch] prose-p:text-[17px] prose-p:leading-[26px] lg:prose-p:text-base lg:prose-p:leading-[27px] prose-pre:rounded-lg prose-pre:border prose-pre:border-line prose-pre:text-label prose-pre:leading-[19px] lg:prose-pre:text-[13px] lg:prose-pre:leading-[22px]"
       data-copy={t.copy}
       data-copied={t.copied}
       data-copy-failed={t.copyFailed}
@@ -153,7 +153,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
         offering `newer` on an older post sends them backwards through a series. */}
     {older && (
       <nav data-keep-reading class="mt-24 max-w-[68ch] border-t border-line pt-10">
-        <span class="font-mono text-[11px] uppercase tracking-wider text-accent">{t.keepReading}</span>
+        <span class="font-mono text-label uppercase tracking-wider text-accent">{t.keepReading}</span>
         <a href={withBase(`${blogIndex}/${older.id}`)} class="group mt-4 flex items-end justify-between gap-8 no-underline">
           <span class="max-w-[20ch] font-display text-3xl font-medium leading-tight text-ink transition-colors group-hover:text-accent sm:text-4xl">
             {older.data.title}
@@ -219,7 +219,7 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
 
     article.querySelectorAll('h2[id], h3[id]').forEach((heading) => {
       const anchor = document.createElement('a')
-      anchor.className = 'heading-anchor'
+      anchor.className = 'heading-anchor inline-flex min-h-touch min-w-touch items-center justify-center'
       anchor.href = '#' + heading.id
       anchor.setAttribute('aria-label', ui.headingAnchor)
       anchor.textContent = '#'

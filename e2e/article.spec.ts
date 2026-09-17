@@ -8,6 +8,29 @@ async function firstPost(page: Page) {
 }
 
 test.describe('article template', () => {
+  test('paragraphs, code and labels use the reference sizes', async ({ page }) => {
+    await page.goto(`${BASE}/blog/stryker-on-a-svelte-monorepo`)
+    const paragraphs = page.locator('article.prose p')
+    const code = page.locator('article.prose pre code')
+    expect(await paragraphs.count()).toBeGreaterThan(0)
+    expect(await code.count()).toBeGreaterThan(0)
+
+    for (const width of [390, 768, 1024]) {
+      await page.setViewportSize({ width, height: 900 })
+      for (const paragraph of await paragraphs.all()) {
+        await expect(paragraph).toHaveCSS('font-size', width >= 1024 ? '16px' : '17px')
+      }
+      for (const block of await code.all()) {
+        await expect(block).toHaveCSS('font-size', width >= 1024 ? '13px' : '12px')
+      }
+      for (const label of await page.locator('[data-back], [data-article-meta], [data-keep-reading] > span, .code-block__lang, .code-block__copy').all()) {
+        await expect(label).toHaveCSS('font-size', '12px')
+      }
+      const back = await page.locator('[data-back]').boundingBox()
+      expect(back!.height).toBeGreaterThanOrEqual(44)
+    }
+  })
+
   test('carries the back link to the index', async ({ page }) => {
     await firstPost(page)
     await expect(page.locator('[data-back]')).toContainText(/all notes/i)

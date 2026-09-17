@@ -133,7 +133,7 @@ const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05)
 }
 
-// Pairs whose foreground token is the same in both themes.
+// Text pairs used by the shared surfaces and controls.
 const PAIRS: Array<[string, string]> = [
   ['--color-ink', '--color-ground'],
   ['--color-ink', '--color-surface'],
@@ -141,6 +141,8 @@ const PAIRS: Array<[string, string]> = [
   ['--color-muted', '--color-surface'],
   ['--color-accent', '--color-ground'],
   ['--color-accent', '--color-surface'],
+  ['--color-on-action', '--color-action'],
+  ['--color-on-selected', '--color-selected'],
 ]
 
 /**

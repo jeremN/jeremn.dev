@@ -111,17 +111,17 @@ const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates
       class="sticky top-0 z-30 h-[72px] border-b border-transparent bg-ground/80 backdrop-blur-md transition-[height,border-color] duration-300 ease-out"
     >
       <div class="mx-auto flex h-full max-w-[1440px] items-center justify-between px-4 sm:px-6">
-        <a href={withBase(lang === 'fr' ? '/fr/' : '/')} class="whitespace-nowrap font-sans text-base font-bold tracking-tight text-ink no-underline sm:text-lg">
-          jeremn<span class="text-accent">.</span>dev
+        <a href={withBase(lang === 'fr' ? '/fr/' : '/')} class="inline-flex min-h-touch shrink-0 items-center whitespace-nowrap font-sans text-base font-bold tracking-tight text-ink no-underline sm:text-lg">
+          <span>jeremn<span class="text-accent">.</span>dev</span>
         </a>
-        <div class="flex min-w-0 items-center gap-3 sm:gap-9">
+        <div class="flex min-w-0 items-center gap-1 sm:gap-9">
           <nav
-            class="flex min-w-0 gap-3 overflow-x-auto [scrollbar-width:none] sm:gap-8 [&::-webkit-scrollbar]:hidden"
+            class="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] sm:gap-8 [&::-webkit-scrollbar]:hidden"
             aria-label={ui.navLabel}
           >
             {nav.map((n) => (
-              <a href={withBase(n.href)} class="group whitespace-nowrap no-underline" aria-current={isActive(n.href) ? 'page' : undefined}>
-                <span class:list={['font-sans text-xs text-muted transition-colors group-hover:text-ink sm:text-sm', isActive(n.href) && '!text-ink']}>{n.label}</span>
+              <a href={withBase(n.href)} class="group inline-flex min-h-touch shrink-0 items-center justify-center whitespace-nowrap no-underline sm:min-w-touch" aria-current={isActive(n.href) ? 'page' : undefined}>
+                <span class:list={['site-nav-label font-sans text-muted transition-colors group-hover:text-ink', isActive(n.href) && '!text-ink']}>{n.label}</span>
               </a>
             ))}
           </nav>
@@ -130,7 +130,7 @@ const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates
             id="theme-toggle"
             type="button"
             aria-label={ui.themeToggleLabel}
-            class="-my-1 flex items-center text-muted transition-colors hover:text-accent"
+            class="flex min-h-touch min-w-8 shrink-0 items-center justify-center text-muted transition-colors hover:text-accent sm:min-w-touch"
           >
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
@@ -145,7 +145,7 @@ const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates
 
     <footer class="relative z-10 border-t border-line bg-ground">
       <div class="mx-auto max-w-[1440px] px-6">
-        <div class="flex flex-col gap-3 py-8 font-mono text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-3 py-8 font-mono text-label text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>© {year} jeremn.dev</span>
           <span>{ui.basedIn}</span>
           <span>{ui.remote}</span>

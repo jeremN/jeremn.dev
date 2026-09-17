@@ -165,3 +165,60 @@ test.describe('no page runs WebGL', () => {
     await expect(page.locator('canvas')).toHaveCount(0)
   })
 })
+
+for (const locale of ['', '/fr']) {
+  test(`Home services use four columns on desktop (${locale || 'en'})`, async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await page.goto(`${BASE}${locale}/`)
+    const services = page.locator('[data-service]')
+    await expect(services).toHaveCount(6)
+    const rows = await services.evaluateAll((elements) => {
+      const counts = new Map<number, number>()
+      for (const element of elements) {
+        const top = Math.round(element.getBoundingClientRect().top)
+        counts.set(top, (counts.get(top) ?? 0) + 1)
+      }
+      return [...counts.values()]
+    })
+    expect(rows).toEqual([4, 2])
+    for (const service of await services.all()) {
+      await expect(service.locator('h3')).toHaveCSS('font-size', '18px')
+      await expect(service.locator('p')).toHaveCSS('font-size', '16px')
+    }
+  })
+
+  for (const width of [390, 640, 768, 1024]) {
+    for (const route of ['/', '/blog']) {
+      test(`Post dates stay clear of titles at ${width}px (${locale}${route})`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto(`${BASE}${locale}${route}`)
+        const rows = page.locator('[data-post-row]')
+        expect(await rows.count()).toBeGreaterThan(0)
+        for (const row of await rows.all()) {
+          await expect(row.locator('[data-date]')).toHaveCount(1)
+          await expect(row.locator('[data-meta] [data-date]')).toHaveCSS('font-size', '12px')
+          const title = await row.locator('[data-title]').boundingBox()
+          const date = await row.locator('[data-date]').boundingBox()
+          expect(title).not.toBeNull()
+          expect(date).not.toBeNull()
+          const overlap = title!.x < date!.x + date!.width && date!.x < title!.x + title!.width
+            && title!.y < date!.y + date!.height && date!.y < title!.y + title!.height
+          expect(overlap).toBe(false)
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+      })
+    }
+  }
+
+  test(`Home actions support keyboard navigation (${locale || 'en'})`, async ({ page }) => {
+    await page.goto(`${BASE}${locale}/`)
+    const action = page.locator('[data-hero-cta]')
+    await action.focus()
+    await expect(action).toBeFocused()
+    await expect(action).toHaveCSS('outline-style', 'solid')
+    const box = await action.boundingBox()
+    expect(box!.height).toBeGreaterThanOrEqual(44)
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(new RegExp(`${locale}/contact/?$`))
+  })
+}

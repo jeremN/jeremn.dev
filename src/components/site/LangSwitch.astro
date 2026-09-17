@@ -16,16 +16,11 @@ const ui = getUi(lang)
     href={withBase(target)}
     hreflang={lang === 'fr' ? 'en' : 'fr'}
     aria-label={ui.switchLabel}
-    class="whitespace-nowrap text-muted no-underline transition-colors hover:text-accent"
+    class="inline-flex min-h-touch min-w-8 shrink-0 items-center justify-center whitespace-nowrap text-muted sm:min-w-touch no-underline transition-colors hover:text-accent"
   >
-    {/* Font sizing sits on the span, not the anchor, so the anchor keeps the
-        ambient (nav-item) font size for its line-box strut. That is what
-        holds this control's row height equal to the nav links'. Set the
-        smaller size on the anchor itself and the row misaligns at narrow
-        widths, where every pixel of the header row is spoken for. */}
     {/* The label names the destination, not the current page: a reader
         already knows what language they are on, and a control labelled
         with its own current state reads as a no-op rather than a link. */}
-    <span class="font-mono text-[11px] uppercase tracking-wider">{lang === 'fr' ? 'EN' : 'FR'}</span>
+    <span class="font-mono text-label uppercase tracking-wider">{lang === 'fr' ? 'EN' : 'FR'}</span>
   </a>
 )}

@@ -13,8 +13,6 @@ const EXTERNAL = [
 test.describe('contact page', () => {
   test('offers a single primary action', async ({ page }) => {
     await page.goto(`${BASE}/contact`)
-    // "Primary action" is a row in the routes list now, not a standalone
-    // button, but the data-cta marker still picks out the one Email link.
     const cta = page.locator('[data-routes] a[data-cta]')
     await expect(cta).toHaveCount(1)
     await expect(cta).toHaveAttribute('href', `mailto:${EMAIL}`)
@@ -164,3 +162,46 @@ test.describe('contact page illustration', () => {
     expect(errors).toEqual([])
   })
 })
+
+for (const route of ['/contact', '/fr/contact']) {
+  for (const width of [390, 768, 1024]) {
+    test(`${route} keeps the email action prominent at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 })
+      await page.goto(`${BASE}${route}`)
+      const email = page.locator('[data-routes] a[data-cta]')
+      await expect(email).toHaveAttribute('href', `mailto:${EMAIL}`)
+      await expect(email).toHaveClass(/button-primary/)
+      await email.focus()
+      await expect(email).toBeFocused()
+
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate((value) => { document.documentElement.dataset.theme = value }, theme)
+        const colors = await email.evaluate((el) => ({
+          background: getComputedStyle(el).backgroundColor,
+          color: getComputedStyle(el).color,
+          label: getComputedStyle(el.querySelector('span')!).color,
+          icon: getComputedStyle(el.querySelector('[data-doodle]')!).color,
+        }))
+        expect(colors.background).not.toBe('rgba(0, 0, 0, 0)')
+        expect(colors.color).not.toBe(colors.background)
+        expect(colors.label).toBe(colors.color)
+        expect(colors.icon).toBe(colors.color)
+      }
+
+      for (const link of await page.locator('[data-routes] a').all()) {
+        const box = await link.boundingBox()
+        expect(box).not.toBeNull()
+        expect(box!.height).toBeGreaterThanOrEqual(44)
+        expect(box!.width).toBeGreaterThanOrEqual(44)
+      }
+      const bounds = await page.evaluate(() => ({
+        footerBottom: document.querySelector('footer')!.getBoundingClientRect().bottom + window.scrollY,
+        documentHeight: document.documentElement.scrollHeight,
+        contentWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+      }))
+      expect(Math.abs(bounds.documentHeight - bounds.footerBottom)).toBeLessThanOrEqual(1)
+      expect(bounds.contentWidth).toBeLessThanOrEqual(bounds.viewportWidth)
+    })
+  }
+}

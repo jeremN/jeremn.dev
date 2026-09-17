@@ -4,7 +4,7 @@ const copy: typeof en = {
   title: 'Développement web freelance et automatisation IA · jeremn.dev',
   description:
     'Développement web freelance, audits de performance et automatisation IA. SvelteKit, React et Node. Disponible pour les équipes produit.',
-  eyebrow: '06 / Services',
+  eyebrow: 'Services',
   headlineBefore: 'Des systèmes utiles, ',
   headlineEmphasis: 'construits avec intention.',
   lead: 'Développement freelance pour les équipes produit, et des systèmes IA cadrés pour le travail répétitif.',
