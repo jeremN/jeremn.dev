@@ -173,7 +173,11 @@ p {
     }
   }
 
-  /* These classes work on native links and buttons. */
+  /* These classes work on native links and buttons. Hover shifts the fill
+     toward the accent colour instead of dropping opacity — a solid button
+     fading to translucent reads as disabling, not responding. Press scales
+     the whole button (0.97): visible feedback that a translateY(1px) barely
+     shows at this size, and it moves the arrow glyph with the label for free. */
   .button-primary,
   .button-secondary {
     display: inline-flex;
@@ -192,6 +196,7 @@ p {
     text-align: center;
     text-decoration: none;
     cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease-out;
   }
   .button-primary {
     background-color: var(--color-action);
@@ -202,14 +207,70 @@ p {
     background-color: transparent;
     color: var(--color-ink);
   }
-  .button-primary:hover,
-  .button-secondary:hover {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+  @media (hover: hover) and (pointer: fine) {
+    .button-primary:hover {
+      background-color: color-mix(in srgb, var(--color-action) 82%, var(--color-accent));
+    }
+    .button-secondary:hover {
+      border-color: var(--color-ink);
+      background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
+    }
   }
   .button-primary:active,
   .button-secondary:active {
-    transform: translateY(1px);
+    transform: scale(0.97);
+  }
+
+  /* Same fill-shift-on-hover, scale-on-press treatment for the two CTA
+     buttons that predate .button-primary/.button-secondary and sit on their
+     own background (a dark panel's cream button, a light page's ink button). */
+  .cta-fill-dark,
+  .cta-fill-light {
+    transition: background-color 0.15s ease, transform 0.12s ease-out;
+  }
+  .cta-fill-dark {
+    background-color: var(--color-ink);
+  }
+  .cta-fill-light {
+    background-color: var(--color-ground);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cta-fill-dark:hover {
+      background-color: color-mix(in srgb, var(--color-ink) 82%, var(--color-accent));
+    }
+    .cta-fill-light:hover {
+      background-color: color-mix(in srgb, var(--color-ground) 82%, var(--color-accent));
+    }
+  }
+  .cta-fill-dark:active,
+  .cta-fill-light:active {
+    transform: scale(0.97);
+  }
+
+  /* Text-only CTAs ("More about how I work →", the article back-link): an
+     underline grows in from the left via scaleX instead of fading the whole
+     link to 70% opacity. Transform-only, no layout shift. */
+  .text-cta {
+    position: relative;
+    padding-bottom: 2px;
+    transition: color 0.15s ease;
+  }
+  .text-cta::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .text-cta:hover::after {
+      transform: scaleX(1);
+    }
   }
 
   /* ── Article reading view ─────────────────────────────────────────────── */
