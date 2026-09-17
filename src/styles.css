@@ -9,6 +9,18 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Redefine the built-in `hover:`/`group-hover:` variant so every hover
+   utility in this file and in markup only fires for a real mouse. Without
+   this, tapping a link on a touch device triggers :hover and the color
+   change sticks until the next tap elsewhere — the "sticky hover" bug. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 /* `static` forces every declared variable into the built CSS. Tailwind v4
    drops an unused @theme variable, and butter, lavender, and the
    --color-xiaohei-* tokens below feed SVG illustrations, not any class in
@@ -241,7 +253,11 @@ p {
     cursor: pointer;
     transition: color 0.2s ease;
   }
-  .code-block__copy:hover,
+  @media (hover: hover) and (pointer: fine) {
+    .code-block__copy:hover {
+      color: #759fff;
+    }
+  }
   .code-block__copy.is-copied {
     color: #759fff;
   }
@@ -273,12 +289,16 @@ p {
   opacity: 0;
   transition: opacity 0.15s ease, color 0.15s ease;
 }
-.prose :is(h2, h3):hover a.heading-anchor,
 .prose a.heading-anchor:focus-visible {
   opacity: 1;
 }
-.prose a.heading-anchor:hover {
-  color: var(--color-accent);
+@media (hover: hover) and (pointer: fine) {
+  .prose :is(h2, h3):hover a.heading-anchor {
+    opacity: 1;
+  }
+  .prose a.heading-anchor:hover {
+    color: var(--color-accent);
+  }
 }
 
 /* Article body colours follow the theme tokens, so the reading view works in
@@ -305,10 +325,12 @@ p {
   text-decoration: none;
   transition: color 0.2s ease;
 }
-.prose a:not(.heading-anchor):hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .prose a:not(.heading-anchor):hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
 }
 .prose blockquote {
   border-left-color: var(--color-accent);
