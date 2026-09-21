@@ -1,0 +1,442 @@
+---
+title: 'Apprendre Go en 2026'
+summary: "Un développeur TypeScript apprend Go en construisant un petit backend de musculation. Ce qui surprend en venant de TypeScript : les unions absentes, les valeurs zéro, les erreurs comme valeurs, les goroutines. Les trois pièges qui m'ont eu, et une cheatsheet TypeScript vers Go."
+description: "Apprendre Go en venant de TypeScript : types, erreurs, concurrence, outillage, les trois pièges qui m'ont eu et une cheatsheet TypeScript vers Go."
+publishedAt: 2026-09-21
+tags: [Go, TypeScript, Backend]
+draft: false
+lang: 'fr'
+translationKey: 'learning-go-in-2026'
+---
+
+J'ai passé la plus grande partie de ma vie de développeur à écrire du JavaScript
+et du TypeScript, avec un peu de PHP. J'ai aussi exploré Python, surtout par
+curiosité et pour quelques projets perso. J'avais envie de me lancer sur Go depuis
+un moment. J'ai sauté le pas en début d'année.
+
+Pourquoi apprendre un langage en 2026, alors qu'un LLM écrit du code correct dans
+à peu près n'importe quel langage ?
+
+D'abord pour moi. Voir comment un autre langage règle les mêmes problèmes m'apprend
+quelque chose sur celui que j'utilise tous les jours. Ensuite pour savoir quand
+l'IA me pond n'importe quoi. Je ne peux pas relire du code que je ne sais pas lire.
+
+Mon terrain d'essai est un petit backend pour noter des séances de musculation :
+des utilisateurs, des séances, et pour chaque exercice les séries et les
+répétitions ou la durée. C'est une API REST avec Chi, PostgreSQL, des migrations
+goose, une authentification par token et des tests qui tournent contre une vraie
+base. Environ 1 300 lignes de Go, écrites entre fin mars et mi-mai en suivant
+[le cours de Melkey](https://master.dev/courses/complete-go/).
+
+## Go, en deux paragraphes
+
+Go est un langage compilé à typage statique, conçu chez Google à partir de 2007,
+open source depuis 2009, en version 1.0 depuis 2012. Il a un ramasse-miettes et
+produit un seul binaire, sans runtime à installer à côté. La présentation
+officielle est sur [go.dev](https://go.dev/), je ne la recopie pas ici.
+
+Docker, Kubernetes, Terraform, Hugo et listmonk sont écrits en Go. Et depuis
+juillet 2026, le compilateur TypeScript aussi : TypeScript 7 est un
+[portage en Go](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)
+du compilateur, que Microsoft annonce environ dix fois plus rapide. L'outil que
+j'utilise tous les jours tourne maintenant dans le langage que j'apprends.
+
+## Go et TypeScript, côte à côte
+
+Je compare ici ce qui m'a surpris en venant de TypeScript. Pour la syntaxe
+ligne à ligne, voir la cheatsheet en fin d'article.
+
+### Les types : structurels à moitié
+
+En TypeScript, tout le typage est structurel. Deux objets de même forme sont
+compatibles, quel que soit leur nom.
+
+Go coupe la poire en deux. Les structs sont nominales : deux structs de même
+forme restent deux types distincts. Les interfaces, elles, sont structurelles.
+Un type satisfait une interface dès qu'il a les bonnes méthodes, sans mot-clé
+`implements`.
+
+```go
+type Greeter interface {
+	Greeting() string
+}
+
+type User struct {
+	Name string
+}
+
+func (u User) Greeting() string {
+	return "Bonjour " + u.Name
+}
+
+var g Greeter = User{Name: "Ana"} // aucune déclaration, la méthode suffit
+```
+
+Go n'a pas de types union au sens de TypeScript. La syntaxe `int | string`
+existe depuis les génériques (Go 1.18), mais
+[uniquement dans les contraintes](https://go.dev/ref/spec#General_interfaces).
+Une variable ne peut pas avoir ce type. Pour une union discriminée, on passe par
+une interface et un `switch` sur le type.
+
+L'absence d'union m'a gêné dès que j'ai manipulé du JSON hétérogène, comme un
+AST ou la réponse d'une API qui change de forme selon un champ. Mon backend en a
+un cas simple : un exercice se mesure en répétitions ou en durée, jamais les
+deux. En TypeScript, j'écris une union et le compilateur vérifie chaque branche :
+
+```ts
+type WorkoutEntry =
+  | { exerciseName: string; sets: number; reps: number }
+  | { exerciseName: string; sets: number; durationSeconds: number };
+```
+
+En Go, la solution la plus directe est une grosse struct qui porte tous les
+champs possibles :
+
+```go
+type WorkoutEntry struct {
+	ExerciseName    string   `json:"exercise_name"`
+	Sets            int      `json:"sets"`
+	Reps            *int     `json:"reps"`
+	DurationSeconds *int     `json:"duration_seconds"`
+	Weight          *float64 `json:"weight"`
+}
+```
+
+C'est long à écrire. Rien n'empêche une entrée d'avoir les deux champs, ou
+aucun : le compilateur ne vérifie plus rien. Et les pointeurs se multiplient,
+parce qu'un pointeur `nil` est la seule façon de distinguer un champ absent de
+sa valeur zéro. Dans mon projet, la règle vit finalement dans PostgreSQL :
+
+```sql
+CONSTRAINT valid_workout_entry CHECK(
+  (reps IS NOT NULL OR duration_seconds IS NOT NULL) AND
+  (reps IS NULL OR duration_seconds IS NULL)
+)
+```
+
+L'interface implicite, elle, m'a évité du code avec les bibliothèques tierces.
+Je déclare dans mon code une interface avec les méthodes dont j'ai besoin, et le
+type de la bibliothèque la satisfait déjà. Pas d'adaptateur, pas de fork.
+
+### Pas de `undefined`, des valeurs zéro
+
+Chaque type Go a une valeur zéro : `0`, `""`, `false`, ou `nil` pour les
+pointeurs, slices, maps, channels et interfaces. Une variable déclarée sans
+valeur n'est jamais « non définie ».
+
+Le piège vient des maps. Lire une clé absente dans une map `nil` renvoie la
+valeur zéro. Écrire dedans fait planter le programme.
+
+```go
+var counts map[string]int
+fmt.Println(counts["a"]) // 0
+counts["a"]++            // panic: assignment to entry in nil map
+```
+
+### Les erreurs sont des valeurs
+
+En TypeScript, une fonction peut lever une exception que sa signature ne montre
+pas. Et depuis `useUnknownInCatchVariables`, l'erreur du `catch` est typée
+`unknown`.
+
+En Go, une fonction qui peut échouer renvoie une `error` en dernière valeur de
+retour. L'appelant la traite tout de suite.
+
+```go
+func loadUser(path string) (User, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return User{}, fmt.Errorf("lecture de %s : %w", path, err)
+	}
+	var u User
+	if err := json.Unmarshal(data, &u); err != nil {
+		return User{}, fmt.Errorf("décodage de %s : %w", path, err)
+	}
+	return u, nil
+}
+```
+
+Le `%w` emballe l'erreur d'origine. L'appelant la retrouve avec
+`errors.Is(err, fs.ErrNotExist)`, même après plusieurs couches. Le code est plus
+long qu'un `try/catch`, mais chaque point d'échec est visible à la lecture.
+
+Go a aussi `panic` et `recover`, mais on les réserve aux bugs, pas au flux
+normal.
+
+Les premières semaines, les `if err != nil` m'ont lassé. Ils m'ont aussi
+rassuré, et c'est ce qui reste. Quand la répétition devient lourde, elle se range
+dans un petit wrapper. L'idée vient du billet
+[Errors are values](https://go.dev/blog/errors-are-values) :
+
+```go
+type errWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (ew *errWriter) write(buf []byte) {
+	if ew.err != nil {
+		return // une erreur est déjà arrivée, on ne fait plus rien
+	}
+	_, ew.err = ew.w.Write(buf)
+}
+```
+
+L'appelant enchaîne les `write` et vérifie `ew.err` une seule fois à la fin.
+Mais je n'en abuse pas. La répétition a du bon : n'importe qui la comprend à la
+première lecture.
+
+### La concurrence : pas de `async`
+
+Node exécute le JavaScript sur un seul thread, autour d'une boucle d'événements.
+Le parallélisme existe (`worker_threads` dans Node, les Web Workers dans Bun et
+Deno), mais il faut le demander explicitement et échanger des messages.
+
+En Go, le mot-clé `go` lance une goroutine. Le runtime répartit les goroutines
+sur tous les cœurs. Il n'y a pas de fonction « colorée » : une fonction
+ordinaire bloque, et c'est l'appelant qui décide de la lancer en parallèle.
+
+L'équivalent de `Promise.all` passe par
+[`errgroup`](https://pkg.go.dev/golang.org/x/sync/errgroup) :
+
+```go
+g, ctx := errgroup.WithContext(ctx)
+users := make([]User, len(ids))
+for i, id := range ids {
+	g.Go(func() error {
+		u, err := fetchUser(ctx, id)
+		if err != nil {
+			return err
+		}
+		users[i] = u
+		return nil
+	})
+}
+if err := g.Wait(); err != nil {
+	return nil, err
+}
+```
+
+Une différence avec `Promise.all` : à la première erreur, `errgroup` annule le
+`ctx`. Les autres requêtes s'arrêtent si `fetchUser` respecte ce contexte. En
+JavaScript, les autres promesses continuent de tourner après le rejet.
+
+Ce code capture `i` et `id` dans une closure. Avant Go 1.22, toutes les
+goroutines partageaient la même variable de boucle, le même bug que `var` dans
+une boucle `for` en JavaScript. Depuis
+[Go 1.22](https://go.dev/doc/go1.22#language), chaque itération a sa propre
+variable.
+
+### L'outillage est dans le langage
+
+Un projet TypeScript assemble `tsc`, un bundler, Prettier, ESLint, Vitest et un
+gestionnaire de paquets. Chacun a sa configuration et ses mises à jour.
+
+Go livre tout dans la commande `go` : `go fmt`, `go vet`, `go test` (avec
+benchmarks et fuzzing), `go mod`, `go build`. `GOOS=linux GOARCH=arm64 go build`
+produit un binaire pour une autre plateforme, sans outil de plus.
+
+La bibliothèque standard couvre aussi plus de terrain. Depuis Go 1.22, le routeur
+de `net/http` gère les méthodes et les paramètres de chemin :
+
+```go
+mux := http.NewServeMux()
+mux.HandleFunc("GET /posts/{id}", func(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "post %s", r.PathValue("id"))
+})
+http.ListenAndServe(":8080", mux)
+```
+
+Gin, Echo et Chi existent. Mon projet utilise Chi, comme le cours. Ses routes
+(`GET`, `PUT` et `DELETE` sur `/workouts/{id}`) passeraient aussi dans le
+routeur standard. Chi apporte surtout les groupes de routes derrière un
+middleware d'authentification.
+
+Pour les tests, le paquet `testing` suffit pour commencer. J'y ai ajouté Testify
+pour ses `assert` et `require`. Les tests du store tournent contre une vraie
+base PostgreSQL, lancée par Docker Compose sur un port à part.
+
+Le langage est petit : [25 mots-clés](https://go.dev/ref/spec#Keywords). Il n'y
+a qu'une boucle (`for`), pas de ternaire, pas de classes, pas d'héritage. On lit
+le code d'un autre projet Go sans découvrir une nouvelle façon d'écrire.
+
+## Ce sur quoi je me suis trompé
+
+J'avais TypeScript en tête, et trois concepts m'ont piégé parce qu'ils
+ressemblent à ce que je connaissais.
+
+**Une slice n'est pas un tableau.** C'est une petite structure : un pointeur vers
+un tableau sous-jacent, une longueur et une capacité. Découper une slice ne copie
+rien, contrairement à `Array.prototype.slice` :
+
+```go
+a := []int{1, 2, 3}
+b := a[:2]       // pas de copie : même tableau sous-jacent
+b[0] = 99
+b = append(b, 4) // la capacité suffit, append écrit dans a
+fmt.Println(a)   // [99 2 4]
+```
+
+**Une interface `nil` n'est pas toujours `nil`.** Une interface contient un type
+et une valeur. Elle vaut `nil` seulement quand les deux sont vides. Un pointeur
+`nil` rangé dans une interface donne une interface non `nil` :
+
+```go
+type MyErr struct{}
+
+func (*MyErr) Error() string { return "boom" }
+
+func find() error {
+	var e *MyErr // pointeur nil
+	return e     // interface avec le type *MyErr et une valeur nil
+}
+
+fmt.Println(find() == nil) // false
+```
+
+La [FAQ de Go](https://go.dev/doc/faq#nil_error) décrit ce piège. Il touche
+surtout les fonctions qui renvoient une `error`.
+
+**Une struct embarquée n'est pas de l'héritage.** J'ai d'abord utilisé
+l'embedding comme un `extends`. `Dog` récupère les champs et les méthodes
+d'`Animal`, mais un `Dog` n'est pas un `Animal` :
+
+```go
+type Animal struct{ Name string }
+
+func (a Animal) Describe() string { return "Je suis " + a.Name }
+
+type Dog struct {
+	Animal // embarqué, pas hérité
+}
+
+func feed(a Animal) {}
+
+d := Dog{Animal{Name: "Rex"}}
+d.Describe()   // OK, la méthode est promue
+feed(d)        // erreur de compilation
+feed(d.Animal) // OK
+```
+
+En Go, le polymorphisme passe par les interfaces, pas par la composition de
+structs.
+
+## Cheatsheet TypeScript vers Go
+
+| TypeScript | Go |
+| --- | --- |
+| `let x = 1` | `x := 1` |
+| `const n = 10` | `const n = 10` |
+| `` `Salut ${name}` `` | `fmt.Sprintf("Salut %s", name)` |
+| `a ? b : c` | pas de ternaire, un `if` |
+| `for (const v of items)` | `for _, v := range items` |
+| `while (cond)` | `for cond { }` |
+| `number[]` | `[]int` (une slice) |
+| `arr.push(x)` | `arr = append(arr, x)` |
+| `arr.length` | `len(arr)` |
+| `arr.includes(x)` | `slices.Contains(arr, x)` |
+| `arr.map(fn)` | une boucle `for` |
+| `Record<string, number>` | `map[string]int` |
+| `m.get(k) ?? 0` | `v := m[k]` (valeur zéro si absent) |
+| `m.has(k)` | `_, ok := m[k]` |
+| `null`, `undefined` | valeur zéro, `nil` |
+| `export function` | nom en majuscule : `func Parse` |
+| `class` avec méthodes | `struct` + méthodes avec receveur |
+| `implements` | rien, implicite |
+| `function first<T>(xs: T[]): T` | `func First[T any](xs []T) T` |
+| `enum` | `const` + `iota` |
+| `throw new Error("x")` | `return fmt.Errorf("x")` |
+| `try { } catch { }` | `if err != nil { }` |
+| `finally` | `defer` |
+| `JSON.parse(s)` | `json.Unmarshal(data, &v)` |
+| `await Promise.all(...)` | `errgroup` ou `sync.WaitGroup` |
+| `setTimeout(fn, 1000)` | `time.AfterFunc(time.Second, fn)` |
+| `npm init` | `go mod init example.com/app` |
+| `npm install pkg` | `go get pkg` |
+| `npm test` | `go test ./...` |
+| `prettier --write` | `go fmt ./...` |
+| `eslint` | `go vet ./...` |
+| `tsc && node dist/index.js` | `go run .` |
+
+### Struct et JSON
+
+```ts
+interface User {
+  id: number;
+  name: string;
+  email?: string;
+}
+```
+
+```go
+type User struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email,omitempty"`
+}
+```
+
+Les tags entre backticks donnent le nom JSON. Les champs doivent commencer par
+une majuscule, sinon `encoding/json` ne les voit pas.
+
+### Enum
+
+```go
+type Status int
+
+const (
+	Draft Status = iota // 0
+	Published           // 1
+	Archived            // 2
+)
+```
+
+### Union discriminée
+
+```go
+switch v := value.(type) {
+case string:
+	fmt.Println("texte", v)
+case int:
+	fmt.Println("nombre", v)
+default:
+	fmt.Println("autre")
+}
+```
+
+### Lancer des tâches sans résultat
+
+Depuis Go 1.25, `WaitGroup.Go` remplace le trio `Add`, `Done`, `Wait` :
+
+```go
+var wg sync.WaitGroup
+for _, url := range urls {
+	wg.Go(func() { ping(url) })
+}
+wg.Wait()
+```
+
+## Pour apprendre
+
+Dans l'ordre où je les ai utilisées. C'est aussi l'ordre que je conseille à un
+développeur TypeScript.
+
+1. [Learning Go by examples](https://dev.to/aurelievache/learning-go-by-examples-introduction-448n),
+   la série d'Aurélie Vache sur dev.to. Chaque article construit un vrai projet :
+   une API REST, un CLI, un bot Discord, une application de bureau.
+2. [La documentation officielle](https://go.dev/doc/). En particulier
+   [A Tour of Go](https://go.dev/tour/) pour la syntaxe et
+   [Effective Go](https://go.dev/doc/effective_go) pour les idiomes.
+3. [The Complete Course for Building Backend Web Apps with Go](https://master.dev/courses/complete-go/),
+   le cours de Melkey sur master.dev (ex-Frontend Masters). On y construit un
+   serveur HTTP avec une API CRUD, PostgreSQL, l'authentification et des tests.
+   Mon backend de musculation en sort directement.
+
+## Pour conclure
+
+Go est très simple à apprendre. Je pense qu'il est plus difficile à bien
+maîtriser : les trois pièges plus haut m'ont eu alors que je lisais la syntaxe
+sans effort.
+
+Il faut choisir Go pour le bon cas d'usage. Pour un CLI ou un backend, sa
+simplicité et sa rapidité en font un très bon choix.

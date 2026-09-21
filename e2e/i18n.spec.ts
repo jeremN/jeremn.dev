@@ -9,8 +9,10 @@ import { ROUTE_MAP } from '../src/i18n'
 // article added by a later translation task joins the sweeps without an edit.
 const BLOG_DIR = fileURLToPath(new URL('../src/content/blog', import.meta.url))
 
-type Article = { slug: string; lang: string; translationKey: string; publishedAt: string; body: string }
+type Article = { slug: string; lang: string; translationKey: string; publishedAt: string; body: string; draft: boolean }
 
+// Drafts are left out, as `seo.spec.ts` does: the preview build under test
+// never renders them, so a sweep that includes one fails on a missing page.
 const ARTICLES: Article[] = readdirSync(BLOG_DIR)
   .filter((file) => file.endsWith('.mdx'))
   .map((file) => {
@@ -26,8 +28,10 @@ const ARTICLES: Article[] = readdirSync(BLOG_DIR)
       translationKey: field('translationKey'),
       publishedAt: field('publishedAt'),
       body: parts.slice(2).join('---'),
+      draft: field('draft') === 'true',
     }
   })
+  .filter((a) => !a.draft)
 
 const FRENCH_ARTICLES = ARTICLES.filter((a) => a.lang === 'fr')
 
@@ -244,9 +248,11 @@ test.describe('bilingual blog index', () => {
     await expect(page.locator('h1')).toContainText('établi.')
   })
 
-  test('the English index still lists the eleven English articles', async ({ page }) => {
+  test('the English index lists every published English article', async ({ page }) => {
     await page.goto(`${BASE}/blog`)
-    await expect(page.locator('main a[href*="/blog/"]')).toHaveCount(11)
+    const english = ARTICLES.filter((a) => a.lang === 'en').length
+    expect(english).toBeGreaterThan(10)
+    await expect(page.locator('main a[href*="/blog/"]')).toHaveCount(english)
   })
 
   test('the French index lists no English article', async ({ page }) => {
