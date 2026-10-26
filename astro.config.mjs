@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config'
 import mdx from '@astrojs/mdx'
+import { unified } from '@astrojs/markdown-remark'
 import tailwindcss from '@tailwindcss/vite'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import sitemap from '@astrojs/sitemap'
@@ -82,7 +83,9 @@ export default defineConfig({
         },
       ],
     },
-    rehypePlugins: [[rehypeSanitize, sanitizeSchema]],
+    // Astro 7 defaults to the Sätteri processor, which has no rehype stage.
+    // `unified()` keeps the sanitize plugin in the pipeline.
+    processor: unified({ rehypePlugins: [[rehypeSanitize, sanitizeSchema]] }),
   },
   vite: { plugins: [tailwindcss()] },
 })
