@@ -101,7 +101,11 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
     </section>
 
     <section data-writing class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
-      <div class="flex items-baseline justify-between gap-6 border-t border-line pt-8">
+      {/* Centred, not baseline-aligned: Safari derives the baseline of an
+          inline-flex link that ends in an SVG differently from Chrome, which
+          lifted the link above the label. Both texts are the same face and
+          size, so centring their boxes lines the letters up in any engine. */}
+      <div class="flex items-center justify-between gap-6 border-t border-line pt-8">
         <h2 class="font-mono text-label uppercase tracking-wider text-accent">{t.writingHeading}</h2>
         <a href={withBase(blogIndex)} class="inline-flex min-h-touch items-center gap-2 font-mono text-label uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
           {t.writingAllNotes}

@@ -21,6 +21,20 @@ test.describe('homepage sections', () => {
     await expect(page.locator('[data-contact] [data-doodle="xiaohei-contact"]')).toHaveCount(1)
   })
 
+  test('the all-notes link sits level with the section label on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 })
+    await page.goto(`${BASE}/`)
+    const [label, link] = await page.locator('[data-writing] > div').evaluate((row) => {
+      const textTop = (el: Element) => {
+        const range = document.createRange()
+        range.selectNodeContents([...el.childNodes].find((n) => n.nodeType === 3 && n.textContent?.trim())!)
+        return range.getBoundingClientRect().top
+      }
+      return [textTop(row.querySelector('h2')!), textTop(row.querySelector('a')!)]
+    })
+    expect(Math.abs(label - link)).toBeLessThanOrEqual(0.5)
+  })
+
   test('teases at most three posts and links to the full index', async ({ page }) => {
     await page.goto(`${BASE}/`)
     const rows = page.locator('[data-writing] [data-post-row]')
