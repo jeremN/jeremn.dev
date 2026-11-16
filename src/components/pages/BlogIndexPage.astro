@@ -23,7 +23,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
   {/* The page grid is 1440, but the reading list keeps its own narrower column
       so the metadata stays beside the title instead of drifting to the screen
       edge on a wide monitor. The shell above and below still spans 1440. */}
-  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-16 sm:pt-24">
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-8 pt-16 sm:pb-24 sm:pt-24">
     <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
       <div>
         <span class="font-mono text-label uppercase tracking-wider text-accent">{t.eyebrow}</span>
@@ -67,7 +67,7 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.lo
         <p class="mt-5 font-mono text-xs text-muted">{t.emptyBody}</p>
       </div>
     ) : (
-      <ul class="mt-0">
+      <ul data-post-list class="mt-0">
         {posts.map((p) => (
           <li data-tags={p.data.tags.join(' ')}>
             <PostRow slug={p.id} title={p.data.title} summary={p.data.summary} tags={p.data.tags} publishedAt={p.data.publishedAt} body={p.body} lang={lang} />

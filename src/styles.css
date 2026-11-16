@@ -560,3 +560,14 @@ article.prose h2::before {
   letter-spacing: 0.08em;
   color: var(--color-accent);
 }
+
+/* Writing index, mobile: the footer's own top rule follows the list, so
+   the last row's bottom rule would double it. "Last" means last visible:
+   the tag filter sets [hidden] on rows, so a plain :last-child could
+   point at a hidden one and leave the visible tail with its rule. Unlayered
+   so it beats the `border-b` utility on the row. */
+@media (width < 40rem) {
+  [data-post-list] > li:nth-last-child(1 of :not([hidden])) > .post-row {
+    border-bottom-width: 0;
+  }
+}
