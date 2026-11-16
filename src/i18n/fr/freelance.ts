@@ -4,7 +4,7 @@ const copy: typeof en = {
   title: 'Développeur freelance fullstack JavaScript · jeremn.dev',
   description:
     'Jérémie Néhlil, développeur freelance fullstack JavaScript. SvelteKit, React et Node. Disponible pour vos applications web.',
-  eyebrow: '05 / Freelance',
+  eyebrow: '06 / Freelance',
   headlineBefore: 'Disponible pour ',
   headlineEmphasis: 'votre équipe.',
   leadTail: '. Je construis et reconstruis des applications web, et le tooling autour.',
