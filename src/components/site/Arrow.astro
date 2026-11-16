@@ -1,0 +1,18 @@
+---
+// The trailing arrow of every CTA. A drawn mark rather than the "→" glyph:
+// each typeface puts that glyph on its own math axis, near the lowercase
+// middle, so beside an uppercase mono label it sits visibly low. Sized to
+// the cap height and centred by the CTA's own flex row, it lines up with
+// the middle of the capitals in any of the site's faces.
+interface Props { class?: string }
+const { class: className } = Astro.props
+---
+<svg
+  class:list={['cta-arrow', className]}
+  viewBox="0 0 12 10"
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d="M0.75 5h10M6.75 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

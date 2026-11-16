@@ -12,12 +12,12 @@ const copy: typeof en = {
   cta: 'Parlons-en',
   servicesHeading: 'Ce que je fais',
   writingHeading: 'Articles choisis',
-  writingAllNotes: 'Tous les articles →',
+  writingAllNotes: 'Tous les articles',
   writingEmpty: 'Aucun article publié pour le moment.',
   aboutHeading: 'À propos',
   aboutBlurb:
     "J'aime les logiciels qui ont du sens. Des systèmes simples, un code maintenable et des fonctionnalités qui résolvent un vrai problème.",
-  aboutLink: 'En savoir plus sur ma façon de travailler →',
+  aboutLink: 'En savoir plus sur ma façon de travailler',
   contactHeading: 'Me contacter',
   contactBlurb: "Un projet en tête ? Construisons quelque chose d'utile ensemble.",
 }

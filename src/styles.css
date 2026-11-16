@@ -291,6 +291,15 @@ p {
     transform: scale(0.97);
   }
 
+  /* CTA arrow (Arrow.astro). Cap height of the surrounding text; the
+     CTA's flex row centres it on the capitals. */
+  .cta-arrow {
+    flex-shrink: 0;
+    height: 0.72em;
+    width: auto;
+    aspect-ratio: 12 / 10;
+  }
+
   /* Text-only CTAs ("More about how I work →", the article back-link): an
      underline grows in from the left via scaleX instead of fading the whole
      link to 70% opacity. Transform-only, no layout shift. */
@@ -550,4 +559,15 @@ article.prose h2::before {
   font-size: var(--text-label);
   letter-spacing: 0.08em;
   color: var(--color-accent);
+}
+
+/* Writing index, mobile: the footer's own top rule follows the list, so
+   the last row's bottom rule would double it. "Last" means last visible:
+   the tag filter sets [hidden] on rows, so a plain :last-child could
+   point at a hidden one and leave the visible tail with its rule. Unlayered
+   so it beats the `border-b` utility on the row. */
+@media (width < 40rem) {
+  [data-post-list] > li:nth-last-child(1 of :not([hidden])) > .post-row {
+    border-bottom-width: 0;
+  }
 }
