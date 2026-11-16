@@ -10,11 +10,11 @@ export default {
   cta: "Let's talk",
   servicesHeading: 'What I do',
   writingHeading: 'Selected writing',
-  writingAllNotes: 'All notes →',
+  writingAllNotes: 'All notes',
   writingEmpty: 'Nothing published yet.',
   aboutHeading: 'About',
   aboutBlurb: 'I like software that makes sense. Simple systems, maintainable code, and features that solve a real problem.',
-  aboutLink: 'More about how I work →',
+  aboutLink: 'More about how I work',
   contactHeading: 'Get in touch',
   contactBlurb: "Got a project in mind? Let's build something useful together.",
 }

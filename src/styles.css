@@ -291,6 +291,15 @@ p {
     transform: scale(0.97);
   }
 
+  /* CTA arrow (Arrow.astro). Cap height of the surrounding text; the
+     CTA's flex row centres it on the capitals. */
+  .cta-arrow {
+    flex-shrink: 0;
+    height: 0.72em;
+    width: auto;
+    aspect-ratio: 12 / 10;
+  }
+
   /* Text-only CTAs ("More about how I work →", the article back-link): an
      underline grows in from the left via scaleX instead of fading the whole
      link to 70% opacity. Transform-only, no layout shift. */

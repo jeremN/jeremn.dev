@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content'
 import Layout from '../../layouts/Layout.astro'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
+import Arrow from '../site/Arrow.astro'
 import PostRow from '../site/PostRow.astro'
 import { getProfile } from '../../lib/cv'
 import { getServices } from '../../lib/services'
@@ -71,7 +72,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
                 class="button-primary w-full sm:w-auto"
               >
                 {t.cta}
-                <span aria-hidden="true">→</span>
+                <Arrow />
               </a>
             </div>
           </div>
@@ -102,8 +103,9 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
     <section data-writing class="mx-auto max-w-[1000px] px-6 pt-24 sm:pt-32">
       <div class="flex items-baseline justify-between gap-6 border-t border-line pt-8">
         <h2 class="font-mono text-label uppercase tracking-wider text-accent">{t.writingHeading}</h2>
-        <a href={withBase(blogIndex)} class="inline-flex min-h-touch items-center font-mono text-label uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
+        <a href={withBase(blogIndex)} class="inline-flex min-h-touch items-center gap-2 font-mono text-label uppercase tracking-wider text-muted no-underline transition-colors hover:text-accent">
           {t.writingAllNotes}
+          <Arrow />
         </a>
       </div>
 
@@ -146,9 +148,11 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
           </p>
           <a
             href={withBase(about)}
-            class="text-cta col-start-1 row-start-3 mt-6 inline-flex min-h-touch items-center self-end font-mono text-label uppercase tracking-wider text-accent lg:font-display lg:text-[15px] lg:normal-case lg:tracking-normal no-underline"
+            class="text-cta col-start-1 row-start-3 mt-6 inline-flex min-h-touch items-center gap-2 self-end font-mono text-label uppercase tracking-wider text-accent lg:font-display lg:text-[15px] lg:normal-case lg:tracking-normal no-underline"
           >
             {t.aboutLink}
+            {/* Newsreader sits its capitals higher in the line box than Geist. */}
+            <Arrow class="lg:-translate-y-[0.12em]" />
           </a>
           <Doodle
             name="xiaohei-about"
@@ -170,7 +174,7 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
             class="button-primary col-span-2 row-start-4 mt-4 w-full sm:col-span-1 sm:row-start-3 sm:mt-6 sm:w-auto sm:justify-self-start sm:self-end"
           >
             {t.cta}
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </a>
         </div>
       </div>

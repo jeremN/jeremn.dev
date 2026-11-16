@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro'
 import Underline from '../site/Underline.astro'
 import Doodle from '../site/Doodle.astro'
+import Arrow from '../site/Arrow.astro'
 import { profile } from '../../lib/cv'
 import { getCopy, type Locale } from '../../i18n'
 import { pageUrl } from '../../lib/base'
@@ -104,7 +105,7 @@ const route = lang === 'fr' ? '/fr/services' : '/services'
         class="cta-fill-light inline-flex shrink-0 items-center gap-3 rounded-sm px-7 py-4 font-mono text-label uppercase tracking-wider text-ink no-underline"
       >
         {t.ctaLabel}
-        <span aria-hidden="true">→</span>
+        <Arrow />
       </a>
     </div>
   </main>
