@@ -116,10 +116,17 @@ test.describe('language switcher', () => {
     await page.setViewportSize({ width: 320, height: 700 })
     for (const path of ['/', '/fr/']) {
       await page.goto(`${BASE}${path}`)
-      const tops = await page
-        .locator('header nav a, header [data-lang-switch]')
-        .evaluateAll((els) => els.map((el) => (el as HTMLElement).getBoundingClientRect().top))
-      expect(new Set(tops.map((t) => Math.round(t))).size, path).toBe(1)
+      // The nav lives in the side panel at this width; the switch shares the
+      // row with the wordmark and the burger.
+      const centers = await page
+        .locator('header a[href$="/"], header [data-lang-switch], header #menu-open')
+        .evaluateAll((els) =>
+          els.map((el) => {
+            const r = (el as HTMLElement).getBoundingClientRect()
+            return Math.round(r.top + r.height / 2)
+          }),
+        )
+      expect(new Set(centers).size, path).toBe(1)
     }
   })
 })

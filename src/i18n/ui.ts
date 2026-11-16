@@ -21,6 +21,8 @@ const en = {
   basedIn: 'Based in France',
   remote: 'Remote friendly',
   switchLabel: 'Read this page in French',
+  menuOpenLabel: 'Open menu',
+  menuCloseLabel: 'Close menu',
 }
 
 const fr: typeof en = {
@@ -35,6 +37,8 @@ const fr: typeof en = {
   basedIn: 'Basé en France',
   remote: 'Travail à distance',
   switchLabel: 'Lire cette page en anglais',
+  menuOpenLabel: 'Ouvrir le menu',
+  menuCloseLabel: 'Fermer le menu',
 }
 
 export const getUi = (lang: Locale) => (lang === 'fr' ? fr : en)
