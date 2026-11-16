@@ -115,8 +115,10 @@ const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates
           <span>jeremn<span class="text-accent">.</span>dev</span>
         </a>
         <div class="flex min-w-0 items-center gap-1 sm:gap-9">
+          {/* Below 40rem the four links no longer fit beside the wordmark and
+              the two controls, so they move into the side panel below. */}
           <nav
-            class="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] sm:gap-8 [&::-webkit-scrollbar]:hidden"
+            class="hidden min-w-0 gap-8 sm:flex"
             aria-label={ui.navLabel}
           >
             {nav.map((n) => (
@@ -137,15 +139,74 @@ const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates
               <path d="M8 1a7 7 0 0 1 0 14z" fill="currentColor" />
             </svg>
           </button>
+          <button
+            id="menu-open"
+            type="button"
+            aria-label={ui.menuOpenLabel}
+            aria-controls="mobile-menu"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="-mr-2 flex min-h-touch min-w-touch shrink-0 items-center justify-center text-ink transition-colors hover:text-accent sm:hidden"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
       </div>
     </header>
 
+    {/* A native modal <dialog>: showModal() gives the focus trap, Escape to
+        close, and an inert page behind it, without a line of script for any
+        of the three. It sits outside <header> so `header nav a` still means
+        the desktop row alone. */}
+    <dialog
+      id="mobile-menu"
+      aria-label={ui.navLabel}
+      class="mobile-menu m-0 ml-auto h-dvh max-h-none w-[min(20rem,85vw)] max-w-none border-l border-line bg-ground p-0 text-ink sm:hidden"
+    >
+      <div class="flex h-full flex-col px-6 pb-8">
+        <div class="flex h-[72px] shrink-0 items-center justify-end">
+          <button
+            id="menu-close"
+            type="button"
+            aria-label={ui.menuCloseLabel}
+            class="-mr-2 flex min-h-touch min-w-touch items-center justify-center text-muted transition-colors hover:text-accent"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        {/* Unlabelled: the dialog already carries the name, and a second
+            "Main" landmark would duplicate the desktop one. */}
+        <nav class="mt-4 flex flex-col border-t border-line">
+          {nav.map((n) => (
+            <a
+              href={withBase(n.href)}
+              aria-current={isActive(n.href) ? 'page' : undefined}
+              class:list={[
+                'flex min-h-14 items-center justify-between border-b border-line font-sans text-2xl font-semibold tracking-tight no-underline transition-colors hover:text-accent',
+                isActive(n.href) ? 'text-ink' : 'text-muted',
+              ]}
+            >
+              <span>{n.label}</span>
+              {isActive(n.href) && <span class="size-1.5 rounded-full bg-accent" aria-hidden="true" />}
+            </a>
+          ))}
+        </nav>
+        <div class="mt-auto flex flex-col gap-1 font-mono text-label text-muted">
+          <span>{ui.basedIn}</span>
+          <span>{ui.remote}</span>
+        </div>
+      </div>
+    </dialog>
+
     <slot />
 
     <footer class="relative z-10 border-t border-line bg-ground">
-      <div class="mx-auto max-w-[1440px] px-6">
-        <div class="flex flex-col gap-3 py-8 font-mono text-label text-muted sm:flex-row sm:items-center sm:justify-between">
+      <div class="mx-auto max-w-[1440px] px-4 sm:px-6">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-6 font-mono text-label text-muted sm:justify-between sm:py-8">
           <span>© {year} jeremn.dev</span>
           <span>{ui.basedIn}</span>
           <span>{ui.remote}</span>
@@ -186,6 +247,29 @@ const alternates = Astro.props.alternates !== undefined ? Astro.props.alternates
           localStorage.setItem('theme', next)
         } catch (e) {}
       })
+
+      // Mobile menu. The dialog handles focus trapping and Escape natively;
+      // this wires the two buttons, a tap on the backdrop, and aria-expanded.
+      const menu = document.getElementById('mobile-menu') as HTMLDialogElement | null
+      const menuOpen = document.getElementById('menu-open')
+      if (menu && menuOpen) {
+        menuOpen.addEventListener('click', () => {
+          menu.showModal()
+          menuOpen.setAttribute('aria-expanded', 'true')
+        })
+        document.getElementById('menu-close')?.addEventListener('click', () => menu.close())
+        // A click whose target is the dialog element itself landed on the
+        // ::backdrop, since the panel's content fills the whole box.
+        menu.addEventListener('click', (e) => {
+          if (e.target === menu) menu.close()
+        })
+        menu.addEventListener('close', () => menuOpen.setAttribute('aria-expanded', 'false'))
+        // Rotating a phone to landscape can cross 40rem with the panel open,
+        // where the dialog is display:none but still modal. Close it.
+        matchMedia('(min-width: 40rem)').addEventListener('change', (e) => {
+          if (e.matches && menu.open) menu.close()
+        })
+      }
 
       // Header shrinks 72px → 56px past the first screenful and gains a
       // hairline. rAF-throttled: a raw scroll handler that writes classes
