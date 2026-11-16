@@ -107,12 +107,14 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
         </a>
       </div>
 
+      {/* Mobile only: the about section's border-top follows straight after
+          the list, so the last row's own bottom rule would double it. */}
       {posts.length === 0 ? (
         <p class="mt-10 max-w-[26ch] font-display text-2xl leading-tight text-ink">
           {t.writingEmpty}
         </p>
       ) : (
-        <ul class="mt-10">
+        <ul class="mt-10 max-sm:[&>li:last-child>.post-row]:border-b-0">
           {posts.map((p, i) => (
             <li>
               <PostRow
@@ -131,41 +133,45 @@ const HOME_NOTE_MARKS = ['xiaohei-mark-code', 'xiaohei-mark-lock', 'xiaohei-mark
       )}
     </section>
 
-    <section class="mx-auto max-w-[1000px] px-6 pb-24 pt-24 sm:pt-32">
+    <section class="mx-auto max-w-[1000px] px-6 pb-24 pt-8 sm:pt-32">
       <div class="grid grid-cols-1 gap-16 border-t border-line pt-8 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
-        <div data-about class="lg:pr-10">
-          <h2 class="font-mono text-label uppercase tracking-wider text-accent">{t.aboutHeading}</h2>
-          <div class="mt-6 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-            <p class="max-w-[26ch] font-display text-[22px] leading-[29px] text-muted lg:font-sans lg:text-sm lg:leading-[21px]">
-              {t.aboutBlurb}
-            </p>
-            <Doodle name="xiaohei-about" class="h-20 w-20 shrink-0 text-ink sm:h-24 sm:w-24" />
-          </div>
+        {/* Each column is a two-track grid: copy on the left, the mascot on
+            the right standing on the column's baseline. On mobile the about
+            mascot shares the link's row; the contact one sits right-aligned
+            above the full-width button. Side by side from 40rem. */}
+        <div data-about class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 lg:pr-10">
+          <h2 class="col-span-2 font-mono text-label uppercase tracking-wider text-accent">{t.aboutHeading}</h2>
+          <p class="col-span-2 mt-6 max-w-[26ch] font-display text-[22px] leading-[29px] text-muted sm:col-span-1 lg:font-sans lg:text-sm lg:leading-[21px]">
+            {t.aboutBlurb}
+          </p>
           <a
             href={withBase(about)}
-            class="text-cta mt-6 inline-flex min-h-touch items-center font-mono text-label uppercase tracking-wider text-accent lg:font-display lg:text-[15px] lg:normal-case lg:tracking-normal no-underline"
+            class="text-cta col-start-1 row-start-3 mt-6 inline-flex min-h-touch items-center self-end font-mono text-label uppercase tracking-wider text-accent lg:font-display lg:text-[15px] lg:normal-case lg:tracking-normal no-underline"
           >
             {t.aboutLink}
           </a>
+          <Doodle
+            name="xiaohei-about"
+            class="col-start-2 row-start-3 mt-4 h-28 w-28 self-end text-ink sm:row-span-2 sm:row-start-2 sm:mt-6 sm:h-40 sm:w-40"
+          />
         </div>
 
-        <div data-contact class="lg:pl-10">
-          <h2 class="font-mono text-label uppercase tracking-wider text-accent">{t.contactHeading}</h2>
-          <div class="mt-6 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-            <div class="contents lg:block lg:min-w-0">
-              <p class="max-w-[26ch] font-display text-[26px] font-bold leading-[30px] text-muted lg:font-sans lg:text-base lg:font-normal lg:leading-6">
-                {t.contactBlurb}
-              </p>
-              <a
-                href={withBase(contact)}
-                class="button-primary order-3 mt-6 w-full sm:w-auto lg:order-none"
-              >
-                {t.cta}
-                <span aria-hidden="true">→</span>
-              </a>
-            </div>
-            <Doodle name="xiaohei-contact" class="order-2 h-16 w-24 shrink-0 text-ink sm:h-20 sm:w-32 lg:order-none" />
-          </div>
+        <div data-contact class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 lg:pl-10">
+          <h2 class="col-span-2 font-mono text-label uppercase tracking-wider text-accent">{t.contactHeading}</h2>
+          <p class="col-span-2 mt-6 max-w-[26ch] font-display text-[26px] font-bold leading-[30px] text-muted sm:col-span-1 lg:font-sans lg:text-base lg:font-normal lg:leading-6">
+            {t.contactBlurb}
+          </p>
+          <Doodle
+            name="xiaohei-contact"
+            class="col-span-2 row-start-3 -mt-2 h-28 w-28 justify-self-end text-ink sm:col-span-1 sm:col-start-2 sm:row-span-2 sm:row-start-2 sm:mt-6 sm:h-40 sm:w-40 sm:self-end"
+          />
+          <a
+            href={withBase(contact)}
+            class="button-primary col-span-2 row-start-4 mt-4 w-full sm:col-span-1 sm:row-start-3 sm:mt-6 sm:w-auto sm:justify-self-start sm:self-end"
+          >
+            {t.cta}
+            <span aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
     </section>
