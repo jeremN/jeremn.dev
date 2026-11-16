@@ -141,13 +141,16 @@ test.describe('mobile menu', () => {
 })
 
 test.describe('mobile footer', () => {
-  test('lays its items out in a row rather than a column', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 800 })
-    await page.goto(`${BASE}/blog`)
-    const tops = await page.locator('footer span').evaluateAll((els) =>
-      els.map((el) => Math.round((el as HTMLElement).getBoundingClientRect().top)),
-    )
-    // Three items, at most two lines: the row may wrap, it must not stack.
-    expect(new Set(tops).size).toBeLessThanOrEqual(2)
-  })
+  for (const path of ['/blog', '/fr/blog']) {
+    test(`keeps its visible items on one row down to 320px on ${path}`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 800 })
+      await page.goto(`${BASE}${path}`)
+      const visible = page.locator('footer span:visible')
+      await expect(visible).toHaveCount(2)
+      const tops = await visible.evaluateAll((els) =>
+        els.map((el) => Math.round((el as HTMLElement).getBoundingClientRect().top)),
+      )
+      expect(new Set(tops).size).toBe(1)
+    })
+  }
 })
