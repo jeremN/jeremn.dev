@@ -87,7 +87,10 @@ const blogIndex = lang === 'fr' ? '/fr/blog' : '/blog'
       at a third of the size it was drawn at. The prose keeps 68ch below; only
       the header row uses the full width; the prose and the onward link stay on
       the reading measure, so their right edges line up. */}
-  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-2">
+  {/* Top padding puts the back link's text on the same line as every
+      other page's eyebrow ("02 / …"), which sit under pt-16 / sm:pt-24 plus
+      their own padding; the link's 44px touch box centres its text 13px in. */}
+  <main class="relative z-10 mx-auto max-w-[1000px] px-6 pb-24 pt-14 sm:pt-22">
     <div>
       <a data-back href={withBase(blogIndex)} class="text-cta inline-flex min-h-touch min-w-touch items-center gap-2 font-mono text-label uppercase tracking-wider text-accent no-underline">
         {t.backToIndex}

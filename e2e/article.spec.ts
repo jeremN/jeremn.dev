@@ -207,3 +207,25 @@ test('every article illustration fills its slot instead of letterboxing', async 
   }
   expect(checked, 'no article carried an illustration').toBeGreaterThan(0)
 })
+
+test.describe('article back link', () => {
+  // The back link plays the eyebrow's role on an article, so it starts on the
+  // same line as every other page's eyebrow. Compared against /services: the
+  // writing index pushes its eyebrow lower on desktop, beside its vignette.
+  for (const width of [390, 1280]) {
+    test(`starts level with a page eyebrow at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      const textTop = (selector: string) =>
+        page.locator(selector).first().evaluate((el) => {
+          const range = document.createRange()
+          range.selectNodeContents(el)
+          return Math.round(range.getBoundingClientRect().top)
+        })
+
+      await page.goto(`${BASE}/services`)
+      const eyebrow = await textTop('main span')
+      await page.goto(`${BASE}/blog/ten-months-of-svelte-5`)
+      expect(Math.abs((await textTop('[data-back]')) - eyebrow)).toBeLessThanOrEqual(2)
+    })
+  }
+})
